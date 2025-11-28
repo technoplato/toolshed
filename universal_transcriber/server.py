@@ -5,8 +5,16 @@ import transcribe
 import os
 import logging
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+# Configure logging to file and console
+LOG_FILE = "transcriptions/app.log"
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler()
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Monkeypatch DB path to be inside the volume so it persists
@@ -17,6 +25,59 @@ app = FastAPI()
 # Ensure directories exist
 os.makedirs("transcriptions", exist_ok=True)
 os.makedirs("downloads", exist_ok=True)
+
+from fastapi import UploadFile, File
+
+@app.post("/upload-cookies")
+async def upload_cookies(file: UploadFile = File(...)):
+    """Uploads a cookies.txt file for yt-dlp."""
+    file_location = "cookies.txt"
+    with open(file_location, "wb+") as file_object:
+        file_object.write(file.file.read())
+    logger.info("cookies.txt uploaded successfully")
+    return RedirectResponse(url="/", status_code=303)
+
+@app.get("/logs")
+def get_logs():
+    """Returns the last 100 lines of the log file."""
+    if not os.path.exists(LOG_FILE):
+        return {"logs": ["Log file not found."]}
+    
+    with open(LOG_FILE, "r") as f:
+        lines = f.readlines()
+        return {"logs": lines[-100:]}
+
+@app.get("/logs-view", response_class=HTMLResponse)
+def view_logs():
+    """Simple HTML page to view logs in real-time."""
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Live Logs</title>
+        <style>
+            body { background: #1e1e1e; color: #d4d4d4; font-family: monospace; padding: 1rem; }
+            #logs { white-space: pre-wrap; word-wrap: break-word; }
+        </style>
+        <script>
+            function fetchLogs() {
+                fetch('/logs')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('logs').textContent = data.logs.join('');
+                        window.scrollTo(0, document.body.scrollHeight);
+                    });
+            }
+            setInterval(fetchLogs, 2000);
+            window.onload = fetchLogs;
+        </script>
+    </head>
+    <body>
+        <h1>Live Logs</h1>
+        <div id="logs">Loading...</div>
+    </body>
+    </html>
+    """
 
 def run_transcription(url: str):
     """Background task to run the transcription process."""

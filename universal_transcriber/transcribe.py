@@ -98,6 +98,11 @@ def download_audio(video_url, output_dir="downloads"):
         'quiet': True,
     }
 
+    # Check for cookies.txt
+    if os.path.exists("cookies.txt"):
+        print("Using cookies.txt for authentication")
+        ydl_opts['cookiefile'] = "cookies.txt"
+
     print(f"Downloading audio for {video_id} ({extractor})...")
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
@@ -208,6 +213,18 @@ def update_index_html(conn, output_dir="transcriptions"):
             <input type="text" name="url" placeholder="Paste YouTube URL here..." style="flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" required>
             <button type="submit" style="padding: 0.5rem 1rem; background: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Transcribe</button>
         </form>
+    </div>
+
+    <div class="video-item" style="background: #fffbe6; border-color: #ffe58f;">
+        <h3>Settings & Debug</h3>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <form action="/upload-cookies" method="post" enctype="multipart/form-data" style="display: flex; gap: 10px; align-items: center;">
+                <label>Upload cookies.txt:</label>
+                <input type="file" name="file" required>
+                <button type="submit" style="padding: 0.3rem 0.8rem; background: #faad14; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
+            </form>
+            <a href="/logs-view" target="_blank" style="color: #faad14; font-weight: bold; text-decoration: none;">View Live Logs 📜</a>
+        </div>
     </div>
 """
     
