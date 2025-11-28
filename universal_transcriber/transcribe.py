@@ -98,12 +98,22 @@ def download_audio(video_url, output_dir="downloads"):
         'quiet': True,
     }
 
+    # Debug: Print CWD and check for cookies
+    print(f"DEBUG: CWD is {os.getcwd()}")
+    
     # Check for cookies.txt in the persistent volume
     cookie_path = "transcriptions/cookies.txt"
     if os.path.exists(cookie_path):
-        print(f"Using cookies.txt from {cookie_path} for authentication")
+        print(f"DEBUG: Found cookies at {cookie_path}")
         ydl_opts['cookiefile'] = cookie_path
+    else:
+        print(f"DEBUG: Cookies NOT found at {cookie_path}")
+        # Fallback check
+        if os.path.exists("cookies.txt"):
+             print(f"DEBUG: Found cookies at ./cookies.txt")
+             ydl_opts['cookiefile'] = "cookies.txt"
 
+    print(f"DEBUG: ydl_opts: {ydl_opts}")
     print(f"Downloading audio for {video_id} ({extractor})...")
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
