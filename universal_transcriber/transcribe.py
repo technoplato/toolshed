@@ -219,7 +219,7 @@ def update_index_html(conn, output_dir="transcriptions"):
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Transcribed Videos</title>
+    <title>_Transcribed Videos_</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
         .video-item { border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
