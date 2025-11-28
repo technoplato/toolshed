@@ -79,11 +79,12 @@ jobs:
             # Export env vars for docker-stack.yml
             export TRANSCRIBER_IMAGE=${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
             
+            # Deploy
+            cd app
+            
             # Load other env vars from .env file if it exists (for API keys etc)
             if [ -f .env ]; then
               export $(grep -v '^#' .env | xargs)
             fi
             
-            # Deploy
-            cd app
             docker stack deploy -c vps_deployer/docker-stack.yml ${{ env.STACK_NAME }} --with-registry-auth
