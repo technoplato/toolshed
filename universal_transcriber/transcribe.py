@@ -61,6 +61,10 @@ def upsert_video_record(conn, external_id, platform, url, title, audio_path=None
                   (platform, external_id, url, title, audio_path, transcript_path, player_path, json_path))
     conn.commit()
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 def download_audio(video_url, output_dir="downloads"):
     """Downloads audio using yt-dlp and returns platform/id info."""
     os.makedirs(output_dir, exist_ok=True)
@@ -80,7 +84,7 @@ def download_audio(video_url, output_dir="downloads"):
     output_path = os.path.join(output_dir, f"{filename_base}.wav")
     
     if os.path.exists(output_path):
-        print(f"Audio already exists at {output_path}")
+        logger.info(f"Audio already exists at {output_path}")
         return output_path, video_id, title, extractor
 
     ydl_opts = {
@@ -99,22 +103,22 @@ def download_audio(video_url, output_dir="downloads"):
     }
 
     # Debug: Print CWD and check for cookies
-    print(f"DEBUG: CWD is {os.getcwd()}")
+    logger.info(f"DEBUG: CWD is {os.getcwd()}")
     
     # Check for cookies.txt in the persistent volume
     cookie_path = "transcriptions/cookies.txt"
     if os.path.exists(cookie_path):
-        print(f"DEBUG: Found cookies at {cookie_path}")
+        logger.info(f"DEBUG: Found cookies at {cookie_path}")
         ydl_opts['cookiefile'] = cookie_path
     else:
-        print(f"DEBUG: Cookies NOT found at {cookie_path}")
+        logger.info(f"DEBUG: Cookies NOT found at {cookie_path}")
         # Fallback check
         if os.path.exists("cookies.txt"):
-             print(f"DEBUG: Found cookies at ./cookies.txt")
+             logger.info(f"DEBUG: Found cookies at ./cookies.txt")
              ydl_opts['cookiefile'] = "cookies.txt"
 
-    print(f"DEBUG: ydl_opts: {ydl_opts}")
-    print(f"Downloading audio for {video_id} ({extractor})...")
+    logger.info(f"DEBUG: ydl_opts: {ydl_opts}")
+    logger.info(f"Downloading audio for {video_id} ({extractor})...")
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
         
