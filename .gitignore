@@ -1,0 +1,26 @@
+# Secrets
+.env
+*.env
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS
+.DS_Store
+transcriber.tar.gz
+vps_deployer/gh_deploy_key
+universal_transcriber/downloads/
+universal_transcriber/downloads/
