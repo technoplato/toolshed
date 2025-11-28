@@ -201,6 +201,14 @@ def update_index_html(conn, output_dir="transcriptions"):
 </head>
 <body>
     <h1>Transcribed Videos</h1>
+    
+    <div class="video-item" style="background: #f0f2f5; border-color: #d9d9d9;">
+        <h3>Add New Video</h3>
+        <form action="/submit" method="post" style="display: flex; gap: 10px;">
+            <input type="text" name="url" placeholder="Paste YouTube URL here..." style="flex: 1; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;" required>
+            <button type="submit" style="padding: 0.5rem 1rem; background: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Transcribe</button>
+        </form>
+    </div>
 """
     
     for platform, vid_id, title, created_at in videos:
