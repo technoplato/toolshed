@@ -98,10 +98,11 @@ def download_audio(video_url, output_dir="downloads"):
         'quiet': True,
     }
 
-    # Check for cookies.txt
-    if os.path.exists("cookies.txt"):
-        print("Using cookies.txt for authentication")
-        ydl_opts['cookiefile'] = "cookies.txt"
+    # Check for cookies.txt in the persistent volume
+    cookie_path = "transcriptions/cookies.txt"
+    if os.path.exists(cookie_path):
+        print(f"Using cookies.txt from {cookie_path} for authentication")
+        ydl_opts['cookiefile'] = cookie_path
 
     print(f"Downloading audio for {video_id} ({extractor})...")
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:

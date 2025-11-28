@@ -31,10 +31,11 @@ from fastapi import UploadFile, File
 @app.post("/upload-cookies")
 async def upload_cookies(file: UploadFile = File(...)):
     """Uploads a cookies.txt file for yt-dlp."""
-    file_location = "cookies.txt"
+    # Save to the persistent volume directory
+    file_location = "transcriptions/cookies.txt"
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
-    logger.info("cookies.txt uploaded successfully")
+    logger.info(f"cookies.txt uploaded successfully to {file_location}")
     return RedirectResponse(url="/", status_code=303)
 
 @app.get("/logs")
