@@ -69,8 +69,27 @@ def download_audio(video_url, output_dir="downloads"):
     """Downloads audio using yt-dlp and returns platform/id info."""
     os.makedirs(output_dir, exist_ok=True)
     
+    # Debug: Print CWD and check for cookies
+    logger.info(f"DEBUG: CWD is {os.getcwd()}")
+    
+    # Common options including cookies
+    common_opts = {'quiet': True}
+    
+    # Check for cookies.txt in the persistent volume
+    cookie_path = "transcriptions/cookies.txt"
+    if os.path.exists(cookie_path):
+        logger.info(f"DEBUG: Found cookies at {cookie_path}")
+        common_opts['cookiefile'] = cookie_path
+    else:
+        logger.info(f"DEBUG: Cookies NOT found at {cookie_path}")
+        # Fallback check
+        if os.path.exists("cookies.txt"):
+             logger.info(f"DEBUG: Found cookies at ./cookies.txt")
+             common_opts['cookiefile'] = "cookies.txt"
+
     # Extract info first to get platform (extractor) and ID
-    with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+    logger.info("Extracting video metadata...")
+    with yt_dlp.YoutubeDL(common_opts) as ydl:
         info = ydl.extract_info(video_url, download=False)
         video_id = info['id']
         title = info.get('title', 'Unknown Title')
@@ -101,21 +120,10 @@ def download_audio(video_url, output_dir="downloads"):
         'outtmpl': os.path.join(output_dir, f'{extractor}_%(id)s_sound.%(ext)s'),
         'quiet': True,
     }
-
-    # Debug: Print CWD and check for cookies
-    logger.info(f"DEBUG: CWD is {os.getcwd()}")
     
-    # Check for cookies.txt in the persistent volume
-    cookie_path = "transcriptions/cookies.txt"
-    if os.path.exists(cookie_path):
-        logger.info(f"DEBUG: Found cookies at {cookie_path}")
-        ydl_opts['cookiefile'] = cookie_path
-    else:
-        logger.info(f"DEBUG: Cookies NOT found at {cookie_path}")
-        # Fallback check
-        if os.path.exists("cookies.txt"):
-             logger.info(f"DEBUG: Found cookies at ./cookies.txt")
-             ydl_opts['cookiefile'] = "cookies.txt"
+    # Add cookiefile to download options if present
+    if 'cookiefile' in common_opts:
+        ydl_opts['cookiefile'] = common_opts['cookiefile']
 
     logger.info(f"DEBUG: ydl_opts: {ydl_opts}")
     logger.info(f"Downloading audio for {video_id} ({extractor})...")
