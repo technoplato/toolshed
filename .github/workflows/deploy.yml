@@ -74,7 +74,7 @@ jobs:
           envs: IMAGE_TAG,REGISTRY,IMAGE_NAME
           script: |
             # Login to GHCR on the VPS
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Export env vars for docker-stack.yml
             export TRANSCRIBER_IMAGE=${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}
