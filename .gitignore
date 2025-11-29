@@ -24,3 +24,10 @@ transcriber.tar.gz
 vps_deployer/gh_deploy_key
 universal_transcriber/downloads/
 universal_transcriber/downloads/
+
+# Artifacts
+downloads/
+transcriptions/
+apps/web/public/transcriptions
+schema_dump.json
+
