@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Unit Tests</title>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
+    <style>
+        body { font-family: monospace; padding: 2rem; }
+        .pass { color: green; }
+        .fail { color: red; }
+        .log { margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    <h1>Search Unit Tests</h1>
+    <div id="results"></div>
+
+    <script>
+        // Mock Data (from user's screenshot/context)
+        const MOCK_SEGMENTS = [
+            { text: "enabled, which is much better suited for production services compared to Docker Compose." },
+            { text: "it's still running. This is because Docker Stack has support for rolling releases," },
+            { text: "Docker Stack specification are shared, which means there are documented configuration options" },
+            { text: "Next, you'll notice for the file property, this is actually set to docker-stack.yaml." },
+            { text: "Initially, I achieved this by using Docker Compose, defining my entire application stack inside" },
+            { text: "and Docker Compose with the start-first update ordering. In fact, another feature that Docker" },
+            { text: "secure secrets, service rollbacks, and even clustering. Not only this, but when combined with Docker" },
+            { text: "database. In addition to having the Docker file and Docker Compose already defined, the application" },
+            { text: "followed by running the Docker stack deploy command, we can see that it's deployed successfully." },
+            // Distractors (should NOT match "docker" ideally, or rank very low)
+            { text: "This is a random sentence about nothing." },
+            { text: "Another random sentence that mentions doc but not the full word." },
+            { text: "Doctors are cool but not relevant here." }
+        ];
+
+        // Current Config (to reproduce failure)
+        const BAD_CONFIG = {
+            keys: ['text'],
+            includeMatches: true,
+            threshold: 0.4,
+            ignoreLocation: true
+        };
+
+        // Proposed Config (stricter)
+        const GOOD_CONFIG = {
+            keys: ['text'],
+            includeMatches: true,
+            threshold: 0.2, // Lower threshold = stricter
+            ignoreLocation: true,
+            minMatchCharLength: 3
+        };
+
+        function runTests(config, configName) {
+            log(`Running tests with ${configName}...`);
+            const fuse = new Fuse(MOCK_SEGMENTS, config);
+            
+            // Test 1: "docker" should match lines with "Docker"
+            const results = fuse.search("docker");
+            
+            // Assertions
+            let passed = true;
+            
+            // Check if top results actually contain "docker" (case-insensitive)
+            if (results.length === 0) {
+                fail("No results found for 'docker'");
+                passed = false;
+            } else {
+                // Check top 3 results
+                for (let i = 0; i < Math.min(results.length, 3); i++) {
+                    const matchText = results[i].item.text.toLowerCase();
+                    if (!matchText.includes("docker")) {
+                        fail(`Result #${i+1} does NOT contain 'docker': "${results[i].item.text}"`);
+                        passed = false;
+                    } else {
+                        pass(`Result #${i+1} contains 'docker'`);
+                    }
+                }
+            }
+            
+            // Check for false positives (distractors)
+            results.forEach(res => {
+                if (res.item.text.includes("Doctors")) {
+                    // "Doctors" might match "docker" fuzzily, but should be ranked lower or excluded if strict
+                    warn(`Matched 'Doctors' with score ${res.score}`);
+                }
+            });
+
+            if (passed) log("All checks passed for this config.");
+            log("------------------------------------------------");
+        }
+
+        const resultsEl = document.getElementById('results');
+
+        function log(msg) {
+            const div = document.createElement('div');
+            div.className = 'log';
+            div.textContent = msg;
+            resultsEl.appendChild(div);
+        }
+
+        function pass(msg) {
+            const div = document.createElement('div');
+            div.className = 'pass';
+            div.textContent = "PASS: " + msg;
+            resultsEl.appendChild(div);
+        }
+
+        function fail(msg) {
+            const div = document.createElement('div');
+            div.className = 'fail';
+            div.textContent = "FAIL: " + msg;
+            resultsEl.appendChild(div);
+        }
+
+        function warn(msg) {
+            const div = document.createElement('div');
+            div.style.color = 'orange';
+            div.textContent = "WARN: " + msg;
+            resultsEl.appendChild(div);
+        }
+
+        // Run
+        runTests(BAD_CONFIG, "Current Config (Threshold 0.4)");
+        runTests(GOOD_CONFIG, "Proposed Config (Threshold 0.2)");
+
+    </script>
+</body>
+</html>
