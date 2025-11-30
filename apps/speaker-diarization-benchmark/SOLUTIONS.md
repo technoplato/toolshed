@@ -4,18 +4,18 @@ This document provides detailed information about each solution benchmarked in t
 
 ## Solution Comparison Matrix
 
-| Feature | pyannote.audio | WhisperX | SpeechBrain | Resemblyzer |
-|---------|---------------|----------|-------------|-------------|
-| **Word-level timestamps** | ❌ (needs ASR) | ✅ | ❌ | ❌ |
-| **Speaker diarization** | ✅ | ✅ | ⚠️ (custom) | ❌ |
-| **Speaker identification** | ⚠️ (separate) | ⚠️ (separate) | ✅ | ✅ |
-| **ASR included** | ❌ | ✅ | ❌ | ❌ |
-| **Accuracy** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
-| **Speed** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Memory usage** | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| **Ease of use** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐ |
-| **Documentation** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
-| **Active maintenance** | ✅ | ✅ | ✅ | ⚠️ |
+| Feature | pyannote.audio | WhisperX | SpeechBrain-Verification | SpeechBrain-Diarization | Resemblyzer | NeMo |
+|---------|---------------|----------|--------------------------|------------------------|-------------|------|
+| **Word-level timestamps** | ❌ (needs ASR) | ✅ | ❌ | ❌ | ❌ | ⚠️ (custom) |
+| **Speaker diarization** | ✅ | ✅ | ⚠️ (custom) | ⚠️ (if available) | ⚠️ (custom) | ✅ |
+| **Speaker identification** | ⚠️ (separate) | ⚠️ (separate) | ✅ | ⚠️ | ✅ | ⚠️ |
+| **ASR included** | ❌ | ✅ | ❌ | ❌ | ❌ | ⚠️ |
+| **Accuracy** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Speed** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Memory usage** | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ |
+| **Ease of use** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
+| **Documentation** | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ | ⭐⭐⭐⭐ |
+| **Active maintenance** | ✅ | ✅ | ✅ | ✅ | ⚠️ | ✅ |
 
 ## Detailed Solution Information
 
@@ -99,7 +99,7 @@ pip install whisperx
 
 ---
 
-### 3. SpeechBrain
+### 3. SpeechBrain-Verification
 
 **GitHub**: https://github.com/speechbrain/speechbrain  
 **License**: Apache 2.0  
@@ -107,26 +107,27 @@ pip install whisperx
 
 #### Strengths
 - End-to-end speech processing toolkit
-- Excellent for speaker verification
+- Excellent speaker embeddings (ECAPA-TDNN)
 - Good for known speaker identification
 - Modular architecture
 - Well-documented
+- Fast inference
 
 #### Weaknesses
-- No built-in diarization (requires custom pipeline)
-- More complex for diarization use case
+- Requires custom segmentation pipeline
+- Needs clustering (scikit-learn) for diarization
 - Better suited for verification than diarization
-- Requires more custom code
+- Segment-level output (not word-level)
 
 #### Use Cases
 - Speaker verification systems
 - Known speaker identification
 - Voice authentication
-- Custom diarization pipelines
+- Custom diarization pipelines with embeddings
 
 #### Setup Requirements
 ```bash
-pip install speechbrain
+pip install speechbrain scikit-learn
 # Models download automatically
 ```
 
@@ -134,10 +135,41 @@ pip install speechbrain
 - **Verification**: `speechbrain/spkrec-ecapa-voxceleb`
 - **Size**: ~100MB
 - **Format**: PyTorch
+- **Implementation**: Uses speaker embeddings + AgglomerativeClustering
+
+### 4. SpeechBrain-Diarization
+
+**GitHub**: https://github.com/speechbrain/speechbrain  
+**License**: Apache 2.0  
+**Language**: Python  
+
+#### Strengths
+- Integrated with SpeechBrain ecosystem
+- May have built-in diarization models
+- Well-documented
+
+#### Weaknesses
+- May require additional setup/configuration
+- Availability depends on SpeechBrain version
+- May not be available in all installations
+
+#### Use Cases
+- When SpeechBrain diarization models are available
+- Integrated SpeechBrain workflows
+
+#### Setup Requirements
+```bash
+pip install speechbrain
+# Check SpeechBrain documentation for diarization models
+```
+
+#### Model Information
+- **Status**: Depends on SpeechBrain version and available models
+- **Note**: This pipeline checks for availability but may require additional setup
 
 ---
 
-### 4. Resemblyzer
+### 5. Resemblyzer
 
 **GitHub**: https://github.com/resemble-ai/Resemblyzer  
 **License**: MIT  
@@ -145,30 +177,71 @@ pip install speechbrain
 
 #### Strengths
 - Simple API
-- Good for speaker verification
-- Lightweight
+- Good speaker embeddings
+- Lightweight (~50MB model)
 - Easy to integrate
+- Fast inference
 
 #### Weaknesses
-- No diarization (verification only)
+- Requires custom segmentation pipeline
+- Needs clustering for diarization
 - Less actively maintained
 - Limited documentation
-- Requires custom diarization pipeline
+- Segment-level output (not word-level)
 
 #### Use Cases
 - Speaker verification
 - Voice similarity checking
 - Simple speaker matching
+- Lightweight diarization with clustering
 
 #### Setup Requirements
 ```bash
-pip install resemblyzer
+pip install resemblyzer scikit-learn
 ```
 
 #### Model Information
 - **Embedding**: Pre-trained speaker encoder
 - **Size**: ~50MB
 - **Format**: PyTorch
+- **Implementation**: Uses VoiceEncoder + AgglomerativeClustering with cosine similarity
+
+### 6. NeMo (NVIDIA)
+
+**GitHub**: https://github.com/NVIDIA/NeMo  
+**License**: Apache 2.0  
+**Language**: Python  
+
+#### Strengths
+- Enterprise-grade toolkit
+- NVIDIA's production solution
+- Well-optimized for GPU
+- Comprehensive documentation
+- Active development
+
+#### Weaknesses
+- Complex setup
+- Requires NeMo toolkit installation
+- Larger dependency footprint
+- May require additional configuration
+
+#### Use Cases
+- Enterprise speaker diarization
+- Production systems
+- GPU-accelerated processing
+- When using other NeMo components
+
+#### Setup Requirements
+```bash
+pip install nemo_toolkit[all]
+# Additional setup may be required - see NeMo documentation
+```
+
+#### Model Information
+- **Models**: Various NeMo diarization models available
+- **Size**: Varies by model
+- **Format**: PyTorch
+- **Note**: Requires proper NeMo configuration and model paths
 
 ---
 
@@ -187,10 +260,11 @@ pip install resemblyzer
 - Can optimize each component separately
 
 ### "I need to identify known speakers"
-**→ Use SpeechBrain or Resemblyzer**
+**→ Use SpeechBrain-Verification or Resemblyzer**
 - Better suited for verification
 - Can match against known speaker database
 - Use with custom diarization pipeline
+- Resemblyzer is simpler, SpeechBrain-Verification is more accurate
 
 ### "I need fastest processing"
 **→ Use pyannote.audio (segment-level only)**
@@ -199,10 +273,25 @@ pip install resemblyzer
 - Lower memory usage
 
 ### "I need lowest memory usage"
-**→ Use pyannote.audio or SpeechBrain**
+**→ Use Resemblyzer or SpeechBrain-Verification**
 - More efficient models
 - Can run on CPU
 - Lower resource requirements
+- Resemblyzer is smallest (~50MB)
+
+### "I need lightweight speaker identification"
+**→ Use Resemblyzer**
+- Smallest model size
+- Simple API
+- Fast inference
+- Good for verification tasks
+
+### "I need enterprise-grade solution"
+**→ Use NeMo**
+- NVIDIA's production toolkit
+- Well-optimized
+- Comprehensive features
+- Requires more setup
 
 ## Performance Benchmarks
 

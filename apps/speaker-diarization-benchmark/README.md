@@ -26,12 +26,33 @@ A comprehensive benchmark tool for comparing open source speaker diarization and
 - **Models**: Whisper (base/large) + pyannote diarization
 - **License**: MIT
 
-### 3. SpeechBrain
-- **Best for**: Speaker verification and identification
-- **Pros**: End-to-end toolkit, good for known speakers
-- **Cons**: Requires custom diarization pipeline, not built-in
+### 3. SpeechBrain-Verification ⭐ (Speaker ID)
+- **Best for**: Speaker verification and identification with known speakers
+- **Pros**: Excellent speaker embeddings, good for verification tasks
+- **Cons**: Requires custom segmentation pipeline, clustering needed
 - **Model**: `speechbrain/spkrec-ecapa-voxceleb`
 - **License**: Apache 2.0
+- **Implementation**: Uses speaker embeddings + clustering for diarization
+
+### 4. SpeechBrain-Diarization
+- **Best for**: SpeechBrain's built-in diarization (if available)
+- **Pros**: Integrated with SpeechBrain ecosystem
+- **Cons**: May require additional setup/configuration
+- **License**: Apache 2.0
+
+### 5. Resemblyzer ⭐ (Speaker ID)
+- **Best for**: Speaker verification and identification
+- **Pros**: Simple API, lightweight, good embeddings
+- **Cons**: Requires custom segmentation, clustering needed
+- **License**: MIT
+- **Implementation**: Uses voice encoder + clustering for diarization
+
+### 6. NeMo (NVIDIA)
+- **Best for**: Enterprise-grade speaker diarization
+- **Pros**: NVIDIA's production toolkit, well-optimized
+- **Cons**: Requires NeMo installation, more complex setup
+- **License**: Apache 2.0
+- **Note**: Requires `nemo_toolkit[all]` installation
 
 ## Installation
 
@@ -140,13 +161,18 @@ def map_speaker_to_user(speaker_id: str, audio_metadata: dict) -> str:
 |----------|-----------|----------|-------|--------|------------------|
 | **pyannote.audio** | ⚠️ Needs ASR | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | Medium |
 | **WhisperX** | ✅ Built-in | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ | Low |
-| **SpeechBrain** | ❌ Custom | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | High |
+| **SpeechBrain-Verification** | ❌ Custom | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Medium |
+| **SpeechBrain-Diarization** | ❌ Custom | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | High |
+| **Resemblyzer** | ❌ Custom | ⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | Low |
+| **NeMo** | ⚠️ Custom | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | High |
 
 ### Recommendations
 
 - **For word-level timestamps**: Use **WhisperX** (simplest, all-in-one)
 - **For production accuracy**: Use **pyannote.audio** + separate ASR (Whisper)
-- **For known speakers**: Use **SpeechBrain** with custom pipeline
+- **For known speakers/verification**: Use **SpeechBrain-Verification** or **Resemblyzer**
+- **For lightweight speaker ID**: Use **Resemblyzer** (simplest setup)
+- **For enterprise/production**: Consider **NeMo** (NVIDIA's toolkit)
 
 ## Performance Benchmarks
 
