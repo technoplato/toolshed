@@ -205,6 +205,29 @@ Example results on a 5-minute audio file with 2 speakers:
        └──► Benchmark Runner ─► JSON/CSV Output
 ```
 
+## Speaker Verification
+
+After running the benchmark, you can use the verification page to review and correct speaker assignments:
+
+```bash
+# Generate verification page
+uv run python src/generate_verification_page.py \
+    data/results/sample_audio_results.json \
+    data/sample_audio.wav \
+    --speaker-db data/speaker_database.json
+
+# Open in browser
+open data/results/sample_audio_results_verification.html
+```
+
+The verification page allows you to:
+- Play audio clips for each segment
+- Assign speakers using autocomplete from your database
+- Filter segments by speaker ID
+- Save verified results as JSON or CSV
+
+See [VERIFICATION_GUIDE.md](VERIFICATION_GUIDE.md) for detailed instructions.
+
 ## Development
 
 ### Running Tests
