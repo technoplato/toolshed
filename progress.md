@@ -24,6 +24,17 @@
 
 ---
 
+### December 1st, 2025 at 10:17:58 p.m.
+
+🧹 Updated script to always include progress.md in referenced commit
+
+[Commit](https://github.com/technoplato/toolshed/commit/7e58b2f)
+
+- Now always amends commit so GitHub link shows both changes and progress.md
+- Uses --force-with-lease for safe history rewrite
+
+
+
 ### December 1st, 2025 at 10:16:27 p.m.
 
 🧹 Fixed commit reference logic
