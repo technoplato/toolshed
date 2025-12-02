@@ -24,6 +24,17 @@
 
 ---
 
+### December 1st, 2025 at 10:16:27 p.m.
+
+🧹 Fixed commit reference logic
+
+[Commit](https://github.com/technoplato/toolshed/commit/b5d227e)
+
+- Now references parent commit when HEAD is a progress.md commit
+- Ensures entries link to commits with actual changes, not progress.md updates
+
+
+
 ### December 1st, 2025 at 10:16:08 p.m.
 
 🧹 Fixed commit hash reference in progress entries
