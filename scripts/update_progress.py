@@ -229,11 +229,17 @@ def push_changes():
             content = f.read()
         # Find and replace the commit reference in the most recent entry
         # Pattern to match commit links/hashes in the format [Commit](url/commit/HASH) or Commit: HASH
-        # Use a simpler pattern that captures the hash
-        old_hash_pattern = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
-        content = re.sub(old_hash_pattern, r'\1' + new_hash + r'\3', content, count=1)
+        # Match the full URL pattern more carefully
+        old_hash_pattern = r'(\[Commit\]\(https?://[^/]+/[^/]+/[^/]+/commit/)([a-f0-9]+)(\))'
+        if re.search(old_hash_pattern, content):
+            content = re.sub(old_hash_pattern, lambda m: m.group(1) + new_hash + m.group(3), content, count=1)
+        else:
+            # Fallback to simpler pattern if URL format is different
+            old_hash_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
+            content = re.sub(old_hash_pattern_simple, lambda m: m.group(1) + new_hash + m.group(3), content, count=1)
         old_hash_pattern2 = r'(Commit: )([a-f0-9]+)'
-        content = re.sub(old_hash_pattern2, r'\1' + new_hash, content, count=1)
+        if re.search(old_hash_pattern2, content) and '[Commit]' not in content.split('\n\n')[1] if len(content.split('\n\n')) > 1 else True:
+            content = re.sub(old_hash_pattern2, lambda m: m.group(1) + new_hash, content, count=1)
         with open(local_progress, 'w') as f:
             f.write(content)
         
@@ -243,8 +249,13 @@ def push_changes():
         if global_path.exists():
             with open(global_path, 'r') as f:
                 global_content = f.read()
-            global_content = re.sub(old_hash_pattern, r'\1' + new_hash + r'\3', global_content, count=1)
-            global_content = re.sub(old_hash_pattern2, r'\1' + new_hash, global_content, count=1)
+            if re.search(old_hash_pattern, global_content):
+                global_content = re.sub(old_hash_pattern, lambda m: m.group(1) + new_hash + m.group(3), global_content, count=1)
+            else:
+                old_hash_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
+                global_content = re.sub(old_hash_pattern_simple, lambda m: m.group(1) + new_hash + m.group(3), global_content, count=1)
+            if re.search(old_hash_pattern2, global_content) and '[Commit]' not in global_content.split('\n\n')[1] if len(global_content.split('\n\n')) > 1 else True:
+                global_content = re.sub(old_hash_pattern2, lambda m: m.group(1) + new_hash, global_content, count=1)
             with open(global_path, 'w') as f:
                 f.write(global_content)
         
@@ -258,8 +269,16 @@ def push_changes():
         # Update progress.md one more time with the final hash
         with open(local_progress, 'r') as f:
             content = f.read()
-        content = re.sub(old_hash_pattern, r'\1' + final_hash + r'\3', content, count=1)
-        content = re.sub(old_hash_pattern2, r'\1' + final_hash, content, count=1)
+        # Use the same pattern matching logic
+        final_hash_pattern = r'(\[Commit\]\(https?://[^/]+/[^/]+/[^/]+/commit/)([a-f0-9]+)(\))'
+        if re.search(final_hash_pattern, content):
+            content = re.sub(final_hash_pattern, lambda m: m.group(1) + final_hash + m.group(3), content, count=1)
+        else:
+            final_hash_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
+            content = re.sub(final_hash_pattern_simple, lambda m: m.group(1) + final_hash + m.group(3), content, count=1)
+        final_hash_pattern2 = r'(Commit: )([a-f0-9]+)'
+        if re.search(final_hash_pattern2, content) and '[Commit]' not in content.split('\n\n')[1] if len(content.split('\n\n')) > 1 else True:
+            content = re.sub(final_hash_pattern2, lambda m: m.group(1) + final_hash, content, count=1)
         with open(local_progress, 'w') as f:
             f.write(content)
         
@@ -267,8 +286,13 @@ def push_changes():
         if global_path.exists():
             with open(global_path, 'r') as f:
                 global_content = f.read()
-            global_content = re.sub(old_hash_pattern, r'\1' + final_hash + r'\3', global_content, count=1)
-            global_content = re.sub(old_hash_pattern2, r'\1' + final_hash, global_content, count=1)
+            if re.search(final_hash_pattern, global_content):
+                global_content = re.sub(final_hash_pattern, lambda m: m.group(1) + final_hash + m.group(3), global_content, count=1)
+            else:
+                final_hash_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
+                global_content = re.sub(final_hash_pattern_simple, lambda m: m.group(1) + final_hash + m.group(3), global_content, count=1)
+            if re.search(final_hash_pattern2, global_content) and '[Commit]' not in global_content.split('\n\n')[1] if len(global_content.split('\n\n')) > 1 else True:
+                global_content = re.sub(final_hash_pattern2, lambda m: m.group(1) + final_hash, global_content, count=1)
             with open(global_path, 'w') as f:
                 f.write(global_content)
         
