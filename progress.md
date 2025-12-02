@@ -30,7 +30,7 @@
 
 ✅ Testing post-push hash reference update
 
-[Commit](https://github.com/technoplato/toolshed/commit/29cb64e)
+[Commit](https://github.com/technoplato/toolshed/commit/6917770)
 
 - Hash should reference commit that exists on GitHub
 - Follow-up commit updates reference if needed
