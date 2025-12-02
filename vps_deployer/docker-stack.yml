@@ -1,0 +1,88 @@
+version: "3.8"
+
+services:
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.swarmMode=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      # - "8080:8080" # Dashboard exposed via router below
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # Force a newer API version because Docker 29+ requires min 1.44
+      - DOCKER_API_VERSION=1.44
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.api.rule=PathPrefix(`/api`) || PathPrefix(`/dashboard`)"
+        - "traefik.http.routers.api.service=api@internal"
+        - "traefik.http.routers.api.middlewares=auth"
+        - "traefik.http.routers.api.entrypoints=web"
+        - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USERS}"
+
+  whoami:
+    image: traefik/whoami
+    deploy:
+      replicas: 1
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.whoami.rule=PathPrefix(`/`)"
+        - "traefik.http.routers.whoami.entrypoints=web"
+        - "traefik.http.routers.whoami.middlewares=auth"
+        - "traefik.http.services.whoami.loadbalancer.server.port=80"
+        # Basic Auth Middleware
+        # Replace the user:hash below.
+        # Default is admin:secret
+        # Generated with: echo $(htpasswd -nb admin secret) | sed -e s/\\$/\\$\\$/g
+        - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USERS}"
+
+  fastapi:
+    image: my-fastapi:latest
+    environment:
+      - API_KEY=${API_KEY}
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.fastapi.rule=PathPrefix(`/fastapi`)"
+        - "traefik.http.routers.fastapi.entrypoints=web"
+        - "traefik.http.routers.fastapi.middlewares=fastapi-strip"
+        - "traefik.http.middlewares.fastapi-strip.stripprefix.prefixes=/fastapi"
+        - "traefik.http.services.fastapi.loadbalancer.server.port=8000"
+
+  transcriber:
+    image: ${TRANSCRIBER_IMAGE:-ghcr.io/psuedonymous/toolshed-transcriber:latest}
+    volumes:
+      - transcriptions_data:/app/transcriptions
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.transcriber.rule=Host(`transcriber.5.161.84.236.nip.io`)"
+        - "traefik.http.routers.transcriber.entrypoints=web"
+        - "traefik.http.services.transcriber.loadbalancer.server.port=8000"
+        # Optional: Add Basic Auth if desired, but user asked for VPN access (public IP + VPN is tricky without firewall rules)
+        # For now, let's protect it with the same Basic Auth as a baseline
+        - "traefik.http.routers.transcriber.middlewares=auth"
+        - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USERS}"
+
+volumes:
+  transcriptions_data:
+
+networks:
+  default:
+    driver: overlay

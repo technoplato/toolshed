@@ -1,0 +1,20 @@
+{
+  "pywhispercpp": {
+    "time": 1.082273801167806,
+    "wer": 0.0,
+    "text": "Hello? *BEEP* Can't handle the tech This tech is off the fucking hook Hello? Hi, how are you? Good! I was looking on the internet and I saw you were selling a mannequin I don't know, what's the... what's telling me more? You're not selling a mannequin? Um, no, I recently sold some farms, but I can't think of one that I have listed right now Ah, shoot! It says it says Glenn Eagles at the bottom of it *GIGGLES* That is a picture of a mannequin That's a mannequin, yes, I am selling that, yes You're selling a picture of it or the actual mannequin? The actual mannequin Okay, so I have a few questions about the mannequin *GIGGLES* It looks here like it has a very nice... uh...",
+    "has_words": false
+  },
+  "faster-whisper": {
+    "time": 8.139594316482544,
+    "wer": 0.14615384615384616,
+    "text": "Hello?  Can't handle the tech.  This tech is off the fucking hook.  Hello?  Hi, how are you?  Good.  I was looking on the internet and I saw you were selling a mannequin?  I don't know, what's the, what's telling me more?  You're not selling a mannequin?  Um, no, I've recently sold some farms, but I can't think of one that I have listed right now.  Ah, shoot.  It says, it says Glen Eagles at the bottom of it.  That is a picture of a mannequin.  That's a mannequin, yes, I am selling that, yes.  You're selling a picture of it or the actual mannequin?  The actual mannequin.  Okay, so I have a few questions about the mannequin.  It looks here like it has a very nice...",
+    "has_words": true
+  },
+  "mlx-whisper": {
+    "time": 1.5730896790822346,
+    "wer": 0.16153846153846155,
+    "text": "Hello? Can't handle the tech. This tech is off the fucking hook. Hello? Hi, how are you? Good. I was looking on the internet and I saw you were selling a mannequin. I don't know, what's the, what's telling me more? You're not selling a mannequin? No, I've recently sold some forms, but I can't think of one that I have listed right now. Ah, shoot. It says it says Glenn Eagles at the bottom of it. That is a picture of a mannequin. That's a mannequin, yes, I am selling that, yes. You're selling a picture of it or the actual mannequin? The actual mannequin. Okay, so I have a few questions about the mannequin. It looks here like it has a very nice,",
+    "has_words": true
+  }
+}

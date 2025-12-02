@@ -1,0 +1,20 @@
+{
+    "name": "log-watcher",
+    "version": "1.0.0",
+    "description": "Tail logs from InstantDB",
+    "main": "src/index.ts",
+    "scripts": {
+        "start": "ts-node src/index.ts",
+        "dev": "nodemon --exec ts-node src/index.ts"
+    },
+    "dependencies": {
+        "@instantdb/admin": "^0.13.2",
+        "dotenv": "^16.4.5"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.24",
+        "nodemon": "^3.1.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3"
+    }
+}

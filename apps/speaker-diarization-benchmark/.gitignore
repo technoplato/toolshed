@@ -1,0 +1,16 @@
+# Ignore large audio downloads
+data/audio/
+data/downloads/
+
+# Ignore cache
+data/cache/
+__pycache__/
+.venv/
+.DS_Store
+
+# Ignore MLX models
+mlx_models/
+
+# Keep clips and embeddings
+!data/clips/
+!data/speaker_embeddings.json

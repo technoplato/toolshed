@@ -1,0 +1,157 @@
+2025-12-01 12:22:09,525 - INFO - Loading embedding model...
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/lightning/pytorch/utilities/migration/migration.py:208: You have multiple `ModelCheckpoint` callback states in this checkpoint, but we found state keys that would end up colliding with each other after an upgrade, which means we can't differentiate which of your checkpoint callbacks needs which states. At least one of your `ModelCheckpoint` callbacks will not be able to reload the state.
+Lightning automatically upgraded your loaded checkpoint from v1.2.7 to v2.6.0. To apply the upgrade to your files permanently, run `python -m lightning.pytorch.utilities.upgrade_checkpoint ../../../../../../.cache/huggingface/hub/models--pyannote--embedding/snapshots/4db4899737a38b2d618bbd74350915aa10293cb2/pytorch_model.bin`
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/pyannote/audio/core/model.py:636: UserWarning: Model has been trained with a task-dependent loss function. Set 'strict' to False to load the model without its loss function and prevent this warning from appearing. 
+  warnings.warn(msg)
+Lightning automatically upgraded your loaded checkpoint from v1.2.7 to v2.6.0. To apply the upgrade to your files permanently, run `python -m lightning.pytorch.utilities.upgrade_checkpoint ../../../../../../.cache/huggingface/hub/models--pyannote--embedding/snapshots/4db4899737a38b2d618bbd74350915aa10293cb2/pytorch_model.bin`
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/lightning/pytorch/core/saving.py:197: Found keys that are not in the model state dict but in the checkpoint: ['loss_func.W']
+2025-12-01 12:22:10,202 - INFO - Extracting embeddings for 74 segments...
+2025-12-01 12:22:10,202 - INFO - Processing segment 0: 1.46s (0.0-1.46)
+2025-12-01 12:22:10,225 - ERROR - Error processing segment 0: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,225 - INFO - Processing segment 1: 0.56s (1.82-2.38)
+2025-12-01 12:22:10,230 - ERROR - Error processing segment 1: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,230 - INFO - Processing segment 2: 0.34s (2.58-2.92)
+2025-12-01 12:22:10,235 - ERROR - Error processing segment 2: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,235 - INFO - Processing segment 3: 0.88s (3.3000000000000007-4.18)
+2025-12-01 12:22:10,240 - ERROR - Error processing segment 3: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,240 - INFO - Processing segment 4: 1.20s (4.3-5.5)
+2025-12-01 12:22:10,245 - ERROR - Error processing segment 4: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,245 - INFO - Processing segment 5: 0.14s (5.78-5.92)
+2025-12-01 12:22:10,245 - WARNING - Skipping short segment 5: 0.14s (Start: 5.78, End: 5.92)
+2025-12-01 12:22:10,245 - INFO - Processing segment 6: 0.86s (6.06-6.92)
+2025-12-01 12:22:10,250 - ERROR - Error processing segment 6: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,250 - INFO - Processing segment 7: 0.80s (7.04-7.84)
+2025-12-01 12:22:10,255 - ERROR - Error processing segment 7: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,256 - INFO - Processing segment 8: 1.72s (8.42-10.14)
+2025-12-01 12:22:10,261 - ERROR - Error processing segment 8: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,261 - INFO - Processing segment 9: 0.42s (10.76-11.18)
+2025-12-01 12:22:10,266 - ERROR - Error processing segment 9: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,266 - INFO - Processing segment 10: 0.74s (11.18-11.92)
+2025-12-01 12:22:10,271 - ERROR - Error processing segment 10: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,271 - INFO - Processing segment 11: 1.62s (12.22-13.84)
+2025-12-01 12:22:10,276 - ERROR - Error processing segment 11: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,276 - INFO - Processing segment 12: 0.94s (13.98-14.92)
+2025-12-01 12:22:10,281 - ERROR - Error processing segment 12: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,281 - INFO - Processing segment 13: 1.76s (15.16-16.92)
+2025-12-01 12:22:10,286 - ERROR - Error processing segment 13: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,286 - INFO - Processing segment 14: 0.28s (17.08-17.36)
+2025-12-01 12:22:10,292 - ERROR - Error processing segment 14: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,292 - INFO - Processing segment 15: 1.90s (17.76-19.66)
+2025-12-01 12:22:10,297 - ERROR - Error processing segment 15: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,297 - INFO - Processing segment 16: 1.76s (20.18-21.94)
+2025-12-01 12:22:10,303 - ERROR - Error processing segment 16: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,303 - INFO - Processing segment 17: 2.84s (22.14-24.98)
+2025-12-01 12:22:10,308 - ERROR - Error processing segment 17: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,308 - INFO - Processing segment 18: 1.20s (25.7-26.9)
+2025-12-01 12:22:10,313 - ERROR - Error processing segment 18: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,313 - INFO - Processing segment 19: 1.04s (26.9-27.94)
+2025-12-01 12:22:10,318 - ERROR - Error processing segment 19: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,318 - INFO - Processing segment 20: 0.48s (29.64-30.12)
+2025-12-01 12:22:10,323 - ERROR - Error processing segment 20: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,324 - INFO - Processing segment 21: 3.04s (30.78-33.82)
+2025-12-01 12:22:10,329 - ERROR - Error processing segment 21: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,329 - INFO - Processing segment 22: 1.58s (33.82-35.4)
+2025-12-01 12:22:10,334 - ERROR - Error processing segment 22: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,334 - INFO - Processing segment 23: 0.38s (35.4-35.78)
+2025-12-01 12:22:10,340 - ERROR - Error processing segment 23: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,340 - INFO - Processing segment 24: 0.72s (36.22-36.94)
+2025-12-01 12:22:10,346 - ERROR - Error processing segment 24: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,346 - INFO - Processing segment 25: 0.46s (36.94-37.4)
+2025-12-01 12:22:10,352 - ERROR - Error processing segment 25: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,352 - INFO - Processing segment 26: 0.86s (37.56-38.42)
+2025-12-01 12:22:10,358 - ERROR - Error processing segment 26: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,358 - INFO - Processing segment 27: 1.00s (38.5-39.5)
+2025-12-01 12:22:10,364 - ERROR - Error processing segment 27: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,364 - INFO - Processing segment 28: 0.72s (39.78-40.5)
+2025-12-01 12:22:10,369 - ERROR - Error processing segment 28: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,369 - INFO - Processing segment 29: 0.70s (40.5-41.2)
+2025-12-01 12:22:10,375 - ERROR - Error processing segment 29: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,375 - INFO - Processing segment 30: 2.30s (41.36-43.66)
+2025-12-01 12:22:10,380 - ERROR - Error processing segment 30: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,380 - INFO - Processing segment 31: 1.16s (43.82-44.98)
+2025-12-01 12:22:10,386 - ERROR - Error processing segment 31: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,386 - INFO - Processing segment 32: 1.46s (44.98-46.44)
+2025-12-01 12:22:10,391 - ERROR - Error processing segment 32: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,391 - INFO - Processing segment 33: 3.48s (46.44-49.92)
+2025-12-01 12:22:10,397 - ERROR - Error processing segment 33: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,397 - INFO - Processing segment 34: 0.56s (50.3-50.86)
+2025-12-01 12:22:10,402 - ERROR - Error processing segment 34: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,402 - INFO - Processing segment 35: 1.42s (51.14-52.56)
+2025-12-01 12:22:10,408 - ERROR - Error processing segment 35: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,408 - INFO - Processing segment 36: 0.86s (52.56-53.42)
+2025-12-01 12:22:10,413 - ERROR - Error processing segment 36: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,413 - INFO - Processing segment 37: 0.48s (54.06-54.54)
+2025-12-01 12:22:10,419 - ERROR - Error processing segment 37: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,419 - INFO - Processing segment 38: 0.86s (54.54-55.4)
+2025-12-01 12:22:10,424 - ERROR - Error processing segment 38: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,424 - INFO - Processing segment 39: 1.18s (55.92-57.1)
+2025-12-01 12:22:10,430 - ERROR - Error processing segment 39: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,430 - INFO - Processing segment 40: 1.34s (57.1-58.44)
+2025-12-01 12:22:10,436 - ERROR - Error processing segment 40: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,436 - INFO - Processing segment 41: 0.42s (58.74-59.16)
+2025-12-01 12:22:10,442 - ERROR - Error processing segment 41: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,442 - INFO - Processing segment 42: 0.82s (59.16-59.98)
+2025-12-01 12:22:10,447 - ERROR - Error processing segment 42: Placeholder storage has not been allocated on MPS device!
+2025-12-01 12:22:10,448 - INFO - Processing segment 43: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 43: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 44: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 44: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 45: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 45: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 46: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 46: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 47: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 47: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 48: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 48: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 49: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 49: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 50: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 50: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 51: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 51: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 52: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 52: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 53: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 53: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 54: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 54: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 55: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 55: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 56: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 56: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 57: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 57: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 58: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 58: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 59: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 59: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 60: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 60: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 61: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 61: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 62: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 62: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 63: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 63: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 64: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 64: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 65: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 65: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 66: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 66: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 67: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 67: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 68: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 68: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 69: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 69: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 70: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 70: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 71: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 71: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 72: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 72: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - INFO - Processing segment 73: 0.00s (59.96-59.96)
+2025-12-01 12:22:10,448 - WARNING - Skipping short segment 73: 0.00s (Start: 59.96, End: 59.96)
+2025-12-01 12:22:10,448 - ERROR - No embeddings generated.

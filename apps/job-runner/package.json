@@ -1,0 +1,23 @@
+{
+    "name": "job-runner",
+    "version": "1.0.0",
+    "description": "Node.js server to listen to InstantDB and trigger jobs",
+    "main": "src/index.ts",
+    "scripts": {
+        "start": "ts-node src/index.ts",
+        "dev": "nodemon src/index.ts"
+    },
+    "dependencies": {
+        "@instantdb/admin": "^0.22.73",
+        "@instantdb/core": "^0.22.73",
+        "dotenv": "^16.6.1",
+        "node-fetch": "^3.3.2",
+        "ws": "^8.18.3"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.24",
+        "nodemon": "^3.1.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3"
+    }
+}

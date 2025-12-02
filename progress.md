@@ -1,0 +1,98 @@
+# Progress Log
+
+**Instructions:**
+- Append new entries to the TOP of the log (below this header).
+- Format: `### [YYYY-MM-DD HH:mm:ss] <Emoji> <Title>`
+- Include a link to the commit if available.
+- Use `scripts/update-progress.js` to add entries.
+- **TASKS.md Guide**:
+    - **Today**: Tasks for the current session.
+    - **Right Now**: The single immediate focus.
+    - **Short Term**: Tasks for the next few days.
+    - **Long Term**: Future goals.
+    - *Agents must update TASKS.md as progress is made.*
+
+**Emoji Key:**
+- 🏗️ `[:construction:]` Work in Progress / New Feature
+- 🐛 `[:bug:]` Bug Fix
+- ❓ `[:question:]` Question Posed
+- 🗣️ `[:speaking_head:]` Discussion / Answer
+- 🧠 `[:brain:]` Decision Made
+- 📝 `[:memo:]` Documentation
+- ✅ `[:white_check_mark:]` Verification / Test Pass
+- 🚀 `[:rocket:]` Deployment / Release
+
+---
+
+### December 1st, 2025 at 9:30:15 p.m.
+
+✅ Testing push functionality
+
+[Commit](https://github.com/technoplato/toolshed/commit/3dc79ef)
+
+- Testing the --push flag
+
+
+
+### December 1st, 2025 at 9:29:38 p.m.
+
+✅ Testing the update_progress script
+
+[Commit](https://github.com/technoplato/toolshed/commit/3dc79ef)
+
+- Quick test run
+
+
+
+### December 1st, 2025 at 9:23:45 p.m.
+
+✅ Verified new date/line format
+
+[Commit](https://github.com/technoplato/toolshed/commit/3dc79ef)
+
+- Checked formatting of commit link
+- Checked multi-line structure
+
+
+
+### [December 1st, 2025 at 9:22:46 p.m.] ✅ Testing date format and push [[Commit](https://github.com/technoplato/toolshed/commit/d56daaa)]
+- Verified ordinal date format
+- Verified global log project context
+
+
+
+### [2025-12-01 21:16:52] ✅ Testing update script [[Commit](https://github.com/technoplato/toolshed/commit/d56daaa)]
+- Verifying gh CLI integration
+- Verifying uv execution
+- Verifying file headers
+
+
+
+### [2025-12-01 03:51:22] UNKNOWN 
+- Downloaded 5 benchmark videos (audio only)
+- Created 'prepare_ground_truth.py' to extract clips and transcribe with pywhispercpp
+- Built 'ground_truth_ui.html' for manual verification
+- Implemented multi-model transcription comparison (base vs small)
+- Integrating pyannote diarization (permission pending)
+- Commit: `6ef4985`
+
+### [2025-11-30 12:39:11] ✅ Verified Benchmark & Logging
+- Commit: `033368b`
+- Ran benchmark on Rick Roll audio
+- Verified logs in log-watcher
+- Fixed pyproject.toml and logging issues
+
+### [2025-11-30 12:32:16] 🏗️ Implemented Centralized Logging & React App
+- Commit: `033368b`
+- Created apps/log-watcher
+- Updated Python benchmark to use InstantDB logging
+- Initialized apps/swiss-army-knife
+
+### [2025-11-30 12:26:18] 🏗️ Starting Execution: Benchmark & Logging
+- Commit: `a339b9c`
+- Fetching benchmark code
+- Initializing log watcher
+
+### [2025-11-30 07:20:00] 🏗️ Initializing Project Structure
+- Created `AGENTS.md`, `README.md`, `TASKS.md`, and `PROGRESS.md`.
+- Defining workflows for Agents and Logging.

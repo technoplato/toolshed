@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ground Truth Creator</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 20px; background: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; }
+        audio { width: 100%; margin: 20px 0; }
+        #transcript { 
+            display: flex; 
+            gap: 20px; 
+            overflow-x: auto; 
+        }
+        .model-column { 
+            flex: 1; 
+            min-width: 300px; 
+            background: #fff; 
+            padding: 10px; 
+            border-radius: 4px; 
+            border: 1px solid #ddd; 
+        }
+        .segment { 
+            cursor: pointer; 
+            padding: 2px 4px; 
+            border-radius: 4px; 
+            transition: background 0.2s;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .segment:hover { background: #e0e0e0; }
+        .segment.active { background: #d0e8ff; border-bottom: 2px solid #2196f3; }
+        .controls { margin-bottom: 20px; }
+        button { padding: 8px 16px; cursor: pointer; background: #2196f3; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ground Truth Creator</h1>
+        
+        <div class="controls">
+            <select id="clip-select" onchange="loadClipById(this.value)" style="padding: 8px; border-radius: 4px; max-width: 400px;">
+                <option value="">Select Clip...</option>
+            </select>
+            <button id="save-btn" onclick="saveData()" style="background-color: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Save Ground Truth</button>
+            <button onclick="showUnlabeled()" style="background-color: #FF9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-left: 10px;">Unlabeled Speakers</button>
+            <span id="status" style="margin-left: 10px; color: #666;"></span>
+        </div>
+
+        <div id="player-container" style="display:none;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <h3 id="clip-title" style="margin: 0;"></h3>
+                <a id="youtube-link" href="#" target="_blank" style="display: none; color: #f00; font-weight: bold; text-decoration: none;">Watch on YouTube ↗</a>
+            </div>
+            <div id="clip-meta" style="color: #666; font-size: 0.9em; margin-bottom: 10px;"></div>
+            
+            <div id="speaker-map" style="margin: 15px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                <!-- Speaker inputs will go here -->
+            </div>
+
+            <audio id="audio" controls></audio>
+            
+            <div id="transcript"></div>
+        </div>
+        
+        <!-- Unlabeled Speakers Modal/View -->
+        <div id="unlabeled-view" style="display:none; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 20px;">
+            <h2>Unlabeled Speakers Dashboard</h2>
+            <div id="unlabeled-list"></div>
+        </div>
+        
+        <datalist id="known-speakers"></datalist>
+    </div>
+
+    <script>
+        let manifestData = [];
+        let currentClip = null;
+        let speakerMap = {}; // SPEAKER_00 -> "Ilya Sutskever"
+
+        const audio = document.getElementById('audio');
+        const transcriptDiv = document.getElementById('transcript');
+        const speakerMapDiv = document.getElementById('speaker-map');
+        const statusSpan = document.getElementById('status');
+        const clipSelect = document.getElementById('clip-select');
+        const clipTitle = document.getElementById('clip-title');
+        const clipMeta = document.getElementById('clip-meta');
+        const youtubeLink = document.getElementById('youtube-link');
+        const unlabeledView = document.getElementById('unlabeled-view');
+        const unlabeledList = document.getElementById('unlabeled-list');
+        const knownSpeakersList = document.getElementById('known-speakers');
+
+        function updateKnownSpeakers() {
+            knownSpeakersList.innerHTML = '';
+            const uniqueNames = new Set();
+            
+            // 1. Add from current session map
+            Object.values(speakerMap).forEach(name => uniqueNames.add(name));
+            
+            // 2. Add from all clips in manifest
+            if (manifestData && manifestData.length > 0) {
+                manifestData.forEach(clip => {
+                    if (clip.transcriptions) {
+                        Object.values(clip.transcriptions).forEach(segments => {
+                            if (Array.isArray(segments)) {
+                                segments.forEach(seg => {
+                                    if (seg.speaker) uniqueNames.add(seg.speaker);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            Array.from(uniqueNames).sort().forEach(name => {
+                // Filter out machine-generated IDs
+                if (!name || name.startsWith('SEG_SPK_') || name.startsWith('SPEAKER_') || name.startsWith('UNKNOWN_')) return;
+                const option = document.createElement('option');
+                option.value = name;
+                knownSpeakersList.appendChild(option);
+            });
+        }
+
+        // Auto-load data
+        window.onload = loadData;
+
+        // Unified ontimeupdate handler
+        audio.ontimeupdate = () => {
+            const time = audio.currentTime;
+            
+            // 1. Highlight active speaker in list
+            let activeSpeaker = null;
+            if (currentClip && currentClip.transcriptions) {
+                const models = Object.keys(currentClip.transcriptions);
+                let bestModel = models[0];
+                if (models.includes('mlx_whisper_turbo_seg_level')) bestModel = 'mlx_whisper_turbo_seg_level';
+                else if (models.includes('mlx_whisper_turbo')) bestModel = 'mlx_whisper_turbo';
+                else if (models.includes('pywhispercpp.small')) bestModel = 'pywhispercpp.small';
+
+                const segments = currentClip.transcriptions[bestModel] || [];
+                for (const seg of segments) {
+                    if (time >= seg.start && time <= seg.end) {
+                        activeSpeaker = seg.speaker;
+                        break;
+                    }
+                }
+            }
+            
+            document.querySelectorAll('.speaker-row').forEach(row => {
+                row.style.backgroundColor = 'transparent';
+                if (activeSpeaker && row.dataset.speaker === activeSpeaker) {
+                    row.style.backgroundColor = '#e8f5e9'; // Light green
+                }
+            });
+
+            // 2. Highlight active segment in transcript
+            document.querySelectorAll('.segment').forEach(seg => {
+                const start = parseFloat(seg.dataset.start);
+                const end = parseFloat(seg.dataset.end);
+                
+                if (time >= start && time < end) {
+                    seg.style.backgroundColor = '#e3f2fd';
+                    seg.style.borderBottom = '2px solid #2196f3';
+                } else {
+                    seg.style.backgroundColor = 'transparent';
+                    seg.style.borderBottom = 'none';
+                }
+            });
+        };
+
+        async function loadData() {
+            try {
+                console.log("Fetching manifest.json...");
+                const response = await fetch('manifest.json');
+                manifestData = await response.json();
+                console.log("Manifest loaded:", manifestData);
+                
+                // Populate select
+                clipSelect.innerHTML = '<option value="">Select Clip...</option>';
+                manifestData.forEach(clip => {
+                    const option = document.createElement('option');
+                    option.value = clip.id;
+                    // Enhanced Dropdown Label
+                    const title = clip.title || clip.id;
+                    const range = clip.start_time !== undefined ? `(${clip.start_time}s - ${clip.start_time + clip.duration}s)` : '';
+                    option.textContent = `${title} ${range}`;
+                    clipSelect.appendChild(option);
+                });
+
+                if (manifestData.length > 0) {
+                    const lastClipId = localStorage.getItem('lastClipId');
+                    const clipToLoad = manifestData.find(c => c.id === lastClipId) || manifestData[0];
+                    loadClip(clipToLoad);
+                    clipSelect.value = clipToLoad.id;
+                } else {
+                    statusSpan.textContent = "No clips found in manifest.";
+                }
+            } catch (e) {
+                console.error(e);
+                statusSpan.textContent = "Error loading manifest.json. Make sure you are running a local server.";
+            }
+        }
+        
+        function loadClipById(id) {
+            const clip = manifestData.find(c => c.id === id);
+            if (clip) {
+                loadClip(clip);
+                unlabeledView.style.display = 'none';
+                document.getElementById('player-container').style.display = 'block';
+            }
+        }
+
+        function loadClip(clipData) {
+            console.log("loadClip called with:", clipData);
+            currentClip = clipData;
+            localStorage.setItem('lastClipId', clipData.id);
+            document.getElementById('player-container').style.display = 'block';
+            
+            // Update Title and Metadata
+            clipTitle.textContent = clipData.title || clipData.id;
+            clipMeta.textContent = `ID: ${clipData.id} | Duration: ${clipData.duration}s`;
+            
+            // Update YouTube Link
+            if (clipData.original_url && clipData.original_url.includes('youtube')) {
+                youtubeLink.style.display = 'block';
+                // Append timestamp
+                const timeParam = clipData.start_time ? `&t=${Math.floor(clipData.start_time)}s` : '';
+                youtubeLink.href = clipData.original_url + timeParam;
+            } else {
+                youtubeLink.style.display = 'none';
+            }
+            
+            audio.src = clipData.id; 
+            
+            // Initialize speaker map from existing data
+            // Only reset if loading a new clip, but here we are loading a clip so yes.
+            speakerMap = {};
+            const speakers = new Set();
+            if (clipData.transcriptions) {
+                 Object.values(clipData.transcriptions).forEach(segments => {
+                     segments.forEach(s => {
+                         if (s.speaker) speakers.add(s.speaker);
+                     });
+                 });
+            }
+            
+            // Initialize map with identity
+            Array.from(speakers).sort().forEach(spk => {
+                speakerMap[spk] = spk;
+            });
+
+            updateKnownSpeakers();
+            renderSpeakerInputs();
+            renderTranscriptions(clipData.transcriptions);
+        }
+        
+        function renderSpeakerInputs() {
+            speakerMapDiv.innerHTML = '<strong>Identify Speakers:</strong><br>';
+            const speakers = Object.keys(speakerMap).sort();
+            
+            speakers.forEach(originalSpk => {
+                const row = document.createElement('div');
+                row.className = 'speaker-row';
+                row.dataset.speaker = originalSpk;
+                row.style.marginTop = '5px';
+                row.style.padding = '4px';
+                row.style.borderRadius = '4px';
+                
+                const label = document.createElement('span');
+                label.textContent = originalSpk + ': ';
+                label.style.width = '150px';
+                label.style.display = 'inline-block';
+                label.style.fontWeight = 'bold';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = 'Enter Name';
+                input.value = speakerMap[originalSpk];
+                input.oninput = (e) => {
+                    speakerMap[originalSpk] = e.target.value;
+                    renderTranscriptions(currentClip.transcriptions);
+                };
+                
+                row.appendChild(label);
+                row.appendChild(input);
+                speakerMapDiv.appendChild(row);
+            });
+        }
+        
+        function showUnlabeled() {
+            document.getElementById('player-container').style.display = 'none';
+            unlabeledView.style.display = 'block';
+            unlabeledList.innerHTML = '';
+            
+            // Find all unlabeled speakers across all clips
+            const unlabeled = [];
+            manifestData.forEach(clip => {
+                if (!clip.transcriptions) return;
+                
+                const models = Object.keys(clip.transcriptions);
+                let bestModel = models[0];
+                if (models.includes('mlx_whisper_turbo_seg_level')) bestModel = 'mlx_whisper_turbo_seg_level';
+                else if (models.includes('mlx_whisper_turbo')) bestModel = 'mlx_whisper_turbo';
+                else if (models.includes('pywhispercpp.small')) bestModel = 'pywhispercpp.small';
+                
+                const segments = clip.transcriptions[bestModel] || [];
+                const clipSpeakers = new Set();
+                segments.forEach(s => {
+                    if (s.speaker && s.speaker.startsWith('SPEAKER_')) {
+                        clipSpeakers.add(s.speaker);
+                    }
+                });
+                
+                clipSpeakers.forEach(spk => {
+                    unlabeled.push({ clip: clip, speaker: spk });
+                });
+            });
+            
+            if (unlabeled.length === 0) {
+                unlabeledList.textContent = "No unlabeled speakers found! Great job!";
+                return;
+            }
+            
+            unlabeled.forEach(item => {
+                const div = document.createElement('div');
+                div.style.marginBottom = '10px';
+                div.style.padding = '10px';
+                div.style.background = '#fff';
+                div.style.border = '1px solid #ddd';
+                div.style.borderRadius = '4px';
+                
+                // Find first segment for this speaker
+                const models = Object.keys(item.clip.transcriptions);
+                let bestModel = models[0];
+                if (models.includes('mlx_whisper_turbo_seg_level')) bestModel = 'mlx_whisper_turbo_seg_level';
+                else if (models.includes('mlx_whisper_turbo')) bestModel = 'mlx_whisper_turbo';
+                else if (models.includes('pywhispercpp.small')) bestModel = 'pywhispercpp.small';
+
+                const segments = item.clip.transcriptions[bestModel] || [];
+                const firstSeg = segments.find(s => s.speaker === item.speaker);
+                
+                const header = document.createElement('div');
+                header.style.display = 'flex';
+                header.style.alignItems = 'center';
+                header.style.marginBottom = '5px';
+ 
+                const title = document.createElement('strong');
+                title.textContent = `${item.speaker} in ${item.clip.title || item.clip.id}`;
+                title.style.marginRight = '10px';
+                
+                const playBtn = document.createElement('button');
+                playBtn.textContent = "▶ Play Sample";
+                playBtn.style.marginRight = '10px';
+                playBtn.style.cursor = 'pointer';
+                playBtn.onclick = () => {
+                    audio.src = item.clip.id;
+                    audio.currentTime = firstSeg.start;
+                    audio.play();
+                };
+ 
+                const labelBtn = document.createElement('button');
+                labelBtn.textContent = "Label This Clip";
+                labelBtn.style.cursor = 'pointer';
+                labelBtn.onclick = () => {
+                    loadClip(item.clip);
+                    clipSelect.value = item.clip.id;
+                    unlabeledView.style.display = 'none';
+                };
+                
+                header.appendChild(title);
+                header.appendChild(playBtn);
+                header.appendChild(labelBtn);
+                div.appendChild(header);
+                
+                if (firstSeg) {
+                    const preview = document.createElement('div');
+                    preview.style.fontSize = '0.9em';
+                    preview.style.color = '#666';
+                    preview.style.fontStyle = 'italic';
+                    preview.textContent = `"${firstSeg.text}"`;
+                    div.appendChild(preview);
+                }
+                
+                unlabeledList.appendChild(div);
+            });
+        }
+        
+        async function saveData() {
+            if (!currentClip) return;
+            
+            statusSpan.textContent = "Enrolling...";
+            
+            try {
+                await fetch('/enroll', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        clip_id: currentClip.id,
+                        mapping: speakerMap
+                    })
+                });
+            } catch (e) {
+                console.error("Enrollment failed:", e);
+            }
+ 
+            if (currentClip.transcriptions) {
+                 Object.values(currentClip.transcriptions).forEach(segments => {
+                     segments.forEach(s => {
+                         if (s.speaker && speakerMap[s.speaker]) {
+                             s.speaker = speakerMap[s.speaker];
+                         }
+                     });
+                 });
+            }
+            
+            statusSpan.textContent = "Saving...";
+            
+            try {
+                const response = await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(manifestData)
+                });
+                
+                if (response.ok) {
+                    statusSpan.textContent = "Saved!";
+                    setTimeout(() => statusSpan.textContent = "", 2000);
+                    loadClip(currentClip); 
+                } else {
+                    statusSpan.textContent = "Error saving.";
+                }
+            } catch (e) {
+                console.error(e);
+                statusSpan.textContent = "Error saving: " + e.message;
+            }
+        }
+ 
+        let navigationSegments = [];
+ 
+        function renderTranscriptions(transcriptions) {
+            console.log("renderTranscriptions called with:", transcriptions);
+            transcriptDiv.innerHTML = '';
+            if (!transcriptions) {
+                console.warn("No transcriptions found for this clip.");
+                transcriptDiv.innerHTML = '<em>No transcriptions available.</em>';
+                return;
+            }
+
+            // Dynamically get all model keys
+            const models = Object.keys(transcriptions);
+            console.log("Available models:", models);
+            
+            // Prioritize mlx_whisper_turbo_seg_level, then mlx_whisper_turbo, else first available
+            let navModel = models[0];
+            if (models.includes('mlx_whisper_turbo_seg_level')) navModel = 'mlx_whisper_turbo_seg_level';
+            else if (models.includes('mlx_whisper_turbo')) navModel = 'mlx_whisper_turbo';
+            
+            console.log("Selected navModel:", navModel);
+
+            if (navModel && transcriptions[navModel]) {
+                navigationSegments = transcriptions[navModel].sort((a, b) => a.start - b.start);
+            }
+ 
+            models.forEach(modelName => {
+                console.log("Processing model:", modelName);
+                if (!transcriptions[modelName]) return;
+                
+                const col = document.createElement('div');
+                col.className = 'model-column';
+                
+                const header = document.createElement('h3');
+                header.textContent = modelName;
+                col.appendChild(header);
+                
+                const segments = transcriptions[modelName];
+                console.log(`Found ${segments.length} segments for ${modelName}`);
+
+                segments.forEach((seg, index) => {
+                    const p = document.createElement('div');
+                    p.className = 'segment';
+                    p.dataset.start = seg.start;
+                    p.dataset.end = seg.end;
+                    p.style.marginBottom = '8px';
+                    p.style.cursor = 'pointer';
+                    p.onclick = () => {
+                        audio.currentTime = seg.start;
+                        audio.play();
+                    };
+                    
+                    // Timestamp
+                    const timeSpan = document.createElement('span');
+                    timeSpan.className = 'timestamp';
+                    timeSpan.textContent = `[${seg.start.toFixed(1)} - ${seg.end.toFixed(1)}] `;
+                    timeSpan.style.color = '#888';
+                    timeSpan.style.fontSize = '0.8em';
+                    
+                    // Speaker
+                    const speakerSpan = document.createElement('span');
+                    const displaySpeaker = speakerMap[seg.speaker] || seg.speaker;
+                    speakerSpan.textContent = displaySpeaker ? `${displaySpeaker}: ` : '';
+                    speakerSpan.style.fontWeight = 'bold';
+                    speakerSpan.style.color = '#333';
+                    speakerSpan.style.marginRight = '5px';
+                    
+
+                    // Inline Editing with Combo Box
+                    speakerSpan.title = "Click to edit speaker name";
+                    speakerSpan.style.cursor = "pointer";
+                    speakerSpan.onclick = (e) => {
+                        e.stopPropagation(); 
+                        audio.pause(); // Pause when opening editor
+                        
+                        // Create input with datalist
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        // Stop propagation immediately so programmatic click() doesn't trigger parent p.onclick
+                        input.onclick = (e) => e.stopPropagation();
+                        
+                        const currentValue = speakerMap[seg.speaker] || seg.speaker;
+                        input.value = currentValue;
+                        input.dataset.original = currentValue; // Store original
+                        input.setAttribute('list', 'known-speakers');
+                        input.setAttribute('autocomplete', 'off'); // Disable browser history, use datalist
+                        input.style.width = '150px';
+                        input.style.marginRight = '5px';
+                        
+                        // Replace span with input
+                        p.replaceChild(input, speakerSpan);
+                        
+                        // Clear on focus to show list (User Request)
+                        input.onfocus = () => {
+                            input.value = '';
+                        };
+                        
+                        input.focus();
+                        input.click(); // Attempt to open dropdown immediately
+                        
+                        let saved = false;
+                        
+                        const revert = () => {
+                            renderTranscriptions(currentClip.transcriptions);
+                        };
+
+                        // Handle save
+                        const save = async (triggerPlay = false) => {
+                            if (saved) return;
+                            saved = true;
+                            
+                            let newName = input.value.trim();
+                            // Remove colon
+                            newName = newName.replace(':', '').trim();
+                            
+                            if (newName) {
+                                // Optimistic update
+                                speakerMap[seg.speaker] = newName;
+                                updateKnownSpeakers(); 
+                                renderSpeakerInputs();
+                                renderTranscriptions(currentClip.transcriptions);
+                                
+                                // Active Learning Call
+                                if (modelName === 'mlx_whisper_turbo_seg_level') {
+                                    console.log(`Correcting segment ${index} to ${newName}`);
+                                    try {
+                                        const response = await fetch('/correct_segment', {
+                                            method: 'POST',
+                                            headers: {'Content-Type': 'application/json'},
+                                            body: JSON.stringify({
+                                                clip_id: currentClip.id,
+                                                segment_index: index,
+                                                new_label: newName
+                                            })
+                                        });
+                                        if (response.ok) {
+                                            console.log("Correction applied/learned!");
+                                            // Optional: Show a toast
+                                        } else {
+                                            console.error("Correction failed:", await response.text());
+                                        }
+                                    } catch (e) {
+                                        console.error("Correction error:", e);
+                                    }
+                                }
+                                
+                                // Play if requested OR if the name is a known speaker (implies selection)
+                                // User requested to resume audio on selection/save
+                                audio.play();
+                            } else {
+                                revert();
+                            }
+                        };
+
+                        input.onkeydown = (e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                save(true); // Save and play
+                            } else if (e.key === 'Escape') {
+                                e.preventDefault();
+                                saved = true; // Prevent blur from doing anything weird
+                                revert();
+                            }
+                        };
+                        
+                        input.onchange = () => {
+                            // On selection (or blur with change)
+                            // We want to save.
+                            save(true);
+                        };
+                        
+                        input.onblur = () => {
+                            // If we clicked out without saving (e.g. no change, or just clicked away)
+                            // If onchange fired, saved is true.
+                            // If onchange didn't fire (no change), saved is false.
+                            // We want to revert.
+                            if (!saved) {
+                                revert();
+                            }
+                        };
+                        
+                        // input.onclick handled above
+                    };
+                    
+                    // Text
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = seg.text;
+                    
+                    p.appendChild(timeSpan);
+                    p.appendChild(speakerSpan);
+                    p.appendChild(textSpan);
+                    
+                    col.appendChild(p);
+                });
+                
+                transcriptDiv.appendChild(col);
+            });
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ignore if typing in an input or editing text
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (audio.paused) audio.play();
+                else audio.pause();
+            } else if (e.code === 'ArrowLeft' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                navigate(-1);
+            } else if (e.code === 'ArrowRight' || e.code === 'ArrowDown') {
+                e.preventDefault();
+                navigate(1);
+            }
+        });
+
+        function navigate(direction) {
+            if (!navigationSegments.length) return;
+            
+            const time = audio.currentTime;
+            // Find current segment index
+            // We find the segment that contains the current time, or the one just before it
+            let currentIndex = -1;
+            
+            for (let i = 0; i < navigationSegments.length; i++) {
+                const seg = navigationSegments[i];
+                if (time >= seg.start && time < seg.end) {
+                    currentIndex = i;
+                    break;
+                }
+                // If we are in between segments (silence), finding the last one that ended before now
+                if (time < seg.start) {
+                    // This segment starts after current time, so the previous one was the "current" context
+                    currentIndex = i - 1;
+                    break;
+                }
+            }
+            
+            // If we reached the end without finding one, we might be after the last segment
+            if (currentIndex === -1 && time >= navigationSegments[navigationSegments.length - 1].end) {
+                currentIndex = navigationSegments.length - 1;
+            }
+
+            let newIndex = currentIndex + direction;
+            
+            // Boundary checks
+            if (newIndex < 0) newIndex = 0;
+            if (newIndex >= navigationSegments.length) newIndex = navigationSegments.length - 1;
+            
+            const targetSeg = navigationSegments[newIndex];
+            if (targetSeg) {
+                audio.currentTime = targetSeg.start;
+                audio.play();
+            }
+        }
+    </script>
+</body>
+</html>
