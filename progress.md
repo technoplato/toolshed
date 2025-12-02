@@ -30,7 +30,7 @@
 
 ✅ Final test of push flag with commit hash reference fix
 
-[Commit](https://github.com/technoplato/toolshed/commit/f9be5b6)
+[Commit](https://github.com/technoplato/toolshed/commit/06276c5)
 
 - Testing that commit hash is correctly updated
 - Verifying GitHub link shows both changes and progress.md
