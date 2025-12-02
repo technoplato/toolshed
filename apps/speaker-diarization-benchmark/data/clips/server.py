@@ -200,6 +200,7 @@ class Handler(RangeRequestHandler):
                 if segment_index < 0 or segment_index >= len(segments):
                     raise ValueError(f"Invalid segment index {segment_index}")
                     
+                old_label = segments[segment_index].get('speaker')
                 segments[segment_index]['speaker'] = new_label
                 
                 with open(MANIFEST_FILE, 'w') as f:
@@ -225,6 +226,19 @@ class Handler(RangeRequestHandler):
                         else:
                             db = {}
                             
+                        # Remove from old label if exists
+                        if old_label and old_label in db:
+                            try:
+                                # Embeddings are lists of floats, so we can try to remove by value
+                                # This removes the first occurrence of this exact embedding list
+                                db[old_label].remove(embedding)
+                                print(f"  Removed embedding from {old_label}")
+                                # If list is empty, maybe remove the key? Optional.
+                                if not db[old_label]:
+                                    del db[old_label]
+                            except ValueError:
+                                print(f"  Warning: Embedding not found in {old_label} to remove")
+
                         if new_label not in db:
                             db[new_label] = []
                             

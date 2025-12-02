@@ -26,6 +26,20 @@
 
 ---
 
+### December 2nd, 2025 at 2:09:58 p.m.
+
+✨ Enhanced Diarization UI with Keyboard Navigation
+
+[Commit](https://github.com/technoplato/toolshed/commit/d712541)
+
+- Implemented 'Enter to Edit' shortcut
+- Added 'Resume on Save' functionality
+- Ensured persistent segment highlighting
+- Fixed code duplication in ground_truth_ui.html
+- Updated server.py to remove old embeddings on correction
+
+
+
 ### December 2nd, 2025 at 2:08:44 p.m.
 
 ✨ Enhanced Diarization UI with Keyboard Navigation

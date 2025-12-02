@@ -128,6 +128,10 @@
 
         // Unified ontimeupdate handler
         audio.ontimeupdate = () => {
+            updateHighlights();
+        };
+
+        function updateHighlights() {
             const time = audio.currentTime;
             
             // 1. Highlight active speaker in list
@@ -163,12 +167,14 @@
                 if (time >= start && time < end) {
                     seg.style.backgroundColor = '#e3f2fd';
                     seg.style.borderBottom = '2px solid #2196f3';
+                    seg.classList.add('active-segment'); // Marker class
                 } else {
                     seg.style.backgroundColor = 'transparent';
                     seg.style.borderBottom = 'none';
+                    seg.classList.remove('active-segment');
                 }
             });
-        };
+        }
 
         async function loadData() {
             try {
@@ -474,6 +480,28 @@
                 header.textContent = modelName;
                 col.appendChild(header);
                 
+                // Metadata Display
+                if (currentClip.transcription_metadata && currentClip.transcription_metadata[modelName]) {
+                    const meta = currentClip.transcription_metadata[modelName];
+                    const metaDiv = document.createElement('div');
+                    metaDiv.style.fontSize = '0.75em';
+                    metaDiv.style.color = '#666';
+                    metaDiv.style.marginBottom = '10px';
+                    metaDiv.style.padding = '5px';
+                    metaDiv.style.background = '#f9f9f9';
+                    metaDiv.style.border = '1px solid #eee';
+                    metaDiv.style.borderRadius = '4px';
+                    
+                    let html = `<strong>Pipeline:</strong> ${meta.pipeline}<br>`;
+                    html += `<strong>Commit:</strong> ${meta.commit_hash.substring(0, 7)}`;
+                    if (meta.is_dirty) html += ' (dirty)';
+                    html += `<br><strong>Params:</strong> T=${meta.threshold}, W=${meta.window}, C=${meta.cluster_threshold}, ID=${meta.id_threshold}`;
+                    if (meta.timestamp) html += `<br><strong>Date:</strong> ${meta.timestamp}`;
+                    
+                    metaDiv.innerHTML = html;
+                    col.appendChild(metaDiv);
+                }
+                
                 const segments = transcriptions[modelName];
                 console.log(`Found ${segments.length} segments for ${modelName}`);
 
@@ -503,6 +531,7 @@
                     speakerSpan.style.fontWeight = 'bold';
                     speakerSpan.style.color = '#333';
                     speakerSpan.style.marginRight = '5px';
+                    speakerSpan.className = 'speaker-label'; // Add class for selection
                     
 
                     // Inline Editing with Combo Box
@@ -554,7 +583,22 @@
                             
                             if (newName) {
                                 // Optimistic update
-                                speakerMap[seg.speaker] = newName;
+                                // 1. Always update the specific segment
+                                if (currentClip.transcriptions[modelName] && currentClip.transcriptions[modelName][index]) {
+                                    currentClip.transcriptions[modelName][index].speaker = newName;
+                                }
+
+                                // 2. Update Map ONLY if it was a machine ID (Global Rename convenience)
+                                // If it was already a name (e.g. "Joe"), we assume we are splitting/correcting just this segment.
+                                const isMachineID = (s) => s.startsWith('SPEAKER_') || s.startsWith('SEG_SPK_') || s.startsWith('UNKNOWN');
+                                
+                                if (isMachineID(seg.speaker)) {
+                                    speakerMap[seg.speaker] = newName;
+                                }
+                                
+                                // 3. Ensure new name maps to itself
+                                speakerMap[newName] = newName;
+
                                 updateKnownSpeakers(); 
                                 renderSpeakerInputs();
                                 renderTranscriptions(currentClip.transcriptions);
@@ -585,7 +629,9 @@
                                 
                                 // Play if requested OR if the name is a known speaker (implies selection)
                                 // User requested to resume audio on selection/save
-                                audio.play();
+                                if (triggerPlay) {
+                                    audio.play();
+                                }
                             } else {
                                 revert();
                             }
@@ -634,6 +680,9 @@
                 
                 transcriptDiv.appendChild(col);
             });
+            
+            // Apply highlights immediately after render
+            updateHighlights();
         }
 
         // Keyboard Shortcuts
@@ -651,6 +700,16 @@
             } else if (e.code === 'ArrowRight' || e.code === 'ArrowDown') {
                 e.preventDefault();
                 navigate(1);
+            } else if (e.code === 'Enter') {
+                e.preventDefault();
+                // Find active segment and trigger edit
+                const activeSeg = document.querySelector('.active-segment');
+                if (activeSeg) {
+                    const speakerLabel = activeSeg.querySelector('.speaker-label');
+                    if (speakerLabel) {
+                        speakerLabel.click();
+                    }
+                }
             }
         });
 
