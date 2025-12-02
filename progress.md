@@ -26,6 +26,16 @@
 
 ---
 
+### December 2nd, 2025 at 1:16:50 p.m.
+
+🧹 Updated progress script to output GitHub link
+
+[Commit](https://github.com/technoplato/toolshed/commit/13a4f1f)
+
+- Added print statement to output GitHub commit link at the end of execution
+
+
+
 ### December 2nd, 2025 at 1:14:45 p.m.
 
 ✨ Added matching and nearest neighbor workflows to benchmark

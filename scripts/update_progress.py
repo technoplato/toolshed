@@ -299,7 +299,7 @@ def is_commit_pushed():
         # If we can't determine, assume it hasn't been pushed to be safe
         return False
 
-def push_changes():
+def push_changes(repo_url=None):
     """
     Amends the current commit to include progress.md and pushes to remote.
     
@@ -318,6 +318,9 @@ def push_changes():
     This ensures that clicking the GitHub link shows both the actual changes
     and the progress.md update in a single commit view.
     
+    Args:
+        repo_url: Repository URL for creating commit links (optional)
+        
     Raises:
         subprocess.CalledProcessError: If any git command fails
     """
@@ -458,6 +461,10 @@ def push_changes():
         subprocess.check_call(['git', 'commit', '-m', 'chore: update progress.md commit hash reference'])
         subprocess.check_call(['git', 'push'])
         print("Updated commit hash reference to point to pushed commit.")
+        
+        if repo_url:
+            print(f"GitHub Link: {repo_url}/commit/{pushed_hash}")
+            
     except subprocess.CalledProcessError as e:
         print(f"Error during push: {e}")
 
@@ -490,7 +497,7 @@ def main():
     print(f"Updated {global_progress}")
     
     if args.push:
-        push_changes()
+        push_changes(repo_url)
 
 if __name__ == "__main__":
     main()
