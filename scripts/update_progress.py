@@ -9,15 +9,54 @@ WHO:   Cursor Agent, User
        (Context: Created to standardize progress tracking across local and global logs)
 
 WHAT:  Updates progress.md in the local repository and a global log in ~/.agents/progress.md.
-       [Inputs] --type (progress type), --message (description), --details (optional list)
-       [Outputs] Updates files, prints status.
-       [Side Effects] Modifies filesystem.
+       
+       This script creates formatted progress entries with timestamps, emojis, commit links,
+       and optional details. It can optionally amend the current commit to include progress.md
+       and push to the remote repository.
+       
+       [Inputs]
+       - --type: Type of progress entry (feature, bug, chore, doc, wip, test, question, answer, decision, release)
+       - --message: Short summary of the change (required)
+       - --details: Additional details as positional arguments (optional, multiple allowed)
+       - --push: If provided, amends current commit to include progress.md and pushes to remote
+       
+       [Outputs]
+       - Updates ./progress.md with new entry at the top
+       - Updates ~/.agents/progress.md with new entry (includes project context)
+       - Prints status messages
+       
+       [Side Effects]
+       - Modifies filesystem (writes to progress.md files)
+       - If --push is used: amends git commit, rewrites history, pushes to remote
+       
        [How to run]
-       # Run with uv (recommended)
+       # Basic usage (updates files only)
        ./scripts/update_progress.py --type feature --message "Added new script" --details "Fixed bug X" "Added test Y"
        
-       # Or via python directly if dependencies are met
-       python3 scripts/update_progress.py ...
+       # With --push flag (amends commit and pushes)
+       ./scripts/update_progress.py --type feature --message "Added new script" --push "Detail 1" "Detail 2"
+       
+       # Workflow:
+       # 1. Make your changes and commit them
+       # 2. Run this script with --push to document the changes
+       # 3. The script will amend your commit to include progress.md and push
+       
+       [--push Flag Behavior]
+       When --push is used, the script:
+       1. Adds progress.md to staging
+       2. Amends the current commit (HEAD) to include progress.md
+       3. Updates the commit hash reference in the progress entry
+       4. Amends again to include the updated hash reference
+       5. Pushes with --force-with-lease (safe force push)
+       
+       This ensures that:
+       - The commit referenced in progress.md includes both your actual changes AND progress.md
+       - Clicking the GitHub link shows everything in one commit
+       - No manual git intervention is needed
+       
+       Note: The script always amends, even if the commit was already pushed. This rewrites
+       history, so use with caution in shared branches. The --force-with-lease flag prevents
+       accidental overwrites if someone else has pushed in the meantime.
 
 WHEN:  2025-12-02
        2025-12-02
@@ -26,14 +65,16 @@ WHEN:  2025-12-02
         - 2025-12-02: Updated to use gh CLI and enforce uv]
         - 2025-12-02: Updated date format and added --push option]
         - 2025-12-02: Changed filename from PROGRESS.md to progress.md]
-        - 2025-12-02: Fixed --push to check if commit is pushed before amending to avoid divergence]
-        - 2025-12-02: Changed to always amend commit so progress.md is included in referenced commit]
+        - 2025-12-02: Fixed --push to always amend commit so progress.md is included in referenced commit]
+        - 2025-12-02: Simplified push logic and added comprehensive documentation]
 
 WHERE: Used by Agents to track progress.
        Local: ./progress.md
        Global: ~/.agents/progress.md
 
-WHY:   To maintain a running log of work for context and history.
+WHY:   To maintain a running log of work for context and history. The --push flag ensures
+       that progress entries are always linked to commits that include both the actual changes
+       and the progress documentation, making it easy to see what changed and why.
 """
 
 import argparse
@@ -72,7 +113,18 @@ WHY:   To maintain context and history of decisions and changes.
 """
 
 def get_git_info():
-    """Returns (commit_hash, repo_url, project_root)"""
+    """
+    Retrieves git information for the current repository.
+    
+    Returns:
+        tuple: (commit_hash, repo_url, project_root)
+            - commit_hash: Short commit hash of HEAD (7 characters)
+            - repo_url: Repository URL from GitHub CLI or git remote (without .git extension)
+            - project_root: Absolute path to the git repository root
+            
+    Uses GitHub CLI (gh) if available, otherwise falls back to git remote.
+    Returns None for any values that cannot be determined.
+    """
     # Get commit hash
     try:
         commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).strip()
@@ -104,7 +156,15 @@ def get_git_info():
     return commit_hash, repo_url, project_root
 
 def get_ordinal_date_string():
-    """Returns formatted date string like 'December 1st, 2025 at 9:16:52 p.m.'"""
+    """
+    Generates a human-readable date string with ordinal suffixes.
+    
+    Returns:
+        str: Formatted date string like 'December 1st, 2025 at 9:16:52 p.m.'
+        
+    Handles ordinal suffixes correctly (1st, 2nd, 3rd, 4th, etc.) and formats
+    time in 12-hour format with a.m./p.m. notation.
+    """
     now = datetime.datetime.now()
     
     # Ordinal suffix
@@ -126,6 +186,21 @@ def get_ordinal_date_string():
     return f"{month} {day}{suffix}, {year} at {time_str} {am_pm}"
 
 def format_entry(entry_type, message, details, commit_hash, repo_url, project_root, is_global=False):
+    """
+    Formats a progress log entry with all relevant information.
+    
+    Args:
+        entry_type: Type of entry (maps to emoji via EMOJI_MAP)
+        message: Main message/summary of the entry
+        details: List of additional detail strings
+        commit_hash: Git commit hash to reference
+        repo_url: Repository URL for creating commit links
+        project_root: Path to project root (for global log context)
+        is_global: If True, adds project context for global log entries
+        
+    Returns:
+        str: Formatted markdown entry with date, emoji, message, commit link, and details
+    """
     emoji = EMOJI_MAP.get(entry_type, 'wb')
     date_str = get_ordinal_date_string()
     
@@ -160,6 +235,20 @@ def format_entry(entry_type, message, details, commit_hash, repo_url, project_ro
     return entry
 
 def update_file(file_path, entry, location_desc):
+    """
+    Updates a progress log file with a new entry.
+    
+    Args:
+        file_path: Path to the progress log file (supports ~ expansion)
+        entry: Formatted entry string to add
+        location_desc: Description of file location (for header if file doesn't exist)
+        
+    Behavior:
+        - Creates file with header if it doesn't exist
+        - Inserts new entry after the "---" separator if present
+        - Otherwise prepends entry to existing content
+        - Ensures entries are always added at the top of the log
+    """
     path = Path(file_path).expanduser()
     
     if not path.exists():
@@ -211,7 +300,27 @@ def is_commit_pushed():
         return False
 
 def push_changes():
-    """Pushes changes to remote, always amending to include progress.md in the referenced commit"""
+    """
+    Amends the current commit to include progress.md and pushes to remote.
+    
+    This function handles the --push flag workflow:
+    1. Stages progress.md
+    2. Amends HEAD commit to include progress.md (creates commit A)
+    3. Updates the commit hash reference in progress.md to point to commit A
+    4. Amends again to include the updated hash reference (creates commit B)
+    5. Pushes with --force-with-lease
+    
+    The final commit (B) includes:
+    - Your original changes
+    - progress.md with the entry
+    - A commit hash reference pointing to commit A (which also includes everything)
+    
+    This ensures that clicking the GitHub link shows both the actual changes
+    and the progress.md update in a single commit view.
+    
+    Raises:
+        subprocess.CalledProcessError: If any git command fails
+    """
     try:
         # Add progress.md
         subprocess.check_call(['git', 'add', 'progress.md'])
