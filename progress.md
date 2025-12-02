@@ -26,6 +26,18 @@
 
 ---
 
+### December 2nd, 2025 at 1:14:45 p.m.
+
+✨ Added matching and nearest neighbor workflows to benchmark
+
+[Commit](https://github.com/technoplato/toolshed/commit/06b8d5d)
+
+- Implemented segment_level_matching with centroid distance
+- Implemented segment_level_nearest_neighbor with min distance
+- Updated benchmark report format to include identification details
+
+
+
 ### December 2nd, 2025 at 12:48:41 p.m.
 
 ✨ Integrated experimental workflows and gold standard comparison

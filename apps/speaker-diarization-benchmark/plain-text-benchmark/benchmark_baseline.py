@@ -48,7 +48,7 @@ import sys
 from pathlib import Path
 import numpy as np
 import torch
-from scipy.spatial.distance import cosine
+from scipy.spatial.distance import cosine, cdist
 from sklearn.cluster import AgglomerativeClustering
 from pyannote.audio import Model, Inference
 from pyannote.audio.core.io import Audio
@@ -79,7 +79,7 @@ def main():
     parser.add_argument("--id-threshold", type=float, default=0.4, help="Identification distance threshold.")
     parser.add_argument("--output-dir", type=str, default=".", help="Directory to save the output text file.")
     parser.add_argument("--append-to", type=str, help="Path to an existing file to append results to. Overrides --output-dir.")
-    parser.add_argument("--workflow", type=str, default="pyannote", choices=["pyannote", "wespeaker", "pyannote_community", "pyannote_3.1", "segment_level"], help="Embedding/Diarization workflow to use.")
+    parser.add_argument("--workflow", type=str, default="pyannote", choices=["pyannote", "wespeaker", "pyannote_community", "pyannote_3.1", "segment_level", "segment_level_matching", "segment_level_nearest_neighbor"], help="Embedding/Diarization workflow to use.")
     args = parser.parse_args()
 
     clip_path = Path(args.clip_path).resolve()
@@ -182,6 +182,20 @@ def main():
         embedding_time = stats['embedding_time']
         segmentation_time = stats['segmentation_time']
         clustering_time = stats['clustering_time']
+
+    elif args.workflow == "segment_level_matching":
+        logger.info("Using Segment Level Matching workflow...")
+        segments, stats = run_segment_level_matching_workflow(clip_path, transcription_result.segments, args)
+        embedding_time = stats['embedding_time']
+        segmentation_time = stats['segmentation_time']
+        clustering_time = stats['clustering_time']
+
+    elif args.workflow == "segment_level_nearest_neighbor":
+        logger.info("Using Segment Level Nearest Neighbor workflow...")
+        segments, stats = run_segment_level_nearest_neighbor_workflow(clip_path, transcription_result.segments, args)
+        embedding_time = stats['embedding_time']
+        segmentation_time = stats['segmentation_time']
+        clustering_time = stats['clustering_time']
         
     
     total_time = time.time() - start_time_global
@@ -235,7 +249,12 @@ def main():
             start = seg['start']
             end = seg['end']
             text = seg['text']
+            
             f.write(f"[{start:6.2f} - {end:6.2f}] {speaker}: {text}\n")
+            
+            if 'match_info' in seg and (speaker.startswith("SPEAKER_") or speaker.startswith("UNKNOWN")):
+                mi = seg['match_info']
+                f.write(f"       Best Guess: {mi['best_match']} (Dist: {mi['distance']:.4f}, Thr: {args.id_threshold})\n")
             
         if comparison_report:
             f.write("\n\n--- Comparison vs Gold Standard ---\n")
@@ -243,6 +262,192 @@ def main():
 
     logger.info(f"Benchmark report saved to {output_path}")
     print(f"\nResults saved to: {output_path}")
+
+def run_segment_level_nearest_neighbor_workflow(clip_path, transcription_segments, args):
+    # Reuse the logic from run_segment_level_matching_workflow but with Nearest Neighbor matching
+    stats = {'embedding_time': 0, 'segmentation_time': 0, 'clustering_time': 0}
+    
+    logger.info("Loading embedding model (pyannote/embedding)...")
+    try:
+        import omegaconf
+        import pytorch_lightning
+        import typing
+        import collections
+        from pyannote.audio.core.task import Specifications, Problem, Resolution
+        import pyannote.audio.core.model
+
+        with torch.serialization.safe_globals([
+            torch.torch_version.TorchVersion,
+            omegaconf.listconfig.ListConfig,
+            omegaconf.dictconfig.DictConfig,
+            Specifications,
+            Problem,
+            Resolution,
+            pyannote.audio.core.model.Introspection,
+            pytorch_lightning.callbacks.early_stopping.EarlyStopping,
+            pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint,
+            omegaconf.base.ContainerMetadata,
+            omegaconf.base.Metadata,
+            omegaconf.nodes.AnyNode,
+            omegaconf.nodes.StringNode,
+            omegaconf.nodes.IntegerNode,
+            omegaconf.nodes.FloatNode,
+            omegaconf.nodes.BooleanNode,
+            typing.Any,
+            list,
+            dict,
+            collections.defaultdict,
+            int,
+            float,
+            str,
+            tuple,
+            set,
+        ]):
+            model = Model.from_pretrained("pyannote/embedding", use_auth_token=HF_TOKEN)
+        
+        inference = Inference(model, window="whole")
+        model.to(torch.device("cpu"))
+    except Exception as e:
+        logger.error(f"Failed to load embedding model: {e}")
+        return [], stats
+
+    audio_io = Audio(sample_rate=16000, mono="downmix")
+    
+    start_time = time.time()
+    embeddings = []
+    valid_indices = []
+    
+    for i, seg in enumerate(transcription_segments):
+        duration = seg.end - seg.start
+        if duration < 0.02:
+            continue
+            
+        try:
+            waveform, sr = audio_io.crop(clip_path, PyannoteSegment(seg.start, seg.end))
+            emb = inference({"waveform": waveform, "sample_rate": sr})
+            embeddings.append(emb)
+            valid_indices.append(i)
+        except Exception as e:
+            logger.warning(f"Failed to embed segment {i}: {e}")
+            pass
+            
+    stats['embedding_time'] = time.time() - start_time
+    
+    # Clustering
+    start_time = time.time()
+    
+    if not embeddings:
+        return [], stats
+        
+    X = np.vstack(embeddings)
+    
+    # Filter NaNs
+    valid_mask = ~np.isnan(X).any(axis=1)
+    X_clean = X[valid_mask]
+    
+    clean_to_original_map = []
+    for i, is_valid in enumerate(valid_mask):
+        if is_valid:
+            clean_to_original_map.append(valid_indices[i])
+            
+    if len(X_clean) > 0:
+        clustering = AgglomerativeClustering(
+            n_clusters=None,
+            distance_threshold=args.cluster_threshold,
+            metric='cosine',
+            linkage='average'
+        )
+        labels_clean = clustering.fit_predict(X_clean)
+    else:
+        labels_clean = []
+        
+    stats['clustering_time'] = time.time() - start_time
+    
+    # Identification Logic with Nearest Neighbor
+    logger.info("Starting identification matching (Nearest Neighbor)...")
+    
+    db_path = Path(__file__).parent.parent / "data/speaker_embeddings.json"
+    known_speakers = {}
+    if db_path.exists():
+        with open(db_path, 'r') as f:
+            known_speakers = json.load(f)
+            logger.info(f"Loaded {len(known_speakers)} known speakers from DB.")
+    else:
+        logger.warning("Speaker embeddings DB not found.")
+    
+    # Calculate centroids for each cluster
+    cluster_centroids = {}
+    unique_labels = set(labels_clean) if len(X_clean) > 0 else set()
+    
+    for label in unique_labels:
+        clean_indices = np.where(labels_clean == label)[0]
+        cluster_embs = X_clean[clean_indices]
+        cluster_centroids[label] = np.mean(cluster_embs, axis=0)
+        
+    final_labels = {}
+    match_details = {} # label -> {best_match: str, distance: float}
+    
+    for label, centroid in cluster_centroids.items():
+        min_dist = 2.0
+        identity = f"SPEAKER_{label:02d}"
+        best_match_name = "None"
+        
+        logger.info(f"Matching Cluster {label}...")
+        
+        # Nearest Neighbor: Compare centroid to ALL known embeddings
+        for name, known_embs in known_speakers.items():
+            if not known_embs: continue
+            
+            # Calculate distance to ALL embeddings for this speaker
+            # known_embs is list of lists
+            known_embs_arr = np.array(known_embs)
+            
+            # cdist expects 2D arrays
+            # centroid is 1D (D,), reshape to (1, D)
+            dists = cdist(centroid.reshape(1, -1), known_embs_arr, metric='cosine')
+            
+            # Min distance to ANY of this speaker's embeddings
+            min_d_speaker = np.min(dists)
+            
+            logger.info(f"  - Min Distance to {name}: {min_d_speaker:.4f}")
+            
+            if min_d_speaker < min_dist:
+                min_dist = min_d_speaker
+                best_match_name = name
+        
+        logger.info(f"  -> Best match: {best_match_name} with dist {min_dist:.4f} (Threshold: {args.id_threshold})")
+        
+        match_details[label] = {
+            "best_match": best_match_name,
+            "distance": min_dist
+        }
+
+        if min_dist < args.id_threshold:
+            final_labels[label] = best_match_name
+        else:
+            final_labels[label] = f"SPEAKER_{label:02d}"
+            
+    # Assign to segments
+    final_segments = []
+    
+    # Initialize all as UNKNOWN
+    for seg in transcription_segments:
+        final_segments.append({
+            "start": seg.start,
+            "end": seg.end,
+            "text": seg.text,
+            "speaker": "UNKNOWN"
+        })
+        
+    # Update with identified labels
+    for i, label in enumerate(labels_clean):
+        original_idx = clean_to_original_map[i]
+        final_segments[original_idx]['speaker'] = final_labels[label]
+        # Add match info
+        if label in match_details:
+            final_segments[original_idx]['match_info'] = match_details[label]
+        
+    return final_segments, stats
 
 
 def run_pyannote_community_workflow(clip_path, all_words, args, model_name="pyannote/speaker-diarization-community-1"):
@@ -665,6 +870,186 @@ def run_segment_level_workflow(clip_path, transcription_segments, args):
     for i, label in enumerate(labels):
         original_idx = clean_to_original_map[i]
         final_segments[original_idx]['speaker'] = f"SPEAKER_{label:02d}"
+        
+    return final_segments, stats
+
+def run_segment_level_matching_workflow(clip_path, transcription_segments, args):
+    # Reuse the logic from run_segment_level_workflow but with explicit logging for matching
+    stats = {'embedding_time': 0, 'segmentation_time': 0, 'clustering_time': 0}
+    
+    logger.info("Loading embedding model (pyannote/embedding)...")
+    try:
+        import omegaconf
+        import pytorch_lightning
+        import typing
+        import collections
+        from pyannote.audio.core.task import Specifications, Problem, Resolution
+        import pyannote.audio.core.model
+
+        with torch.serialization.safe_globals([
+            torch.torch_version.TorchVersion,
+            omegaconf.listconfig.ListConfig,
+            omegaconf.dictconfig.DictConfig,
+            Specifications,
+            Problem,
+            Resolution,
+            pyannote.audio.core.model.Introspection,
+            pytorch_lightning.callbacks.early_stopping.EarlyStopping,
+            pytorch_lightning.callbacks.model_checkpoint.ModelCheckpoint,
+            omegaconf.base.ContainerMetadata,
+            omegaconf.base.Metadata,
+            omegaconf.nodes.AnyNode,
+            omegaconf.nodes.StringNode,
+            omegaconf.nodes.IntegerNode,
+            omegaconf.nodes.FloatNode,
+            omegaconf.nodes.BooleanNode,
+            typing.Any,
+            list,
+            dict,
+            collections.defaultdict,
+            int,
+            float,
+            str,
+            tuple,
+            set,
+        ]):
+            model = Model.from_pretrained("pyannote/embedding", use_auth_token=HF_TOKEN)
+        
+        inference = Inference(model, window="whole")
+        model.to(torch.device("cpu"))
+    except Exception as e:
+        logger.error(f"Failed to load embedding model: {e}")
+        return [], stats
+
+    audio_io = Audio(sample_rate=16000, mono="downmix")
+    
+    start_time = time.time()
+    embeddings = []
+    valid_indices = []
+    
+    for i, seg in enumerate(transcription_segments):
+        duration = seg.end - seg.start
+        if duration < 0.02:
+            continue
+            
+        try:
+            waveform, sr = audio_io.crop(clip_path, PyannoteSegment(seg.start, seg.end))
+            emb = inference({"waveform": waveform, "sample_rate": sr})
+            embeddings.append(emb)
+            valid_indices.append(i)
+        except Exception as e:
+            logger.warning(f"Failed to embed segment {i}: {e}")
+            pass
+            
+    stats['embedding_time'] = time.time() - start_time
+    
+    # Clustering
+    start_time = time.time()
+    
+    if not embeddings:
+        return [], stats
+        
+    X = np.vstack(embeddings)
+    
+    # Filter NaNs
+    valid_mask = ~np.isnan(X).any(axis=1)
+    X_clean = X[valid_mask]
+    
+    clean_to_original_map = []
+    for i, is_valid in enumerate(valid_mask):
+        if is_valid:
+            clean_to_original_map.append(valid_indices[i])
+            
+    if len(X_clean) > 0:
+        clustering = AgglomerativeClustering(
+            n_clusters=None,
+            distance_threshold=args.cluster_threshold,
+            metric='cosine',
+            linkage='average'
+        )
+        labels_clean = clustering.fit_predict(X_clean)
+    else:
+        labels_clean = []
+        
+    stats['clustering_time'] = time.time() - start_time
+    
+    # Identification Logic with Logging
+    logger.info("Starting identification matching...")
+    
+    db_path = Path(__file__).parent.parent / "data/speaker_embeddings.json"
+    known_speakers = {}
+    if db_path.exists():
+        with open(db_path, 'r') as f:
+            known_speakers = json.load(f)
+            logger.info(f"Loaded {len(known_speakers)} known speakers from DB.")
+    else:
+        logger.warning("Speaker embeddings DB not found.")
+    
+    # Calculate centroids for each cluster
+    cluster_centroids = {}
+    unique_labels = set(labels_clean) if len(X_clean) > 0 else set()
+    
+    for label in unique_labels:
+        clean_indices = np.where(labels_clean == label)[0]
+        cluster_embs = X_clean[clean_indices]
+        cluster_centroids[label] = np.mean(cluster_embs, axis=0)
+        
+    final_labels = {}
+    match_details = {} # label -> {best_match: str, distance: float}
+    
+    for label, centroid in cluster_centroids.items():
+        min_dist = 2.0
+        identity = f"SPEAKER_{label:02d}"
+        best_match_name = "None"
+        
+        logger.info(f"Matching Cluster {label}...")
+        
+        for name, known_embs in known_speakers.items():
+            if not known_embs: continue
+            # known_embs is a list of lists (embeddings)
+            # We can take the mean of known embeddings to form a prototype
+            known_proto = np.mean(np.array(known_embs), axis=0)
+            
+            d = cosine(centroid, known_proto)
+            logger.info(f"  - Distance to {name}: {d:.4f}")
+            
+            if d < min_dist:
+                min_dist = d
+                best_match_name = name
+        
+        logger.info(f"  -> Best match: {best_match_name} with dist {min_dist:.4f} (Threshold: {args.id_threshold})")
+        
+        match_details[label] = {
+            "best_match": best_match_name,
+            "distance": min_dist
+        }
+
+        if min_dist < args.id_threshold:
+            final_labels[label] = best_match_name
+        else:
+            final_labels[label] = f"SPEAKER_{label:02d}"
+            
+    # Assign to segments
+    final_segments = []
+    
+    # Initialize all as UNKNOWN
+    for seg in transcription_segments:
+        final_segments.append({
+            "start": seg.start,
+            "end": seg.end,
+            "text": seg.text,
+            "speaker": "UNKNOWN"
+        })
+        
+    # Update with identified labels
+    # We need to map back from clean_labels -> clean_indices -> original_indices
+    
+    for i, label in enumerate(labels_clean):
+        original_idx = clean_to_original_map[i]
+        final_segments[original_idx]['speaker'] = final_labels[label]
+        # Add match info
+        if label in match_details:
+            final_segments[original_idx]['match_info'] = match_details[label]
         
     return final_segments, stats
 

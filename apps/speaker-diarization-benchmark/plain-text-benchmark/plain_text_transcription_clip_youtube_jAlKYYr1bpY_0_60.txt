@@ -286,3 +286,285 @@ New Segments: 15
 Average Boundary Deviation: 2.521s
 Max Boundary Deviation: 10.120s
 Segment Count Difference: -28
+
+
+--- Benchmark Report ---
+Date: 2025-12-02 12:53:17
+Clip: clip_youtube_jAlKYYr1bpY_0_60.wav
+Workflow: segment_level_matching
+Commit: 44098adde0557ae0e9b80d11a2e7353251377e22 (Dirty: True)
+Arguments: Namespace(clip_path='data/clips/clip_youtube_jAlKYYr1bpY_0_60.wav', threshold=0.5, window=0, cluster_threshold=0.5, id_threshold=0.4, output_dir='.', append_to='plain-text-benchmark/plain_text_transcription_clip_youtube_jAlKYYr1bpY_0_60.txt', workflow='segment_level_matching')
+
+--- Timing Stats ---
+Transcription: 0.00s
+Embedding:     0.49s
+Segmentation:  0.00s
+Clustering:    0.03s
+Total:         1.09s
+
+--- Full Transcription ---
+The Wild Wild West. Two hours. We're doing two. Whatever you want to do. Yeah, just know the pace. We're going to talk to Paige. Oh, I like that, man. I like that approach. Can you guys not release this till October? Oh, wow. I'm joking. I was going to say, I thought they're special. Yeah, totally. Also, I was waiting to share it for this episode. Thank you. I was in a tomb on Monday. Dude, trust me. When you hit me back, I was like, he just did it. He's in the tomb. He's in the tomb. I... Sorry, because discussing the tomb I was just in is... The tomb was... Sacrophagus? I was in... I've risen. I'm Lazarus right now. This is the third day. I'm actually... What's the tomb? Like, is the tomb the bed or the couch? The tomb is... I just played... There's a new game called Ready or Not, and I played it for two days. That's awesome. I played the entire... I played every mission. Meanwhile... That's so long. Psychologically, what's the thought... Is it thought process all in addition? It's... Usually, it's a...
+
+--- Segmentation & Diarization ---
+[  0.00 -   1.46] MSSP Theme Music: The Wild Wild West.
+[  1.82 -   2.38] SPEAKER_24: Two hours.
+[  2.58 -   2.92] SPEAKER_35: We're doing two.
+[  3.30 -   4.18] SPEAKER_27: Whatever you want to do.
+[  4.30 -   5.50] SPEAKER_26: Yeah, just know the pace.
+[  5.78 -   5.92] UNKNOWN: We're going to talk to Paige.
+[  6.06 -   6.92] SPEAKER_25: Oh, I like that, man.
+[  7.04 -   7.84] SPEAKER_23: I like that approach.
+[  8.42 -  10.14] SPEAKER_33: Can you guys not release this till October?
+[ 10.76 -  11.18] SPEAKER_19: Oh, wow.
+[ 11.18 -  11.92] SPEAKER_29: I'm joking.
+[ 12.22 -  13.84] SPEAKER_12: I was going to say, I thought they're special.
+[ 13.98 -  14.92] SPEAKER_28: Yeah, totally.
+[ 15.16 -  16.92] SPEAKER_36: Also, I was waiting to share it for this episode.
+[ 17.08 -  17.36] UNKNOWN: Thank you.
+[ 17.76 -  19.66] Shane Gillis: I was in a tomb on Monday.
+[ 20.18 -  21.94] SPEAKER_30: Dude, trust me.
+[ 22.14 -  24.98] SPEAKER_37: When you hit me back, I was like, he just did it.
+[ 25.70 -  26.90] SPEAKER_13: He's in the tomb.
+[ 26.90 -  27.94] SPEAKER_32: He's in the tomb.
+[ 29.64 -  30.12] SPEAKER_11: I...
+[ 30.78 -  33.82] Shane Gillis: Sorry, because discussing the tomb I was just in is...
+[ 33.82 -  35.40] SPEAKER_17: The tomb was...
+[ 35.40 -  35.78] SPEAKER_20: Sacrophagus?
+[ 36.22 -  36.94] SPEAKER_09: I was in...
+[ 36.94 -  37.40] SPEAKER_21: I've risen.
+[ 37.56 -  38.42] SPEAKER_14: I'm Lazarus right now.
+[ 38.50 -  39.50] SPEAKER_22: This is the third day.
+[ 39.78 -  40.50] SPEAKER_38: I'm actually...
+[ 40.50 -  41.20] SPEAKER_10: What's the tomb?
+[ 41.36 -  43.66] SPEAKER_15: Like, is the tomb the bed or the couch?
+[ 43.82 -  44.98] SPEAKER_34: The tomb is...
+[ 44.98 -  46.44] Shane Gillis: I just played...
+[ 46.44 -  49.92] Shane Gillis: There's a new game called Ready or Not, and I played it for two days.
+[ 50.30 -  50.86] SPEAKER_05: That's awesome.
+[ 51.14 -  52.56] SPEAKER_01: I played the entire...
+[ 52.56 -  53.42] SPEAKER_01: I played every mission.
+[ 54.06 -  54.54] SPEAKER_04: Meanwhile...
+[ 54.54 -  55.40] SPEAKER_06: That's so long.
+[ 55.92 -  57.10] SPEAKER_08: Psychologically, what's the thought...
+[ 57.10 -  58.44] SPEAKER_07: Is it thought process all in addition?
+[ 58.74 -  59.16] SPEAKER_03: It's...
+[ 59.16 -  59.98] SPEAKER_02: Usually, it's a...
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 62.98 -  62.98] UNKNOWN: 
+
+
+--- Comparison vs Gold Standard ---
+Gold Standard Segments: 43
+New Segments: 66
+Average Boundary Deviation: 0.023s
+Max Boundary Deviation: 0.040s
+Segment Count Difference: 23
+
+
+--- Benchmark Report ---
+Date: 2025-12-02 13:00:12
+Clip: clip_youtube_jAlKYYr1bpY_0_60.wav
+Workflow: segment_level_matching
+Commit: 44098adde0557ae0e9b80d11a2e7353251377e22 (Dirty: True)
+Arguments: Namespace(clip_path='data/clips/clip_youtube_jAlKYYr1bpY_0_60.wav', threshold=0.5, window=0, cluster_threshold=0.5, id_threshold=0.4, output_dir='.', append_to='plain-text-benchmark/plain_text_transcription_clip_youtube_jAlKYYr1bpY_0_60.txt', workflow='segment_level_matching')
+
+--- Timing Stats ---
+Transcription: 0.00s
+Embedding:     0.50s
+Segmentation:  0.00s
+Clustering:    0.03s
+Total:         1.11s
+
+--- Full Transcription ---
+The Wild Wild West. Two hours. We're doing two. Whatever you want to do. Yeah, just know the pace. We're going to talk to Paige. Oh, I like that, man. I like that approach. Can you guys not release this till October? Oh, wow. I'm joking. I was going to say, I thought they're special. Yeah, totally. Also, I was waiting to share it for this episode. Thank you. I was in a tomb on Monday. Dude, trust me. When you hit me back, I was like, he just did it. He's in the tomb. He's in the tomb. I... Sorry, because discussing the tomb I was just in is... The tomb was... Sacrophagus? I was in... I've risen. I'm Lazarus right now. This is the third day. I'm actually... What's the tomb? Like, is the tomb the bed or the couch? The tomb is... I just played... There's a new game called Ready or Not, and I played it for two days. That's awesome. I played the entire... I played every mission. Meanwhile... That's so long. Psychologically, what's the thought... Is it thought process all in addition? It's... Usually, it's a...
+
+--- Segmentation & Diarization ---
+[  0.00 -   1.46] MSSP Theme Music (Best: MSSP Theme Music, Dist: 0.0000, Thr: 0.4): The Wild Wild West.
+[  1.82 -   2.38] SPEAKER_24 (Best: Shane Gillis, Dist: 0.6152, Thr: 0.4): Two hours.
+[  2.58 -   2.92] SPEAKER_35 (Best: Shane Gillis, Dist: 0.7655, Thr: 0.4): We're doing two.
+[  3.30 -   4.18] SPEAKER_27 (Best: Joe DeRosa, Dist: 0.6732, Thr: 0.4): Whatever you want to do.
+[  4.30 -   5.50] SPEAKER_26 (Best: Matt McCusker, Dist: 0.6291, Thr: 0.4): Yeah, just know the pace.
+[  5.78 -   5.92] UNKNOWN: We're going to talk to Paige.
+[  6.06 -   6.92] SPEAKER_25 (Best: Matt McCusker, Dist: 0.6369, Thr: 0.4): Oh, I like that, man.
+[  7.04 -   7.84] SPEAKER_23 (Best: Matt McCusker, Dist: 0.6966, Thr: 0.4): I like that approach.
+[  8.42 -  10.14] SPEAKER_33 (Best: Joe DeRosa, Dist: 0.5795, Thr: 0.4): Can you guys not release this till October?
+[ 10.76 -  11.18] SPEAKER_19 (Best: Joe DeRosa, Dist: 0.8866, Thr: 0.4): Oh, wow.
+[ 11.18 -  11.92] SPEAKER_29 (Best: Joe DeRosa, Dist: 0.6663, Thr: 0.4): I'm joking.
+[ 12.22 -  13.84] SPEAKER_12 (Best: Shane Gillis, Dist: 0.7640, Thr: 0.4): I was going to say, I thought they're special.
+[ 13.98 -  14.92] SPEAKER_28 (Best: Joe DeRosa, Dist: 0.6120, Thr: 0.4): Yeah, totally.
+[ 15.16 -  16.92] SPEAKER_36 (Best: Shane Gillis, Dist: 0.4358, Thr: 0.4): Also, I was waiting to share it for this episode.
+[ 17.08 -  17.36] UNKNOWN: Thank you.
+[ 17.76 -  19.66] Shane Gillis (Best: Shane Gillis, Dist: 0.3255, Thr: 0.4): I was in a tomb on Monday.
+[ 20.18 -  21.94] SPEAKER_30 (Best: Joe DeRosa, Dist: 0.6230, Thr: 0.4): Dude, trust me.
+[ 22.14 -  24.98] SPEAKER_37 (Best: Joe DeRosa, Dist: 0.6430, Thr: 0.4): When you hit me back, I was like, he just did it.
+[ 25.70 -  26.90] SPEAKER_13 (Best: Joe DeRosa, Dist: 0.6637, Thr: 0.4): He's in the tomb.
+[ 26.90 -  27.94] SPEAKER_32 (Best: Joe DeRosa, Dist: 0.7736, Thr: 0.4): He's in the tomb.
+[ 29.64 -  30.12] SPEAKER_11 (Best: MSSP Mannequin Prank Call Lady, Dist: 0.8786, Thr: 0.4): I...
+[ 30.78 -  33.82] Shane Gillis (Best: Shane Gillis, Dist: 0.3255, Thr: 0.4): Sorry, because discussing the tomb I was just in is...
+[ 33.82 -  35.40] SPEAKER_17 (Best: Shane Gillis, Dist: 0.5482, Thr: 0.4): The tomb was...
+[ 35.40 -  35.78] SPEAKER_20 (Best: Matt McCusker, Dist: 0.7680, Thr: 0.4): Sacrophagus?
+[ 36.22 -  36.94] SPEAKER_09 (Best: Shane Gillis, Dist: 0.6191, Thr: 0.4): I was in...
+[ 36.94 -  37.40] SPEAKER_21 (Best: Phil Gillis, Dist: 0.8068, Thr: 0.4): I've risen.
+[ 37.56 -  38.42] SPEAKER_14 (Best: Shane Gillis, Dist: 0.5919, Thr: 0.4): I'm Lazarus right now.
+[ 38.50 -  39.50] SPEAKER_22 (Best: Shane Gillis, Dist: 0.6270, Thr: 0.4): This is the third day.
+[ 39.78 -  40.50] SPEAKER_38 (Best: Shane Gillis, Dist: 0.6542, Thr: 0.4): I'm actually...
+[ 40.50 -  41.20] SPEAKER_10 (Best: Matt McCusker, Dist: 0.7432, Thr: 0.4): What's the tomb?
+[ 41.36 -  43.66] SPEAKER_15 (Best: Matt McCusker, Dist: 0.7367, Thr: 0.4): Like, is the tomb the bed or the couch?
+[ 43.82 -  44.98] SPEAKER_34 (Best: Shane Gillis, Dist: 0.5228, Thr: 0.4): The tomb is...
+[ 44.98 -  46.44] Shane Gillis (Best: Shane Gillis, Dist: 0.3900, Thr: 0.4): I just played...
+[ 46.44 -  49.92] Shane Gillis (Best: Shane Gillis, Dist: 0.3682, Thr: 0.4): There's a new game called Ready or Not, and I played it for two days.
+[ 50.30 -  50.86] SPEAKER_05 (Best: Joe DeRosa, Dist: 0.7348, Thr: 0.4): That's awesome.
+[ 51.14 -  52.56] SPEAKER_01 (Best: Shane Gillis, Dist: 0.4127, Thr: 0.4): I played the entire...
+[ 52.56 -  53.42] SPEAKER_01 (Best: Shane Gillis, Dist: 0.4127, Thr: 0.4): I played every mission.
+[ 54.06 -  54.54] SPEAKER_04 (Best: Shane Gillis, Dist: 0.8415, Thr: 0.4): Meanwhile...
+[ 54.54 -  55.40] SPEAKER_06 (Best: Shane Gillis, Dist: 0.5463, Thr: 0.4): That's so long.
+[ 55.92 -  57.10] SPEAKER_08 (Best: Matt McCusker, Dist: 0.6512, Thr: 0.4): Psychologically, what's the thought...
+[ 57.10 -  58.44] SPEAKER_07 (Best: Matt McCusker, Dist: 0.6699, Thr: 0.4): Is it thought process all in addition?
+[ 58.74 -  59.16] SPEAKER_03 (Best: Joe DeRosa, Dist: 0.8634, Thr: 0.4): It's...
+[ 59.16 -  59.98] SPEAKER_02 (Best: Shane Gillis, Dist: 0.5002, Thr: 0.4): Usually, it's a...
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 62.98 -  62.98] UNKNOWN: 
+
+
+--- Comparison vs Gold Standard ---
+Gold Standard Segments: 43
+New Segments: 66
+Average Boundary Deviation: 0.023s
+Max Boundary Deviation: 0.040s
+Segment Count Difference: 23
+
+
+--- Benchmark Report ---
+Date: 2025-12-02 13:06:15
+Clip: clip_youtube_jAlKYYr1bpY_0_60.wav
+Workflow: segment_level_nearest_neighbor
+Commit: 44098adde0557ae0e9b80d11a2e7353251377e22 (Dirty: True)
+Arguments: Namespace(clip_path='data/clips/clip_youtube_jAlKYYr1bpY_0_60.wav', threshold=0.5, window=0, cluster_threshold=0.5, id_threshold=0.8, output_dir='.', append_to='plain-text-benchmark/plain_text_transcription_clip_youtube_jAlKYYr1bpY_0_60.txt', workflow='segment_level_nearest_neighbor')
+
+--- Timing Stats ---
+Transcription: 0.00s
+Embedding:     0.51s
+Segmentation:  0.00s
+Clustering:    0.03s
+Total:         1.26s
+
+--- Full Transcription ---
+The Wild Wild West. Two hours. We're doing two. Whatever you want to do. Yeah, just know the pace. We're going to talk to Paige. Oh, I like that, man. I like that approach. Can you guys not release this till October? Oh, wow. I'm joking. I was going to say, I thought they're special. Yeah, totally. Also, I was waiting to share it for this episode. Thank you. I was in a tomb on Monday. Dude, trust me. When you hit me back, I was like, he just did it. He's in the tomb. He's in the tomb. I... Sorry, because discussing the tomb I was just in is... The tomb was... Sacrophagus? I was in... I've risen. I'm Lazarus right now. This is the third day. I'm actually... What's the tomb? Like, is the tomb the bed or the couch? The tomb is... I just played... There's a new game called Ready or Not, and I played it for two days. That's awesome. I played the entire... I played every mission. Meanwhile... That's so long. Psychologically, what's the thought... Is it thought process all in addition? It's... Usually, it's a...
+
+--- Segmentation & Diarization ---
+[  0.00 -   1.46] MSSP Theme Music: The Wild Wild West.
+[  1.82 -   2.38] Shane Gillis: Two hours.
+[  2.58 -   2.92] Shane Gillis: We're doing two.
+[  3.30 -   4.18] Joe DeRosa: Whatever you want to do.
+[  4.30 -   5.50] Matt McCusker: Yeah, just know the pace.
+[  5.78 -   5.92] UNKNOWN: We're going to talk to Paige.
+[  6.06 -   6.92] Matt McCusker: Oh, I like that, man.
+[  7.04 -   7.84] Matt McCusker: I like that approach.
+[  8.42 -  10.14] Joe DeRosa: Can you guys not release this till October?
+[ 10.76 -  11.18] Shane Gillis: Oh, wow.
+[ 11.18 -  11.92] Joe DeRosa: I'm joking.
+[ 12.22 -  13.84] Shane Gillis: I was going to say, I thought they're special.
+[ 13.98 -  14.92] Joe DeRosa: Yeah, totally.
+[ 15.16 -  16.92] Shane Gillis: Also, I was waiting to share it for this episode.
+[ 17.08 -  17.36] UNKNOWN: Thank you.
+[ 17.76 -  19.66] Shane Gillis: I was in a tomb on Monday.
+[ 20.18 -  21.94] Joe DeRosa: Dude, trust me.
+[ 22.14 -  24.98] Joe DeRosa: When you hit me back, I was like, he just did it.
+[ 25.70 -  26.90] Joe DeRosa: He's in the tomb.
+[ 26.90 -  27.94] Matt McCusker: He's in the tomb.
+[ 29.64 -  30.12] Matt McCusker: I...
+[ 30.78 -  33.82] Shane Gillis: Sorry, because discussing the tomb I was just in is...
+[ 33.82 -  35.40] Shane Gillis: The tomb was...
+[ 35.40 -  35.78] Matt McCusker: Sacrophagus?
+[ 36.22 -  36.94] Joe DeRosa: I was in...
+[ 36.94 -  37.40] Shane Gillis: I've risen.
+[ 37.56 -  38.42] Shane Gillis: I'm Lazarus right now.
+[ 38.50 -  39.50] Shane Gillis: This is the third day.
+[ 39.78 -  40.50] Shane Gillis: I'm actually...
+[ 40.50 -  41.20] Matt McCusker: What's the tomb?
+[ 41.36 -  43.66] Matt McCusker: Like, is the tomb the bed or the couch?
+[ 43.82 -  44.98] Shane Gillis: The tomb is...
+[ 44.98 -  46.44] Shane Gillis: I just played...
+[ 46.44 -  49.92] Shane Gillis: There's a new game called Ready or Not, and I played it for two days.
+[ 50.30 -  50.86] Joe DeRosa: That's awesome.
+[ 51.14 -  52.56] Shane Gillis: I played the entire...
+[ 52.56 -  53.42] Shane Gillis: I played every mission.
+[ 54.06 -  54.54] Matt McCusker: Meanwhile...
+[ 54.54 -  55.40] Shane Gillis: That's so long.
+[ 55.92 -  57.10] Matt McCusker: Psychologically, what's the thought...
+[ 57.10 -  58.44] Matt McCusker: Is it thought process all in addition?
+[ 58.74 -  59.16] Shane Gillis: It's...
+[ 59.16 -  59.98] Shane Gillis: Usually, it's a...
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 59.98 -  59.98] UNKNOWN: 
+[ 62.98 -  62.98] UNKNOWN: 
+
+
+--- Comparison vs Gold Standard ---
+Gold Standard Segments: 43
+New Segments: 66
+Average Boundary Deviation: 0.023s
+Max Boundary Deviation: 0.040s
+Segment Count Difference: 23
