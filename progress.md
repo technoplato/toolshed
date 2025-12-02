@@ -24,6 +24,18 @@
 
 ---
 
+### December 1st, 2025 at 10:16:08 p.m.
+
+🧹 Fixed commit hash reference in progress entries
+
+[Commit](https://github.com/technoplato/toolshed/commit/42f0cb8)
+
+- Now correctly references commit with actual changes
+- When creating new commit: references original commit
+- When amending: references amended commit
+
+
+
 ### December 1st, 2025 at 10:14:15 p.m.
 
 🧹 Verified push flag fix works correctly
