@@ -30,7 +30,7 @@
 
 ✨ Enhanced Diarization UI with Keyboard Navigation
 
-[Commit](https://github.com/technoplato/toolshed/commit/7b32697)
+[Commit](https://github.com/technoplato/toolshed/commit/bd0ab41)
 
 - Implemented 'Enter to Edit' shortcut
 - Added 'Resume on Save' functionality
