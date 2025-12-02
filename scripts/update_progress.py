@@ -252,6 +252,30 @@ def push_changes():
         subprocess.check_call(['git', 'add', 'progress.md'])
         subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
         
+        # Get the final commit hash after second amend
+        final_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).strip()
+        
+        # Update progress.md one more time with the final hash
+        with open(local_progress, 'r') as f:
+            content = f.read()
+        content = re.sub(old_hash_pattern, r'\1' + final_hash + r'\3', content, count=1)
+        content = re.sub(old_hash_pattern2, r'\1' + final_hash, content, count=1)
+        with open(local_progress, 'w') as f:
+            f.write(content)
+        
+        # Same for global log
+        if global_path.exists():
+            with open(global_path, 'r') as f:
+                global_content = f.read()
+            global_content = re.sub(old_hash_pattern, r'\1' + final_hash + r'\3', global_content, count=1)
+            global_content = re.sub(old_hash_pattern2, r'\1' + final_hash, global_content, count=1)
+            with open(global_path, 'w') as f:
+                f.write(global_content)
+        
+        # Final amend to include the correct commit hash reference
+        subprocess.check_call(['git', 'add', 'progress.md'])
+        subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
+        
         # Push with --force-with-lease for safety (rewrites history if commit was already pushed)
         print("Pushing to origin...")
         subprocess.check_call(['git', 'push', '--force-with-lease'])
