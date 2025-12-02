@@ -30,7 +30,7 @@
 
 ✅ Final test: commit hash references pushed commit
 
-[Commit](https://github.com/technoplato/toolshed/commit/dbdc6f4)
+[Commit](https://github.com/technoplato/toolshed/commit/f894463)
 
 - Verifying hash exists on GitHub
 - Should reference commit that was actually pushed
