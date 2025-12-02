@@ -24,6 +24,19 @@
 
 ---
 
+### December 1st, 2025 at 10:05:00 p.m.
+
+🧠 Repository Cleanup & Security Overhaul
+
+[Commit](https://github.com/technoplato/toolshed/commit/378cb76)
+
+- **Nuked Git History**: Removed 459MB `weights.npz` file and other large artifacts from history to fix slow pushes.
+- **Secured Secrets**: 
+    - Moved hardcoded `HF_TOKEN` from code to `.env`.
+    - Updated `experiment_segment_embedding.py`, `example_usage.py`, and `experimental_alignment.py` to use `os.getenv("HF_TOKEN")`.
+    - Added `.env.example` template.
+- **Re-initialized Repo**: Started fresh git history to ensure clean slate.
+
 ### December 1st, 2025 at 9:30:15 p.m.
 
 ✅ Testing push functionality
