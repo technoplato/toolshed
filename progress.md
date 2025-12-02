@@ -30,7 +30,7 @@
 
 ✅ Smoke test: empty file creation and progress update
 
-[Commit](https://github.com/technoplato/toolshed/commit/218e0a5)
+[Commit](https://github.com/technoplato/toolshed/commit/50463a4)
 
 - Created .empty file
 - Tested end-to-end workflow with --push flag
