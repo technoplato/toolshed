@@ -30,7 +30,7 @@
 
 ✨ Integrated experimental workflows and gold standard comparison
 
-[Commit](https://github.com/technoplato/toolshed/commit/40f32fd)
+[Commit](https://github.com/technoplato/toolshed/commit/1bec61b)
 
 - Added segment_level and pyannote_3.1 workflows
 - Implemented result appending and gold standard comparison logic
