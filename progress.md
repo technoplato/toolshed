@@ -26,11 +26,23 @@
 
 ---
 
+### December 3rd, 2025 at 10:01:26 p.m.
+
+📝 Restructured voice note into sections
+
+[Commit](https://github.com/technoplato/toolshed/commit/bfa6349)
+
+- Extracted notes into 3 sections: Audio Ingestion CLI, Segmentation Hypotheses, Manual Correction
+- Added Table of Contents
+- Preserved Full Text Source
+
+
+
 ### December 2nd, 2025 at 2:09:58 p.m.
 
 ✨ Enhanced Diarization UI with Keyboard Navigation
 
-[Commit](https://github.com/technoplato/toolshed/commit/d712541)
+[Commit](https://github.com/technoplato/toolshed/commit/31faca2)
 
 - Implemented 'Enter to Edit' shortcut
 - Added 'Resume on Save' functionality
