@@ -406,7 +406,43 @@ def push_changes():
             with open(global_path, 'w') as f:
                 f.write(global_content)
         
-        # Final amend to include the correct hash reference (the one that will be pushed)
+        # Final amend to include the updated hash reference
+        subprocess.check_call(['git', 'add', 'progress.md'])
+        subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
+        
+        # Get the actual final commit hash that will be pushed (after all amends)
+        actual_final_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).strip()
+        
+        # Update progress.md one last time with the hash that will actually be pushed
+        with open(local_progress, 'r') as f:
+            content = f.read()
+        actual_final_pattern = r'(\[Commit\]\(https?://[^/]+/[^/]+/[^/]+/commit/)([a-f0-9]+)(\))'
+        if re.search(actual_final_pattern, content):
+            content = re.sub(actual_final_pattern, lambda m: m.group(1) + actual_final_hash + m.group(3), content, count=1)
+        else:
+            actual_final_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
+            content = re.sub(actual_final_pattern_simple, lambda m: m.group(1) + actual_final_hash + m.group(3), content, count=1)
+        actual_final_pattern2 = r'(Commit: )([a-f0-9]+)'
+        if re.search(actual_final_pattern2, content) and '[Commit]' not in content.split('\n\n')[1] if len(content.split('\n\n')) > 1 else True:
+            content = re.sub(actual_final_pattern2, lambda m: m.group(1) + actual_final_hash, content, count=1)
+        with open(local_progress, 'w') as f:
+            f.write(content)
+        
+        # Same for global log
+        if global_path.exists():
+            with open(global_path, 'r') as f:
+                global_content = f.read()
+            if re.search(actual_final_pattern, global_content):
+                global_content = re.sub(actual_final_pattern, lambda m: m.group(1) + actual_final_hash + m.group(3), global_content, count=1)
+            else:
+                actual_final_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
+                global_content = re.sub(actual_final_pattern_simple, lambda m: m.group(1) + actual_final_hash + m.group(3), global_content, count=1)
+            if re.search(actual_final_pattern2, global_content) and '[Commit]' not in global_content.split('\n\n')[1] if len(global_content.split('\n\n')) > 1 else True:
+                global_content = re.sub(actual_final_pattern2, lambda m: m.group(1) + actual_final_hash, global_content, count=1)
+            with open(global_path, 'w') as f:
+                f.write(global_content)
+        
+        # One more amend to include the correct final hash reference
         subprocess.check_call(['git', 'add', 'progress.md'])
         subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
         
