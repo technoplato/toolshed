@@ -30,7 +30,7 @@
 
 📝 Added comprehensive documentation to update_progress script
 
-[Commit](https://github.com/technoplato/toolshed/commit/661e3cd)
+[Commit](https://github.com/technoplato/toolshed/commit/5c3f198)
 
 - Added detailed docstrings to all functions
 - Documented --push flag behavior and workflow
