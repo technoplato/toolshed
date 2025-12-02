@@ -24,6 +24,18 @@
 
 ---
 
+### December 1st, 2025 at 10:12:51 p.m.
+
+🧹 Fixed script to use lowercase progress.md filename
+
+[Commit](https://github.com/technoplato/toolshed/commit/6722a26)
+
+- Updated all references from PROGRESS.md to progress.md
+- Script now correctly stages and commits progress.md file
+- Meta: using the script to document changes to itself
+
+
+
 ### December 1st, 2025 at 10:12:41 p.m.
 
 🧹 Fixed script to use lowercase progress.md filename
