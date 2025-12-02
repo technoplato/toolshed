@@ -8,7 +8,7 @@
 WHO:   Cursor Agent, User
        (Context: Created to standardize progress tracking across local and global logs)
 
-WHAT:  Updates PROGRESS.md in the local repository and a global log in ~/.agents/progress.md.
+WHAT:  Updates progress.md in the local repository and a global log in ~/.agents/progress.md.
        [Inputs] --type (progress type), --message (description), --details (optional list)
        [Outputs] Updates files, prints status.
        [Side Effects] Modifies filesystem.
@@ -25,9 +25,10 @@ WHEN:  2025-12-02
         - 2025-12-02: Initial creation]
         - 2025-12-02: Updated to use gh CLI and enforce uv]
         - 2025-12-02: Updated date format and added --push option]
+        - 2025-12-02: Changed filename from PROGRESS.md to progress.md]
 
 WHERE: Used by Agents to track progress.
-       Local: ./PROGRESS.md
+       Local: ./progress.md
        Global: ~/.agents/progress.md
 
 WHY:   To maintain a running log of work for context and history.
@@ -185,8 +186,8 @@ def update_file(file_path, entry, location_desc):
 def push_changes():
     """Pushes changes to remote"""
     try:
-        # Add PROGRESS.md
-        subprocess.check_call(['git', 'add', 'PROGRESS.md'])
+        # Add progress.md
+        subprocess.check_call(['git', 'add', 'progress.md'])
         
         # Amend commit (no edit) to include PROGRESS.md
         # Check if there is a previous commit to amend?
@@ -206,7 +207,7 @@ def main():
     parser.add_argument("--type", choices=EMOJI_MAP.keys(), default='wip', help="Type of update")
     parser.add_argument("--message", required=True, help="Short summary of the change")
     parser.add_argument("details", nargs="*", help="Additional details")
-    parser.add_argument("--push", action="store_true", help="Add PROGRESS.md, amend commit, and push")
+    parser.add_argument("--push", action="store_true", help="Add progress.md, amend commit, and push")
     
     args = parser.parse_args()
     
@@ -214,7 +215,7 @@ def main():
     
     # Update local
     entry_local = format_entry(args.type, args.message, args.details, commit_hash, repo_url, project_root, is_global=False)
-    local_progress = Path("PROGRESS.md")
+    local_progress = Path("progress.md")
     update_file(local_progress, entry_local, "Local Repository")
     print(f"Updated {local_progress}")
     
