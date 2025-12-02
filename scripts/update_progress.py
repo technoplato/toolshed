@@ -229,12 +229,11 @@ def push_changes():
             content = f.read()
         # Find and replace the commit reference in the most recent entry
         # Pattern to match commit links/hashes in the format [Commit](url/commit/HASH) or Commit: HASH
-        old_hash_pattern = r'(?<=\[Commit\]\([^)]+/commit/)([a-f0-9]+)(?=\))'
-        if re.search(old_hash_pattern, content):
-            content = re.sub(old_hash_pattern, new_hash, content, count=1)
-        old_hash_pattern2 = r'(?<=Commit: )([a-f0-9]+)'
-        if re.search(old_hash_pattern2, content):
-            content = re.sub(old_hash_pattern2, new_hash, content, count=1)
+        # Use a simpler pattern that captures the hash
+        old_hash_pattern = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
+        content = re.sub(old_hash_pattern, r'\1' + new_hash + r'\3', content, count=1)
+        old_hash_pattern2 = r'(Commit: )([a-f0-9]+)'
+        content = re.sub(old_hash_pattern2, r'\1' + new_hash, content, count=1)
         with open(local_progress, 'w') as f:
             f.write(content)
         
@@ -244,8 +243,8 @@ def push_changes():
         if global_path.exists():
             with open(global_path, 'r') as f:
                 global_content = f.read()
-            global_content = re.sub(old_hash_pattern, new_hash, global_content, count=1)
-            global_content = re.sub(old_hash_pattern2, new_hash, global_content, count=1)
+            global_content = re.sub(old_hash_pattern, r'\1' + new_hash + r'\3', global_content, count=1)
+            global_content = re.sub(old_hash_pattern2, r'\1' + new_hash, global_content, count=1)
             with open(global_path, 'w') as f:
                 f.write(global_content)
         
