@@ -26,6 +26,7 @@ WHEN:  2025-12-02
         - 2025-12-02: Updated to use gh CLI and enforce uv]
         - 2025-12-02: Updated date format and added --push option]
         - 2025-12-02: Changed filename from PROGRESS.md to progress.md]
+        - 2025-12-02: Fixed --push to check if commit is pushed before amending to avoid divergence]
 
 WHERE: Used by Agents to track progress.
        Local: ./progress.md
@@ -37,6 +38,7 @@ WHY:   To maintain a running log of work for context and history.
 import argparse
 import datetime
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -183,17 +185,77 @@ def update_file(file_path, entry, location_desc):
         with open(path, 'w') as f:
             f.write(new_content)
 
+def is_commit_pushed():
+    """Check if HEAD has been pushed to origin"""
+    try:
+        # Get current branch name
+        branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], text=True).strip()
+        remote_branch = f'origin/{branch}'
+        
+        # Check if remote branch exists
+        try:
+            remote_hash = subprocess.check_output(['git', 'rev-parse', remote_branch], 
+                                                 stderr=subprocess.DEVNULL, text=True).strip()
+        except subprocess.CalledProcessError:
+            # Remote branch doesn't exist, so commit hasn't been pushed
+            return False
+        
+        # Get local commit hash
+        local_hash = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+        
+        # If local == remote, the commit has been pushed
+        return local_hash == remote_hash
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        # If we can't determine, assume it hasn't been pushed to be safe
+        return False
+
 def push_changes():
     """Pushes changes to remote"""
     try:
         # Add progress.md
         subprocess.check_call(['git', 'add', 'progress.md'])
         
-        # Amend commit (no edit) to include PROGRESS.md
-        # Check if there is a previous commit to amend?
-        # Only amend if the user hasn't pushed yet?
-        # The prompt implies "update progress should push the commit", assuming we are adding to the last commit
-        subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
+        # Check if the last commit has been pushed
+        if is_commit_pushed():
+            # Commit already pushed, create a new commit instead of amending
+            # The entry already references the correct commit (the one with actual changes)
+            subprocess.check_call(['git', 'commit', '-m', 'chore: update progress.md'])
+        else:
+            # Commit hasn't been pushed, safe to amend
+            # First amend to include progress.md
+            subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
+            # Get the new amended commit hash
+            new_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).strip()
+            
+            # Update progress.md with the new commit hash (the amended commit contains both changes and progress.md)
+            local_progress = Path("progress.md")
+            with open(local_progress, 'r') as f:
+                content = f.read()
+            # Find and replace the commit reference in the most recent entry
+            # Pattern to match commit links/hashes in the format [Commit](url/commit/HASH) or Commit: HASH
+            old_hash_pattern = r'(?<=\[Commit\]\([^)]+/commit/)([a-f0-9]+)(?=\))'
+            if re.search(old_hash_pattern, content):
+                content = re.sub(old_hash_pattern, new_hash, content, count=1)
+            old_hash_pattern2 = r'(?<=Commit: )([a-f0-9]+)'
+            if re.search(old_hash_pattern2, content):
+                content = re.sub(old_hash_pattern2, new_hash, content, count=1)
+            with open(local_progress, 'w') as f:
+                f.write(content)
+            
+            # Same for global log
+            global_progress = Path("~/.agents/progress.md")
+            global_path = global_progress.expanduser()
+            if global_path.exists():
+                with open(global_path, 'r') as f:
+                    global_content = f.read()
+                global_content = re.sub(old_hash_pattern, new_hash, global_content, count=1)
+                global_content = re.sub(old_hash_pattern2, new_hash, global_content, count=1)
+                with open(global_path, 'w') as f:
+                    f.write(global_content)
+            
+            # Re-add and amend again to include the updated commit hash reference
+            subprocess.check_call(['git', 'add', 'progress.md'])
+            subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
         
         # Push
         print("Pushing to origin...")
@@ -213,14 +275,34 @@ def main():
     
     commit_hash, repo_url, project_root = get_git_info()
     
+    # Store the commit hash before updating progress.md (this should be the one with actual changes)
+    # If we're pushing and will create a new commit, check if current HEAD is a progress.md commit
+    # If so, reference the parent commit (which should have the actual changes)
+    commit_hash_for_entry = commit_hash
+    if args.push and is_commit_pushed():
+        # Check if current commit message suggests it's a progress.md update
+        try:
+            commit_msg = subprocess.check_output(['git', 'log', '-1', '--pretty=%s'], text=True).strip()
+            if 'progress.md' in commit_msg.lower() or 'update progress' in commit_msg.lower():
+                # Current HEAD is a progress.md commit, reference its parent (the commit with actual changes)
+                try:
+                    parent_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD~1'], text=True).strip()
+                    commit_hash_for_entry = parent_hash
+                except subprocess.CalledProcessError:
+                    # No parent, keep current hash
+                    pass
+        except subprocess.CalledProcessError:
+            # Can't check, keep current hash
+            pass
+    
     # Update local
-    entry_local = format_entry(args.type, args.message, args.details, commit_hash, repo_url, project_root, is_global=False)
+    entry_local = format_entry(args.type, args.message, args.details, commit_hash_for_entry, repo_url, project_root, is_global=False)
     local_progress = Path("progress.md")
     update_file(local_progress, entry_local, "Local Repository")
     print(f"Updated {local_progress}")
     
     # Update global
-    entry_global = format_entry(args.type, args.message, args.details, commit_hash, repo_url, project_root, is_global=True)
+    entry_global = format_entry(args.type, args.message, args.details, commit_hash_for_entry, repo_url, project_root, is_global=True)
     global_progress = Path("~/.agents/progress.md")
     update_file(global_progress, entry_global, "Global Log (~/.agents/progress.md)")
     print(f"Updated {global_progress}")
