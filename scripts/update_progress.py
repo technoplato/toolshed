@@ -260,45 +260,13 @@ def push_changes():
                 f.write(global_content)
         
         # Re-add and amend again to include the updated commit hash reference
+        # This creates a commit that includes: actual changes + progress.md + hash reference to itself
         subprocess.check_call(['git', 'add', 'progress.md'])
         subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
         
-        # Get the final commit hash after second amend
-        final_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], text=True).strip()
-        
-        # Update progress.md one more time with the final hash
-        with open(local_progress, 'r') as f:
-            content = f.read()
-        # Use the same pattern matching logic
-        final_hash_pattern = r'(\[Commit\]\(https?://[^/]+/[^/]+/[^/]+/commit/)([a-f0-9]+)(\))'
-        if re.search(final_hash_pattern, content):
-            content = re.sub(final_hash_pattern, lambda m: m.group(1) + final_hash + m.group(3), content, count=1)
-        else:
-            final_hash_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
-            content = re.sub(final_hash_pattern_simple, lambda m: m.group(1) + final_hash + m.group(3), content, count=1)
-        final_hash_pattern2 = r'(Commit: )([a-f0-9]+)'
-        if re.search(final_hash_pattern2, content) and '[Commit]' not in content.split('\n\n')[1] if len(content.split('\n\n')) > 1 else True:
-            content = re.sub(final_hash_pattern2, lambda m: m.group(1) + final_hash, content, count=1)
-        with open(local_progress, 'w') as f:
-            f.write(content)
-        
-        # Same for global log
-        if global_path.exists():
-            with open(global_path, 'r') as f:
-                global_content = f.read()
-            if re.search(final_hash_pattern, global_content):
-                global_content = re.sub(final_hash_pattern, lambda m: m.group(1) + final_hash + m.group(3), global_content, count=1)
-            else:
-                final_hash_pattern_simple = r'(\[Commit\]\([^)]+/commit/)([a-f0-9]+)(\))'
-                global_content = re.sub(final_hash_pattern_simple, lambda m: m.group(1) + final_hash + m.group(3), global_content, count=1)
-            if re.search(final_hash_pattern2, global_content) and '[Commit]' not in global_content.split('\n\n')[1] if len(global_content.split('\n\n')) > 1 else True:
-                global_content = re.sub(final_hash_pattern2, lambda m: m.group(1) + final_hash, global_content, count=1)
-            with open(global_path, 'w') as f:
-                f.write(global_content)
-        
-        # Final amend to include the correct commit hash reference
-        subprocess.check_call(['git', 'add', 'progress.md'])
-        subprocess.check_call(['git', 'commit', '--amend', '--no-edit'])
+        # Note: The hash reference will point to the commit that includes progress.md.
+        # Even though we amend one more time below, the referenced commit still contains
+        # both the actual changes and progress.md, which is what the user wants to see.
         
         # Push with --force-with-lease for safety (rewrites history if commit was already pushed)
         print("Pushing to origin...")
