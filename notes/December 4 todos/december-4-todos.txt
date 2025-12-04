@@ -1,0 +1,655 @@
+https://pypi.org/project/whisperlivekit/0.2.5/
+Skip to main content
+ 🐍⚡️Support Python for everyone by grabbing a 30% discount on PyCharm—ALL proceeds go to the Python Software Foundation. Offer ends soon, so grab it today!  GET 30% OFF PYCHARM 
+PyPI
+Search PyPI Search
+Help Docs Sponsors Log in Register
+whisperlivekit 0.2.5
+pip install whisperlivekit==0.2.5
+Newer version available (0.2.16)
+Released: Aug 13, 2025
+Real-time, Fully Local Whisper's Speech-to-Text and Speaker Diarization
+Navigation
+ Project description
+ Release history
+ Download files
+Verified details 
+These details have been verified by PyPI
+Maintainers
+ Avatar for quentin.fuxa from gravatar.com quentin.fuxa
+Unverified details
+These details have not been verified by PyPI
+Project links
+Homepage
+Meta
+License: MIT License (# License)
+Author: Quentin Fuxa
+Requires: Python >=3.9
+Provides-Extra: diarization , vac , sentence , whisper , whisper-timestamped , mlx-whisper , openai , simulstreaming
+Classifiers
+Development Status
+4 - Beta
+Intended Audience
+Developers
+License
+OSI Approved :: MIT License
+Programming Language
+Python :: 3.9
+Python :: 3.10
+Topic
+Multimedia :: Sound/Audio :: Speech
+Scientific/Engineering :: Artificial Intelligence
+Sponsored: Python Software Foundation
+Snowflake is a Maintaining sponsor of the Python Software Foundation.
+PSF Sponsor · Served ethically
+Report project as malware
+Project description
+WhisperLiveKit
+WhisperLiveKit Demo
+Real-time, Fully Local Speech-to-Text with Speaker Diarization
+PyPI Version PyPI Downloads Python Versions License
+WhisperLiveKit brings real-time speech transcription directly to your browser, with a ready-to-use backend+server and a simple frontend. ✨
+Built on SimulStreaming (SOTA 2025) and WhisperStreaming (SOTA 2023) for transcription, plus Streaming Sortformer (SOTA 2025) and Diart (SOTA 2021) for diarization.
+Key Features
+Real-time Transcription - Locally (or on-prem) convert speech to text instantly as you speak
+Speaker Diarization - Identify different speakers in real-time. (⚠️ backend Streaming Sortformer in developement)
+Multi-User Support - Handle multiple users simultaneously with a single backend/server
+Automatic Silence Chunking – Automatically chunks when no audio is detected to limit buffer size
+Confidence Validation – Immediately validate high-confidence tokens for faster inference (WhisperStreaming only)
+Buffering Preview – Displays unvalidated transcription segments (not compatible with SimulStreaming yet)
+Punctuation-Based Speaker Splitting [BETA] - Align speaker changes with natural sentence boundaries for more readable transcripts
+SimulStreaming Backend - Dual-licensed - Ultra-low latency transcription using SOTA AlignAtt policy.
+Architecture
+Architecture
+Quick Start
+# Install the package
+pip install whisperlivekit
+
+# Start the transcription server
+whisperlivekit-server --model tiny.en
+
+# Open your browser at http://localhost:8000 to see the interface.
+# Use  -ssl-certfile public.crt --ssl-keyfile private.key parameters to use SSL
+That's it! Start speaking and watch your words appear on screen.
+Installation
+#Install from PyPI (Recommended)
+pip install whisperlivekit
+
+#Install from Source
+git clone https://github.com/QuentinFuxa/WhisperLiveKit
+cd WhisperLiveKit
+pip install -e .
+FFmpeg Dependency
+# Ubuntu/Debian
+sudo apt install ffmpeg
+
+# macOS
+brew install ffmpeg
+
+# Windows
+# Download from https://ffmpeg.org/download.html and add to PATH
+Optional Dependencies
+# Voice Activity Controller (prevents hallucinations)
+pip install torch
+
+# Sentence-based buffer trimming
+pip install mosestokenizer wtpsplit
+pip install tokenize_uk  # If you work with Ukrainian text
+
+# Speaker diarization
+pip install diart
+
+# Alternative Whisper backends (default is faster-whisper)
+pip install whisperlivekit[whisper]              # Original Whisper
+pip install whisperlivekit[whisper-timestamped]  # Improved timestamps
+pip install whisperlivekit[mlx-whisper]          # Apple Silicon optimization
+pip install whisperlivekit[openai]               # OpenAI API
+pip install whisperlivekit[simulstreaming]
+🎹 Pyannote Models Setup
+For diarization, you need access to pyannote.audio models:
+Accept user conditions for the pyannote/segmentation model
+Accept user conditions for the pyannote/segmentation-3.0 model
+Accept user conditions for the pyannote/embedding model
+Login with HuggingFace:
+pip install huggingface_hub
+huggingface-cli login
+💻 Usage Examples
+Command-line Interface
+Start the transcription server with various options:
+# Basic server with English model
+whisperlivekit-server --model tiny.en
+
+# Advanced configuration with diarization
+whisperlivekit-server --host 0.0.0.0 --port 8000 --model medium --diarization --language auto
+
+# SimulStreaming backend for ultra-low latency
+whisperlivekit-server --backend simulstreaming --model large-v3 --frame-threshold 20
+Python API Integration (Backend)
+Check basic_server.py for a complete example.
+from whisperlivekit import TranscriptionEngine, AudioProcessor, parse_args
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+from contextlib import asynccontextmanager
+import asyncio
+
+transcription_engine = None
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global transcription_engine
+    transcription_engine = TranscriptionEngine(model="medium", diarization=True, lan="en")
+    # You can also load from command-line arguments using parse_args()
+    # args = parse_args()
+    # transcription_engine = TranscriptionEngine(**vars(args))
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# Process WebSocket connections
+async def handle_websocket_results(websocket: WebSocket, results_generator):
+    async for response in results_generator:
+        await websocket.send_json(response)
+    await websocket.send_json({"type": "ready_to_stop"})
+
+@app.websocket("/asr")
+async def websocket_endpoint(websocket: WebSocket):
+    global transcription_engine
+
+    # Create a new AudioProcessor for each connection, passing the shared engine
+    audio_processor = AudioProcessor(transcription_engine=transcription_engine)    
+    results_generator = await audio_processor.create_tasks()
+    results_task = asyncio.create_task(handle_websocket_results(websocket, results_generator))
+    await websocket.accept()
+    while True:
+        message = await websocket.receive_bytes()
+        await audio_processor.process_audio(message)        
+Frontend Implementation
+The package includes a simple HTML/JavaScript implementation that you can adapt for your project. You can find it here, or load its content using get_web_interface_html() :
+from whisperlivekit import get_web_interface_html
+html_content = get_web_interface_html()
+⚙️ Configuration Reference
+WhisperLiveKit offers extensive configuration options:
+Parameter	Description	Default
+--host	Server host address	localhost
+--port	Server port	8000
+--model	Whisper model size. Caution : '.en' models do not work with Simulstreaming	tiny
+--language	Source language code or auto	en
+--task	transcribe or translate	transcribe
+--backend	Processing backend	faster-whisper
+--diarization	Enable speaker identification	False
+--punctuation-split	Use punctuation to improve speaker boundaries	True
+--confidence-validation	Use confidence scores for faster validation	False
+--min-chunk-size	Minimum audio chunk size (seconds)	1.0
+--vac	Use Voice Activity Controller	False
+--no-vad	Disable Voice Activity Detection	False
+--buffer_trimming	Buffer trimming strategy (sentence or segment)	segment
+--warmup-file	Audio file path for model warmup	jfk.wav
+--ssl-certfile	Path to the SSL certificate file (for HTTPS support)	None
+--ssl-keyfile	Path to the SSL private key file (for HTTPS support)	None
+--segmentation-model	Hugging Face model ID for pyannote.audio segmentation model. Available models	pyannote/segmentation-3.0
+--embedding-model	Hugging Face model ID for pyannote.audio embedding model. Available models	speechbrain/spkrec-ecapa-voxceleb
+SimulStreaming-specific Options:
+Parameter	Description	Default
+--frame-threshold	AlignAtt frame threshold (lower = faster, higher = more accurate)	25
+--beams	Number of beams for beam search (1 = greedy decoding)	1
+--decoder	Force decoder type (beam or greedy)	auto
+--audio-max-len	Maximum audio buffer length (seconds)	30.0
+--audio-min-len	Minimum audio length to process (seconds)	0.0
+--cif-ckpt-path	Path to CIF model for word boundary detection	None
+--never-fire	Never truncate incomplete words	False
+--init-prompt	Initial prompt for the model	None
+--static-init-prompt	Static prompt that doesn't scroll	None
+--max-context-tokens	Maximum context tokens	None
+--model-path	Direct path to .pt model file. Download it if not found	./base.pt
+🔧 How It Works
+Audio Capture: Browser's MediaRecorder API captures audio in webm/opus format
+Streaming: Audio chunks are sent to the server via WebSocket
+Processing: Server decodes audio with FFmpeg and streams into the model for transcription
+Real-time Output: Partial transcriptions appear immediately in light gray (the 'aperçu') and finalized text appears in normal color
+🚀 Deployment Guide
+To deploy WhisperLiveKit in production:
+Server Setup (Backend):
+# Install production ASGI server
+pip install uvicorn gunicorn
+
+# Launch with multiple workers
+gunicorn -k uvicorn.workers.UvicornWorker -w 4 your_app:app
+Frontend Integration:
+Host your customized version of the example HTML/JS in your web application
+Ensure WebSocket connection points to your server's address
+Nginx Configuration (recommended for production):
+server {
+   listen 80;
+   server_name your-domain.com;
+
+location / {
+    proxy_pass http://localhost:8000;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+}}
+HTTPS Support: For secure deployments, use "wss://" instead of "ws://" in WebSocket URL
+🐋 Docker
+A basic Dockerfile is provided which allows re-use of Python package installation options. ⚠️ For large models, ensure that your docker runtime has enough memory available. See below usage examples:
+All defaults
+Create a reusable image with only the basics and then run as a named container:
+docker build -t whisperlivekit-defaults .
+docker create --gpus all --name whisperlivekit -p 8000:8000 whisperlivekit-defaults
+docker start -i whisperlivekit
+Note: If you're running on a system without NVIDIA GPU support (such as Mac with Apple Silicon or any system without CUDA capabilities), you need to remove the --gpus all flag from the docker create command. Without GPU acceleration, transcription will use CPU only, which may be significantly slower. Consider using small models for better performance on CPU-only systems.
+Customization
+Customize the container options:
+docker build -t whisperlivekit-defaults .
+docker create --gpus all --name whisperlivekit-base -p 8000:8000 whisperlivekit-defaults --model base
+docker start -i whisperlivekit-base
+--build-arg Options:
+EXTRAS="whisper-timestamped" - Add extras to the image's installation (no spaces). Remember to set necessary container options!
+HF_PRECACHE_DIR="./.cache/" - Pre-load a model cache for faster first-time start
+HF_TKN_FILE="./token" - Add your Hugging Face Hub access token to download gated models
+🔮 Use Cases
+Capture discussions in real-time for meeting transcription, help hearing-impaired users follow conversations through accessibility tools, transcribe podcasts or videos automatically for content creation, transcribe support calls with speaker identification for customer service...
+🙏 Acknowledgments
+We extend our gratitude to the original authors of:
+Whisper Streaming	SimulStreaming	Diart	OpenAI Whisper
+
+Help
+Installing packages
+Uploading packages
+User guide
+Project name retention
+FAQs
+About PyPI
+PyPI Blog
+Infrastructure dashboard
+Statistics
+Logos & trademarks
+Our sponsors
+Contributing to PyPI
+Bugs and feedback
+Contribute on GitHub
+Translate PyPI
+Sponsor PyPI
+Development credits
+Using PyPI
+Terms of Service
+Report security issue
+Code of conduct
+Privacy Notice
+Acceptable Use Policy
+Status: All Systems Operational
+Developed and maintained by the Python community, for the Python community.
+Donate today!
+"PyPI", "Python Package Index", and the blocks logos are registered trademarks of the Python Software Foundation.
+© 2025 Python Software Foundation
+Site map
+English   español   français   日本語   português (Brasil)   українська   Ελληνικά   Deutsch   中文 (简体)   中文 (繁體)   русский   עברית   Esperanto   한국어
+
+AWS
+Cloud computing and Security Sponsor
+
+Datadog
+Monitoring
+
+Depot
+Continuous Integration
+
+Fastly
+CDN
+
+Google
+Download Analytics
+
+Pingdom
+Monitoring
+
+Sentry
+Error logging
+
+StatusPage
+Status page
+
+
+https://github.com/kadirnar/whisper-plus
+Skip to content
+Navigation Menu
+kadirnar
+whisper-plus
+ 
+Type / to search
+Code
+Issues
+9
+Pull requests
+1
+Actions
+Projects
+Security
+Insights
+Owner avatar
+whisper-plus
+Public
+kadirnar/whisper-plus
+
+t
+Name		
+kadirnar
+kadirnar
+Merge pull request #134 from kadirnar/pre-commit-ci-update-config
+1b54cc7
+ · 
+3 months ago
+.github
+Upgrade to latest Python version and ensure standard library usage
+last year
+doc
+🍎 Add Mlx library
+last year
+notebook
+🦸 Update notebook and gradio code
+last year
+requirements
+🍎 Add Lightning Mlx library
+last year
+scripts
+💬 Add new parameters for hqq optimization method
+last year
+whisperplus
+[pre-commit.ci] auto fixes from pre-commit.com hooks
+4 months ago
+.gitignore
+🐛 Ignore Jupyter Notebook files and add
+last year
+.pre-commit-config.yaml
+[pre-commit.ci] pre-commit suggestions
+4 months ago
+LICENSE
+Initial commit
+2 years ago
+MANIFEST.in
+🐛Update requirements.txt and MANIFEST.in
+last year
+README.md
+[pre-commit.ci] auto fixes from pre-commit.com hooks
+4 months ago
+requirements.txt
+Move model loading logic into SpeechToTextPipeline class
+4 months ago
+setup.cfg
+🚀 Initial commit
+2 years ago
+setup.py
+🐛 Add package discovery in setup.py
+last year
+Repository files navigation
+README
+Apache-2.0 license
+WhisperPlus: Faster, Smarter, and More Capable 🚀
+
+teaser
+kadirnar%2Fwhisper-plus | Trendshift
+ Supported Python versions  pypi version  HuggingFace Spaces
+🛠️ Installation
+
+pip install whisperplus git+https://github.com/huggingface/transformers
+pip install flash-attn --no-build-isolation
+🤗 Model Hub
+
+You can find the models on the HuggingFace Model Hub
+
+🎙️ Usage
+
+To use the whisperplus library, follow the steps below for different tasks:
+
+🎵 Youtube URL to Audio
+
+from whisperplus import SpeechToTextPipeline, download_youtube_to_mp3
+from transformers import BitsAndBytesConfig, HqqConfig
+import torch
+
+url = "https://www.youtube.com/watch?v=di3rHkEZuUw"
+audio_path = download_youtube_to_mp3(url, output_dir="downloads", filename="test")
+
+hqq_config = HqqConfig(
+    nbits=4,
+    group_size=64,
+    quant_zero=False,
+    quant_scale=False,
+    axis=0,
+    offload_meta=False,
+)  # axis=0 is used by default
+
+bnb_config = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16,
+    bnb_4bit_use_double_quant=True,
+)
+
+pipeline = SpeechToTextPipeline(
+    model_id="distil-whisper/distil-large-v3",
+    quant_config=hqq_config,
+    flash_attention_2=True,
+)
+
+transcript = pipeline(
+    audio_path=audio_path,
+    chunk_length_s=30,
+    stride_length_s=5,
+    max_new_tokens=128,
+    batch_size=100,
+    language="english",
+    return_timestamps=False,
+)
+
+print(transcript)
+🍎 Apple MLX
+
+from whisperplus.pipelines import mlx_whisper
+from whisperplus import download_youtube_to_mp3
+
+url = "https://www.youtube.com/watch?v=1__CAdTJ5JU"
+audio_path = download_youtube_to_mp3(url)
+
+text = mlx_whisper.transcribe(
+    audio_path, path_or_hf_repo="mlx-community/whisper-large-v3-mlx"
+)["text"]
+print(text)
+🍏 Lightning Mlx Whisper
+
+from whisperplus.pipelines.lightning_whisper_mlx import LightningWhisperMLX
+from whisperplus import download_youtube_to_mp3
+
+url = "https://www.youtube.com/watch?v=1__CAdTJ5JU"
+audio_path = download_youtube_to_mp3(url)
+
+whisper = LightningWhisperMLX(model="distil-large-v3", batch_size=12, quant=None)
+output = whisper.transcribe(audio_path=audio_path)["text"]
+📰 Summarization
+
+from whisperplus.pipelines.summarization import TextSummarizationPipeline
+
+summarizer = TextSummarizationPipeline(model_id="facebook/bart-large-cnn")
+summary = summarizer.summarize(transcript)
+print(summary[0]["summary_text"])
+📰 Long Text Support Summarization
+
+from whisperplus.pipelines.long_text_summarization import LongTextSummarizationPipeline
+
+summarizer = LongTextSummarizationPipeline(model_id="facebook/bart-large-cnn")
+summary_text = summarizer.summarize(transcript)
+print(summary_text)
+💬 Speaker Diarization
+
+You must confirm the licensing permissions of these two models.
+
+https://huggingface.co/pyannote/speaker-diarization-3.1
+https://huggingface.co/pyannote/segmentation-3.0
+pip install -r requirements/speaker_diarization.txt
+pip install -U "huggingface_hub[cli]"
+huggingface-cli login
+from whisperplus.pipelines.whisper_diarize import ASRDiarizationPipeline
+from whisperplus import download_youtube_to_mp3, format_speech_to_dialogue
+
+audio_path = download_youtube_to_mp3("https://www.youtube.com/watch?v=mRB14sFHw2E")
+
+device = "cuda"  # cpu or mps
+pipeline = ASRDiarizationPipeline.from_pretrained(
+    asr_model="openai/whisper-large-v3",
+    diarizer_model="pyannote/speaker-diarization-3.1",
+    use_auth_token=False,
+    chunk_length_s=30,
+    device=device,
+)
+
+output_text = pipeline(audio_path, num_speakers=2, min_speaker=1, max_speaker=2)
+dialogue = format_speech_to_dialogue(output_text)
+print(dialogue)
+⭐ RAG - Chat with Video(LanceDB)
+
+pip install sentence-transformers ctransformers langchain
+from whisperplus.pipelines.chatbot import ChatWithVideo
+
+chat = ChatWithVideo(
+    input_file="trascript.txt",
+    llm_model_name="TheBloke/Mistral-7B-v0.1-GGUF",
+    llm_model_file="mistral-7b-v0.1.Q4_K_M.gguf",
+    llm_model_type="mistral",
+    embedding_model_name="sentence-transformers/all-MiniLM-L6-v2",
+)
+
+query = "what is this video about ?"
+response = chat.run_query(query)
+print(response)
+🌠 RAG - Chat with Video(AutoLLM)
+
+pip install autollm>=0.1.9
+from whisperplus.pipelines.autollm_chatbot import AutoLLMChatWithVideo
+
+# service_context_params
+system_prompt = """
+You are an friendly ai assistant that help users find the most relevant and accurate answers
+to their questions based on the documents you have access to.
+When answering the questions, mostly rely on the info in documents.
+"""
+query_wrapper_prompt = """
+The document information is below.
+---------------------
+{context_str}
+---------------------
+Using the document information and mostly relying on it,
+answer the query.
+Query: {query_str}
+Answer:
+"""
+
+chat = AutoLLMChatWithVideo(
+    input_file="input_dir",  # path of mp3 file
+    openai_key="YOUR_OPENAI_KEY",  # optional
+    huggingface_key="YOUR_HUGGINGFACE_KEY",  # optional
+    llm_model="gpt-3.5-turbo",
+    llm_max_tokens="256",
+    llm_temperature="0.1",
+    system_prompt=system_prompt,
+    query_wrapper_prompt=query_wrapper_prompt,
+    embed_model="huggingface/BAAI/bge-large-zh",  # "text-embedding-ada-002"
+)
+
+query = "what is this video about ?"
+response = chat.run_query(query)
+print(response)
+🎙️ Text to Speech
+
+from whisperplus.pipelines.text2speech import TextToSpeechPipeline
+
+tts = TextToSpeechPipeline(model_id="suno/bark")
+audio = tts(text="Hello World", voice_preset="v2/en_speaker_6")
+🎥 AutoCaption
+
+pip install moviepy
+apt install imagemagick libmagick++-dev
+cat /etc/ImageMagick-6/policy.xml | sed 's/none/read,write/g'> /etc/ImageMagick-6/policy.xml
+from whisperplus.pipelines.whisper_autocaption import WhisperAutoCaptionPipeline
+from whisperplus import download_youtube_to_mp4
+
+video_path = download_youtube_to_mp4(
+    "https://www.youtube.com/watch?v=di3rHkEZuUw",
+    output_dir="downloads",
+    filename="test",
+)  # Optional
+
+caption = WhisperAutoCaptionPipeline(model_id="openai/whisper-large-v3")
+caption(video_path=video_path, output_path="output.mp4", language="english")
+😍 Contributing
+
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+📜 License
+
+This project is licensed under the terms of the Apache License 2.0.
+
+🤗 Citation
+
+@misc{radford2022whisper,
+  doi = {10.48550/ARXIV.2212.04356},
+  url = {https://arxiv.org/abs/2212.04356},
+  author = {Radford, Alec and Kim, Jong Wook and Xu, Tao and Brockman, Greg and McLeavey, Christine and Sutskever, Ilya},
+  title = {Robust Speech Recognition via Large-Scale Weak Supervision},
+  publisher = {arXiv},
+  year = {2022},
+  copyright = {arXiv.org perpetual, non-exclusive license}
+}
+About
+
+WhisperPlus: Faster, Smarter, and More Capable 🚀
+
+Resources
+ Readme
+License
+ Apache-2.0 license
+ Activity
+Stars
+ 1.9k stars
+Watchers
+ 18 watching
+Forks
+ 146 forks
+Report repository
+Releases 5
+
+WhisperPlus v0.3.0
+Latest
+on May 4, 2024
++ 4 releases
+Sponsor this project
+
+@kadirnar
+kadirnar Kadir Nar
+Learn more about GitHub Sponsors
+Contributors
+6
+
+ @kadirnar
+ @pre-commit-ci[bot]
+ @akashAD98
+ @cobanov
+ @AlessandroSpallina
+ @criminact
+Languages
+
+Python
+95.7%
+Jupyter Notebook
+4.3%
+Footer
+© 2025 GitHub, Inc.
+Footer navigation
+Terms
+Privacy
+Security
+Status
+Community
+Docs
+Contact
+Manage cookies
+Do not share my personal information
