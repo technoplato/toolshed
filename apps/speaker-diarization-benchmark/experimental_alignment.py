@@ -60,7 +60,11 @@ def align_words_with_diarization(words, diarization):
     return aligned_segments
 
 def main():
-    clip_id = "clip_local_mssp-old-test-ep-1_0_60.wav"
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--clip-id", type=str, default="clip_youtube_jAlKYYr1bpY_0_60.wav", help="Clip ID to process")
+    args = parser.parse_args()
+    
+    clip_id = args.clip_id
     clip_path = CLIPS_DIR / clip_id
     
     if not clip_path.exists():

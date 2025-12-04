@@ -26,6 +26,18 @@
 
 ---
 
+### December 4th, 2025 at 2:57:21 p.m.
+
+🧹 Refactored audio ingestion system
+
+[Commit](https://github.com/technoplato/toolshed/commit/61d3d14)
+
+- Created modular ingestion package
+- Implemented base Workflow class
+- Migrated existing workflows to new structure
+
+
+
 ### December 4th, 2025 at 2:56:24 p.m.
 
 ✨ Enhanced Ground Truth UI
