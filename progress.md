@@ -26,11 +26,22 @@
 
 ---
 
+### December 3rd, 2025 at 10:25:11 p.m.
+
+🧹 Suppress noisy BrokenPipeError in server.py
+
+[Commit](https://github.com/technoplato/toolshed/commit/401abed)
+
+- Caught BrokenPipeError and ConnectionResetError in copyfile
+- Prevented double-fault in fallback logic
+
+
+
 ### December 3rd, 2025 at 10:08:44 p.m.
 
 📝 Added Agent Instructions section
 
-[Commit](https://github.com/technoplato/toolshed/commit/5c9b359)
+[Commit](https://github.com/technoplato/toolshed/commit/a3fb077)
 
 - Added section on file documentation standards
 - Added section on progress tracking workflow
