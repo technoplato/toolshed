@@ -30,7 +30,7 @@
 
 🧹 Updated project dependencies
 
-[Commit](https://github.com/technoplato/toolshed/commit/bd8b725)
+[Commit](https://github.com/technoplato/toolshed/commit/5b4816a)
 
 - Updated pyproject.toml and uv.lock
 
