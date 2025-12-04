@@ -16,49 +16,119 @@ Every source code file (Python, TypeScript, React, Scripts, etc.) MUST start wit
 **Format:**
 
 ```text
-WHO:   [Agent Name/Version], [User Name]
-       (Context: What conversation/task was this created in?)
+WHO:
+  [Agent Name/Version], [User Name]
+  (Context: What conversation/task was this created in?)
 
-WHAT:  [Description of the file's purpose]
-       [Inputs]
-       [Outputs]
-       [Side Effects]
-       [How to run/invoke it]
-       (Example usage should be copy-pasteable)
+WHAT:
+  [Description of the file's purpose]
+  [Inputs]
+  [Outputs]
+  [Side Effects]
+  [How to run/invoke it]
+  (Example usage should be copy-pasteable)
 
-WHEN:  [Created Date]
-       [Last Modified Date]
-       [Change Log:
-        - YYYY-MM-DD: Initial creation
-        - YYYY-MM-DD: Added feature X]
+WHEN:
+  [Created Date]
+  [Last Modified Date]
+  [Change Log:
+    - YYYY-MM-DD: Initial creation
+    - YYYY-MM-DD: Added feature X
+  ]
 
-WHERE: [Known usages]
-       [Deployment location - or "Not deployed yet"]
+WHERE:
+  [Known usages]
+  [Deployment location - or "Not deployed yet"]
 
-WHY:   [Reason for existence - e.g., "Playground for speaker diarization", "Fixing bug X"]
-       [Design decisions/Rationale]
+WHY:
+  [Reason for existence - e.g., "Playground for speaker diarization", "Fixing bug X"]
+  [Design decisions/Rationale]
 ```
 
 ## Workflows
 
 ### Progress Tracking
 
-- Maintain `PROGRESS.md` at the root.
+- Maintain `progress.md` at the root (lowercase filename).
 - Maintain a global progress log at `~/.agents/progress.md`.
 - Add an entry for every significant decision, question, answer, or code change.
-- Use the `scripts/update_progress.py` script to append entries.
-- **Setup**:
-  - Ensure `uv` and `gh` are installed.
-  - Add the script to your PATH or symlink it:
-    ```bash
-    ln -s $(pwd)/scripts/update_progress.py ~/.local/bin/update_progress
-    ```
-- **Commit Flow**:
-  1. Make changes.
-  2. **Ask the user to verify/check changes.**
-  3. Update `PROGRESS.md` (using the script).
-  4. Commit relevant changes.
-  5. Amend commit if needed to ensure `PROGRESS.md` is included and message is correct.
+- **Always use the `scripts/update_progress.py` script** to append entries. Never edit progress files manually.
+
+#### Using `update_progress.py`
+
+**Setup:**
+
+- Ensure `uv` and `gh` are installed.
+- The script can be run directly: `./scripts/update_progress.py`
+- Optionally add to PATH: `ln -s $(pwd)/scripts/update_progress.py ~/.local/bin/update_progress`
+
+**Default Behavior:**
+
+- **Agents MUST use the `--push` flag by default** unless the user explicitly requests otherwise.
+- The `--push` flag ensures progress entries are linked to commits that include both the actual changes and the progress documentation.
+
+**What Happens When You Run It:**
+
+1. **Without `--push` flag:**
+
+   - Updates `progress.md` with a new entry at the top
+   - Updates `~/.agents/progress.md` with the same entry (includes project context)
+   - Prints confirmation messages
+   - Does NOT modify git state
+
+2. **With `--push` flag (default for agents):**
+   - Updates both progress files (local and global)
+   - Stages `progress.md`
+   - Amends the current commit (HEAD) to include `progress.md`
+   - Updates the commit hash reference in the progress entry to point to the amended commit
+   - Pushes to remote with `--force-with-lease` (safe force push)
+   - Ensures the GitHub commit link shows both your changes AND the progress entry
+
+**Example Usage:**
+
+```bash
+# Basic entry (updates files only, no git changes)
+./scripts/update_progress.py --type feature --message "Added new authentication system" "Implemented OAuth2" "Added tests"
+
+# With --push (default for agents - amends commit and pushes)
+./scripts/update_progress.py --type feature --message "Added new authentication system" --push "Implemented OAuth2" "Added tests"
+
+# Different entry types
+./scripts/update_progress.py --type bug --message "Fixed memory leak" --push "Reduced memory usage by 40%"
+./scripts/update_progress.py --type doc --message "Updated API documentation" --push
+./scripts/update_progress.py --type decision --message "Chose React over Vue" --push "Better ecosystem support" "Team familiarity"
+```
+
+**Entry Types:**
+
+- `feature`: ✨ New features
+- `bug`: 🐛 Bug fixes
+- `chore`: 🧹 Maintenance tasks
+- `doc`: 📝 Documentation updates
+- `wip`: 🚧 Work in progress
+- `test`: ✅ Tests and verification
+- `question`: ❓ Questions posed
+- `answer`: 🗣️ Answers/discussions
+- `decision`: 🧠 Decisions made
+- `release`: 🚀 Releases/deployments
+
+**Commit Flow:**
+
+1. Make changes.
+2. **Ask the user to verify/check changes.**
+3. Commit your changes: `git add . && git commit -m "Your commit message"`
+4. Update progress (with `--push` by default):
+   ```bash
+   ./scripts/update_progress.py --type <type> --message "Description" --push "Detail 1" "Detail 2"
+   ```
+5. The script automatically amends your commit to include `progress.md` and pushes.
+
+**Important Notes:**
+
+- The script uses human-readable dates (e.g., "December 1st, 2025 at 9:16:52 p.m.")
+- Progress entries are formatted with date on first line, message on second line, commit link on third line
+- Global log entries include project name and path for context
+- The `--push` flag rewrites git history (amends commits). Use with caution on shared branches.
 
 ### Task Management
 
