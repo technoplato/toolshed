@@ -30,7 +30,7 @@
 
 🧹 Suppress noisy BrokenPipeError in server.py
 
-[Commit](https://github.com/technoplato/toolshed/commit/401abed)
+[Commit](https://github.com/technoplato/toolshed/commit/4ca3e1b)
 
 - Caught BrokenPipeError and ConnectionResetError in copyfile
 - Prevented double-fault in fallback logic
