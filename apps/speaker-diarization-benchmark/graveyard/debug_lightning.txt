@@ -1,0 +1,45 @@
+2025-12-04 11:40:11,273 - INFO - Starting audio ingestion for /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav
+2025-12-04 11:40:11,371 - INFO - Starting transcription...
+2025-12-04 11:40:11,371 - INFO - Loading transcription from cache: /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/cache/transcriptions/clip_youtube_jAlKYYr1bpY_240_60.json
+2025-12-04 11:40:11,373 - INFO - Transcription complete in 0.00s
+2025-12-04 11:40:11,373 - INFO - Running WhisperPlus Lightning MLX Workflow...
+2025-12-04 11:40:14,011 - ERROR - whisperplus or lightning not installed.
+2025-12-04 11:40:14,011 - INFO - Dry run: Skipping manifest update.
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/audio_ingestion.py:132: PydanticDeprecatedSince20: The `json` method is deprecated; use `model_dump_json` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": json.loads(config.json()) if hasattr(config, 'json') else config.dict()
+2025-12-04 11:40:14,011 - INFO - Dry run results saved to temp file: /var/folders/2d/5pqypl0x3px_4z4pbqxwczk80000gn/T/dry_run_qw0kjruf.json
+
+--- Dry Run Metadata ---
+Command: python audio_ingestion.py diarize data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav --workflow whisperplus_lightning --dry-run
+CWD: /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark
+Workflow: whisperplus_lightning
+------------------------
+
+{
+  "metadata": {
+    "command": "python audio_ingestion.py diarize data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav --workflow whisperplus_lightning --dry-run",
+    "cwd": "/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark",
+    "config": {
+      "clip_path": "/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav",
+      "workflow": {
+        "name": "whisperplus_lightning",
+        "threshold": 0.5,
+        "window": 0,
+        "cluster_threshold": 0.5,
+        "id_threshold": 0.4,
+        "model_name": null,
+        "min_speakers": null,
+        "max_speakers": null
+      },
+      "output_dir": ".",
+      "append_to": null,
+      "identify": false,
+      "overwrite": false,
+      "verbose": false,
+      "dry_run": true
+    }
+  },
+  "transcript": []
+}
+
+Dry run results saved to: /var/folders/2d/5pqypl0x3px_4z4pbqxwczk80000gn/T/dry_run_qw0kjruf.json

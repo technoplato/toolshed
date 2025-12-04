@@ -1,0 +1,46 @@
+2025-12-04 11:44:41,552 - INFO - Starting audio ingestion for /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav
+2025-12-04 11:44:41,648 - INFO - Starting transcription...
+2025-12-04 11:44:41,649 - INFO - Loading transcription from cache: /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/cache/transcriptions/clip_youtube_jAlKYYr1bpY_240_60.json
+2025-12-04 11:44:41,650 - INFO - Transcription complete in 0.00s
+2025-12-04 11:44:41,651 - INFO - Running WhisperPlus Apple MLX Workflow...
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Fetching 4 files:  25%|██▌       | 1/4 [00:00<00:00,  4.41it/s]Fetching 4 files: 100%|██████████| 4/4 [00:41<00:00, 11.10s/it]Fetching 4 files: 100%|██████████| 4/4 [00:41<00:00, 10.28s/it]
+2025-12-04 11:45:27,580 - ERROR - WhisperPlus MLX failed: [load_npz] Input must be a zip file or a file-like object that can be opened with zipfile.ZipFile
+2025-12-04 11:45:27,581 - INFO - Dry run: Skipping manifest update.
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/audio_ingestion.py:132: PydanticDeprecatedSince20: The `json` method is deprecated; use `model_dump_json` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": json.loads(config.json()) if hasattr(config, 'json') else config.dict()
+2025-12-04 11:45:27,581 - INFO - Dry run results saved to temp file: /var/folders/2d/5pqypl0x3px_4z4pbqxwczk80000gn/T/dry_run_y72_6_0y.json
+
+--- Dry Run Metadata ---
+Command: python audio_ingestion.py diarize data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav --workflow whisperplus_mlx --dry-run
+CWD: /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark
+Workflow: whisperplus_mlx
+------------------------
+
+{
+  "metadata": {
+    "command": "python audio_ingestion.py diarize data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav --workflow whisperplus_mlx --dry-run",
+    "cwd": "/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark",
+    "config": {
+      "clip_path": "/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav",
+      "workflow": {
+        "name": "whisperplus_mlx",
+        "threshold": 0.5,
+        "window": 0,
+        "cluster_threshold": 0.5,
+        "id_threshold": 0.4,
+        "model_name": null,
+        "min_speakers": null,
+        "max_speakers": null
+      },
+      "output_dir": ".",
+      "append_to": null,
+      "identify": false,
+      "overwrite": false,
+      "verbose": false,
+      "dry_run": true
+    }
+  },
+  "transcript": []
+}
+
+Dry run results saved to: /var/folders/2d/5pqypl0x3px_4z4pbqxwczk80000gn/T/dry_run_y72_6_0y.json

@@ -1,0 +1,29 @@
+--- Benchmark Report ---
+Date: 2025-12-04 12:24:08
+Clip: clip_youtube_jAlKYYr1bpY_240_60.wav
+Workflow: overlapped_speech
+Commit: 4547f1c5fc99358c34376f56ba13760e815de013 (Dirty: True)
+Arguments: name='overlapped_speech' threshold=0.5 window=0 cluster_threshold=0.5 id_threshold=0.4 model_name=None min_speakers=None max_speakers=None
+
+--- Timing Stats ---
+Transcription: 0.00s
+Embedding:     0.00s
+Segmentation:  6.10s
+Clustering:    0.00s
+Total:         6.11s
+
+--- Full Transcription ---
+yeah bobo is an australian man or he's or he might be from um because if that's the case he lives actually on new zealand i think he's new zealand oh okay yeah that guy he was in that movie when we were kings which i feel like i always i don't even think i've heard of that movie as i was saying it i was like i feel like shane there's a movie shane would love but i'm basing that only on the title when we were kings it's just something movie you would love drunk every night we was king we were the best movie takes place at a bus stop it takes place at a bus stop in west philadelphia i think it's about like i think it's kind of like um slum dog millionaire except in new zealand or one of those kind of movies okay i think or like city of god maybe it's like that city of god's awesome i've never seen either movie i heard they're both great city of god's awesome yeah i'm a great title i like subtitles man i'm a big subtitle movie guy
+
+--- Segmentation & Diarization ---
+[  0.00 -   4.60] OVERLAP: [OVERLAP] yeah bobo is an australian man or he's or he might be from um because if that's the case he
+[  4.60 -   9.34] OVERLAP: [OVERLAP] lives actually on new zealand i think he's new zealand oh okay yeah that guy he was in that movie
+[  9.34 -  14.16] OVERLAP: [OVERLAP] when we were kings which i feel like i always i don't even think i've heard of that movie
+[ 14.98 -  18.74] UNKNOWN: as i was saying it i was like i feel like shane there's a movie shane would love but i'm basing
+[ 18.74 -  22.58] OVERLAP: [OVERLAP] that only on the title when we were kings it's just something movie you would love
+[ 22.58 -  28.90] OVERLAP: [OVERLAP] drunk every night we was king we were the best
+[ 32.90 -  37.36] OVERLAP: [OVERLAP] movie takes place at a bus stop it takes place at a bus stop in west philadelphia
+[ 38.86 -  45.76] OVERLAP: [OVERLAP] i think it's about like i think it's kind of like um slum dog millionaire except in new zealand or one
+[ 45.76 -  50.62] OVERLAP: [OVERLAP] of those kind of movies okay i think or like city of god maybe it's like that city of god's awesome
+[ 50.62 -  55.86] UNKNOWN: i've never seen either movie i heard they're both great city of god's awesome yeah i'm a great
+[ 55.86 -  59.66] OVERLAP: [OVERLAP] title i like subtitles man i'm a big subtitle movie guy

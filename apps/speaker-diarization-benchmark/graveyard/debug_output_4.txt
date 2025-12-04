@@ -1,0 +1,63 @@
+2025-12-04 11:38:41,540 - INFO - Starting audio ingestion for /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav
+2025-12-04 11:38:41,639 - INFO - Starting transcription...
+2025-12-04 11:38:41,639 - INFO - Loading transcription from cache: /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/cache/transcriptions/clip_youtube_jAlKYYr1bpY_240_60.json
+2025-12-04 11:38:41,641 - INFO - Transcription complete in 0.00s
+2025-12-04 11:38:41,643 - INFO - Running WhisperPlus Diarization Workflow...
+objc[87013]: Class AVFFrameReceiver is implemented in both /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/av/.dylibs/libavdevice.62.1.100.dylib (0x1595e83a8) and /opt/homebrew/Cellar/ffmpeg/7.1/lib/libavdevice.61.3.100.dylib (0x16bf40328). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+objc[87013]: Class AVFAudioReceiver is implemented in both /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/av/.dylibs/libavdevice.62.1.100.dylib (0x1595e83f8) and /opt/homebrew/Cellar/ffmpeg/7.1/lib/libavdevice.61.3.100.dylib (0x16bf40378). This may cause spurious casting failures and mysterious crashes. One of the duplicates must be removed or renamed.
+Device set to use mps
+Using `chunk_length_s` is very experimental with seq2seq models. The results will not necessarily be entirely accurate and will have caveats. More information: https://github.com/huggingface/transformers/pull/20104. Ignore this warning with pipeline(..., ignore_warning=True). To use Whisper for long-form transcription, use rather the model's `generate` method directly as the model relies on it's own chunking mechanism (cf. Whisper original paper, section 3.8. Long-form Transcription).
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/speechbrain/utils/torch_audio_backend.py:57: UserWarning: torchaudio._backend.list_audio_backends has been deprecated. This deprecation is part of a large refactoring effort to transition TorchAudio into a maintenance phase. The decoding and encoding capabilities of PyTorch for both audio and video are being consolidated into TorchCodec. Please see https://github.com/pytorch/audio/issues/3902 for more information. It will be removed from the 2.9 release. 
+  available_backends = torchaudio.list_audio_backends()
+2025-12-04 11:38:47,534 - DEBUG - Registered checkpoint save hook for _speechbrain_save
+2025-12-04 11:38:47,534 - DEBUG - Registered checkpoint load hook for _speechbrain_load
+2025-12-04 11:38:47,534 - DEBUG - Registered checkpoint save hook for save
+2025-12-04 11:38:47,534 - DEBUG - Registered checkpoint load hook for load
+2025-12-04 11:38:47,584 - INFO - Applied quirks (see `speechbrain.utils.quirks`): [disable_jit_profiling, allow_tf32]
+2025-12-04 11:38:47,584 - INFO - Excluded quirks specified by the `SB_DISABLE_QUIRKS` environment (comma-separated list): []
+2025-12-04 11:38:47,585 - DEBUG - Registered checkpoint save hook for _save
+2025-12-04 11:38:47,585 - DEBUG - Registered checkpoint load hook for _recover
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/whisperplus/pipelines/whisper_diarize.py:230: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/torch/csrc/utils/tensor_numpy.cpp:209.)
+  diarizer_inputs = torch.from_numpy(inputs).float()
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/pyannote/audio/models/blocks/pooling.py:103: UserWarning: std(): degrees of freedom is <= 0. Correction should be strictly less than the reduction factor (input numel divided by output numel). (Triggered internally at /Users/runner/work/pytorch/pytorch/pytorch/aten/src/ATen/native/ReduceOps.cpp:1839.)
+  std = sequences.std(dim=-1, correction=1)
+2025-12-04 11:39:34,515 - ERROR - WhisperPlus Diarization failed: 'DiarizeOutput' object has no attribute 'itertracks'
+2025-12-04 11:39:34,515 - INFO - Dry run: Skipping manifest update.
+/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/audio_ingestion.py:132: PydanticDeprecatedSince20: The `json` method is deprecated; use `model_dump_json` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+  "config": json.loads(config.json()) if hasattr(config, 'json') else config.dict()
+2025-12-04 11:39:34,516 - INFO - Dry run results saved to temp file: /var/folders/2d/5pqypl0x3px_4z4pbqxwczk80000gn/T/dry_run_zggmrwtq.json
+
+--- Dry Run Metadata ---
+Command: python audio_ingestion.py diarize data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav --workflow whisperplus_diarize --dry-run
+CWD: /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark
+Workflow: whisperplus_diarize
+------------------------
+
+{
+  "metadata": {
+    "command": "python audio_ingestion.py diarize data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav --workflow whisperplus_diarize --dry-run",
+    "cwd": "/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark",
+    "config": {
+      "clip_path": "/Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav",
+      "workflow": {
+        "name": "whisperplus_diarize",
+        "threshold": 0.5,
+        "window": 0,
+        "cluster_threshold": 0.5,
+        "id_threshold": 0.4,
+        "model_name": null,
+        "min_speakers": null,
+        "max_speakers": null
+      },
+      "output_dir": ".",
+      "append_to": null,
+      "identify": false,
+      "overwrite": false,
+      "verbose": false,
+      "dry_run": true
+    }
+  },
+  "transcript": []
+}
+
+Dry run results saved to: /var/folders/2d/5pqypl0x3px_4z4pbqxwczk80000gn/T/dry_run_zggmrwtq.json

@@ -1,0 +1,8 @@
+2025-12-04 11:45:29,124 - INFO - Starting audio ingestion for /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav
+2025-12-04 11:45:29,222 - INFO - Starting transcription...
+2025-12-04 11:45:29,223 - INFO - Loading transcription from cache: /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/data/cache/transcriptions/clip_youtube_jAlKYYr1bpY_240_60.json
+2025-12-04 11:45:29,224 - INFO - Transcription complete in 0.00s
+2025-12-04 11:45:29,225 - INFO - Running WhisperPlus Lightning MLX Workflow...
+> /Users/laptop/Development/Personal/psuedonymous/toolshed/apps/speaker-diarization-benchmark/.venv/lib/python3.12/site-packages/whisperplus/pipelines/lightning_whisper_mlx/lightning.py(97)transcribe()
+-> result = transcribe_audio(
+(Pdb) 

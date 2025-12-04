@@ -1,0 +1,40 @@
+--- Benchmark Report ---
+Date: 2025-12-02 14:13:22
+Clip: clip_youtube_jAlKYYr1bpY_240_60.wav
+Workflow: segment_level_nearest_neighbor
+Commit: d8401095aa3fb45f3a670c49fdc8b885dca9a5d8 (Dirty: True)
+Arguments: Namespace(clip_path='data/clips/clip_youtube_jAlKYYr1bpY_240_60.wav', threshold=0.5, window=0, cluster_threshold=0.5, id_threshold=0.4, output_dir='.', append_to=None, workflow='segment_level_nearest_neighbor')
+
+--- Timing Stats ---
+Transcription: 4.37s
+Embedding:     0.30s
+Segmentation:  0.00s
+Clustering:    0.04s
+Total:         5.20s
+
+--- Full Transcription ---
+yeah bobo is an australian man or he's or he might be from um because if that's the case he lives actually on new zealand i think he's new zealand oh okay yeah that guy he was in that movie when we were kings which i feel like i always i don't even think i've heard of that movie as i was saying it i was like i feel like shane there's a movie shane would love but i'm basing that only on the title when we were kings it's just something movie you would love drunk every night we was king we were the best movie takes place at a bus stop it takes place at a bus stop in west philadelphia i think it's about like i think it's kind of like um slum dog millionaire except in new zealand or one of those kind of movies okay i think or like city of god maybe it's like that city of god's awesome i've never seen either movie i heard they're both great city of god's awesome yeah i'm a great title i like subtitles man i'm a big subtitle movie guy
+
+--- Segmentation & Diarization ---
+[  0.00 -   4.60] SPEAKER_05: yeah bobo is an australian man or he's or he might be from um because if that's the case he
+       Best Guess: Shane Gillis (Dist: 0.5863, Thr: 0.4)
+[  4.60 -   9.34] SPEAKER_09: lives actually on new zealand i think he's new zealand oh okay yeah that guy he was in that movie
+       Best Guess: Shane Gillis (Dist: 0.6092, Thr: 0.4)
+[  9.34 -  14.16] SPEAKER_08: when we were kings which i feel like i always i don't even think i've heard of that movie
+       Best Guess: Joe DeRosa (Dist: 0.6052, Thr: 0.4)
+[ 14.98 -  18.74] SPEAKER_10: as i was saying it i was like i feel like shane there's a movie shane would love but i'm basing
+       Best Guess: Joe DeRosa (Dist: 0.6345, Thr: 0.4)
+[ 18.74 -  22.58] SPEAKER_07: that only on the title when we were kings it's just something movie you would love
+       Best Guess: Joe DeRosa (Dist: 0.6345, Thr: 0.4)
+[ 22.58 -  28.90] SPEAKER_04: drunk every night we was king we were the best
+       Best Guess: Shane Gillis (Dist: 0.5649, Thr: 0.4)
+[ 32.90 -  37.36] SPEAKER_03: movie takes place at a bus stop it takes place at a bus stop in west philadelphia
+       Best Guess: Matt McCusker (Dist: 0.5223, Thr: 0.4)
+[ 38.86 -  45.76] SPEAKER_01: i think it's about like i think it's kind of like um slum dog millionaire except in new zealand or one
+       Best Guess: Joe DeRosa (Dist: 0.6011, Thr: 0.4)
+[ 45.76 -  50.62] SPEAKER_06: of those kind of movies okay i think or like city of god maybe it's like that city of god's awesome
+       Best Guess: Matt McCusker (Dist: 0.5694, Thr: 0.4)
+[ 50.62 -  55.86] SPEAKER_02: i've never seen either movie i heard they're both great city of god's awesome yeah i'm a great
+       Best Guess: Matt McCusker (Dist: 0.5970, Thr: 0.4)
+[ 55.86 -  59.66] SPEAKER_00: title i like subtitles man i'm a big subtitle movie guy
+       Best Guess: Shane Gillis (Dist: 0.6083, Thr: 0.4)
