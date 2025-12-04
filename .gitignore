@@ -42,3 +42,7 @@ apps/transcriber/whisper.cpp/
 apps/transcriber/.python-version
 apps/transcriber/uv.lock
 cookies/
+apps/speaker-diarization-benchmark/data/clips/jAlKYYr1bpY.wav
+
+# Audio Files
+*.wav
