@@ -30,7 +30,7 @@
 
 ✨ Implemented Overlapped Speech Detection
 
-[Commit](https://github.com/technoplato/toolshed/commit/5ec311a)
+[Commit](https://github.com/technoplato/toolshed/commit/1ca0ae7)
 
 - Added  workflow using 
 - Implemented manual chunk processing and merging logic
