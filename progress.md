@@ -30,7 +30,7 @@
 
 ✨ Enhanced Ground Truth UI
 
-[Commit](https://github.com/technoplato/toolshed/commit/cbf1a5b)
+[Commit](https://github.com/technoplato/toolshed/commit/7d13e0e)
 
 - Restyled segments as cards
 - Implemented auto-scrolling and centering
