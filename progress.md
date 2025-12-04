@@ -26,11 +26,22 @@
 
 ---
 
+### December 3rd, 2025 at 10:08:44 p.m.
+
+📝 Added Agent Instructions section
+
+[Commit](https://github.com/technoplato/toolshed/commit/5c9b359)
+
+- Added section on file documentation standards
+- Added section on progress tracking workflow
+
+
+
 ### December 3rd, 2025 at 10:01:26 p.m.
 
 📝 Restructured voice note into sections
 
-[Commit](https://github.com/technoplato/toolshed/commit/bfa6349)
+[Commit](https://github.com/technoplato/toolshed/commit/1765e20)
 
 - Extracted notes into 3 sections: Audio Ingestion CLI, Segmentation Hypotheses, Manual Correction
 - Added Table of Contents
