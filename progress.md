@@ -30,7 +30,7 @@
 
 🧹 Vendored WhisperPlus diarization
 
-[Commit](https://github.com/technoplato/toolshed/commit/cb01c5f)
+[Commit](https://github.com/technoplato/toolshed/commit/748ecad)
 
 - Vendored pipeline to 
 - Removed external dependency on unstable  package
