@@ -26,6 +26,18 @@
 
 ---
 
+### December 4th, 2025 at 2:56:24 p.m.
+
+✨ Enhanced Ground Truth UI
+
+[Commit](https://github.com/technoplato/toolshed/commit/cbf1a5b)
+
+- Restyled segments as cards
+- Implemented auto-scrolling and centering
+- Separated click targets for seeking and editing
+
+
+
 ### December 4th, 2025 at 2:56:01 p.m.
 
 ✨ Implemented Overlapped Speech Detection

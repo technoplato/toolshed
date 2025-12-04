@@ -20,18 +20,69 @@
             background: #fff; 
             padding: 10px; 
             border-radius: 4px; 
-            border: 1px solid #ddd; 
+            border: 1px solid #ddd;
+            height: calc(100vh - 250px); /* Fixed height for scrolling */
+            overflow-y: auto; /* Enable vertical scrolling */
         }
         .segment { 
-            cursor: pointer; 
-            padding: 2px 4px; 
-            border-radius: 4px; 
-            transition: background 0.2s;
-            display: inline-block;
-            margin-right: 4px;
+            display: block;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            cursor: pointer; /* Indicates the whole card is clickable (for seeking) */
         }
-        .segment:hover { background: #e0e0e0; }
-        .segment.active { background: #d0e8ff; border-bottom: 2px solid #2196f3; }
+        .segment:hover { 
+            background: #fcfcfc; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .segment.active { 
+            background: #f0f7ff; 
+            border-left: 4px solid #2196f3; 
+            border-color: #bbdefb;
+        }
+        
+        .segment-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .segment-text {
+            display: block;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: text;
+            background: rgba(0,0,0,0.02);
+            transition: background 0.1s;
+            line-height: 1.4;
+        }
+        .segment-text:hover {
+            background: #eee;
+        }
+        
+        .speaker-label {
+            font-weight: bold;
+            color: #333;
+            margin-right: 8px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .speaker-label:hover {
+            background: #e0e0e0;
+        }
+        
+        .timestamp {
+            color: #888;
+            margin-right: 8px;
+            font-family: monospace;
+        }
         .controls { margin-bottom: 20px; }
         button { padding: 8px 16px; cursor: pointer; background: #2196f3; color: white; border: none; border-radius: 4px; }
         button:hover { background: #1976d2; }
@@ -165,13 +216,14 @@
                 const end = parseFloat(seg.dataset.end);
                 
                 if (time >= start && time < end) {
-                    seg.style.backgroundColor = '#e3f2fd';
-                    seg.style.borderBottom = '2px solid #2196f3';
-                    seg.classList.add('active-segment'); // Marker class
+                    if (!seg.classList.contains('active')) {
+                        seg.classList.add('active'); // Use .active instead of .active-segment to match CSS
+                        
+                        // Auto-scroll to center
+                        seg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 } else {
-                    seg.style.backgroundColor = 'transparent';
-                    seg.style.borderBottom = 'none';
-                    seg.classList.remove('active-segment');
+                    seg.classList.remove('active');
                 }
             });
         }
@@ -510,104 +562,88 @@
                     p.className = 'segment';
                     p.dataset.start = seg.start;
                     p.dataset.end = seg.end;
-                    p.style.marginBottom = '8px';
-                    p.style.cursor = 'pointer';
-                    p.onclick = () => {
-                        audio.currentTime = seg.start;
-                        audio.play();
+                    
+                    // Card Click -> Seek
+                    p.onclick = (e) => {
+                        // Prevent seeking if clicking on an input/textarea
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                        console.log("Seeking to:", seg.start);
+                        if (Number.isFinite(seg.start)) {
+                            audio.currentTime = seg.start;
+                            audio.play().catch(err => console.error("Play failed:", err));
+                        }
                     };
+                    
+                    // --- HEADER (Time + Speaker) ---
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'segment-header';
                     
                     // Timestamp
                     const timeSpan = document.createElement('span');
                     timeSpan.className = 'timestamp';
-                    timeSpan.textContent = `[${seg.start.toFixed(1)} - ${seg.end.toFixed(1)}] `;
-                    timeSpan.style.color = '#888';
-                    timeSpan.style.fontSize = '0.8em';
+                    timeSpan.textContent = `[${seg.start.toFixed(1)} - ${seg.end.toFixed(1)}]`;
+                    headerDiv.appendChild(timeSpan);
                     
-                    // Speaker
+                    // Speaker Label
                     const speakerSpan = document.createElement('span');
                     const displaySpeaker = speakerMap[seg.speaker] || seg.speaker;
-                    speakerSpan.textContent = displaySpeaker ? `${displaySpeaker}: ` : '';
-                    speakerSpan.style.fontWeight = 'bold';
-                    speakerSpan.style.color = '#333';
-                    speakerSpan.style.marginRight = '5px';
-                    speakerSpan.className = 'speaker-label'; // Add class for selection
-                    
-
-                    // Inline Editing with Combo Box
+                    speakerSpan.textContent = displaySpeaker ? `${displaySpeaker}` : 'UNKNOWN';
+                    speakerSpan.className = 'speaker-label';
                     speakerSpan.title = "Click to edit speaker name";
-                    speakerSpan.style.cursor = "pointer";
+                    
+                    // Speaker Edit Click
                     speakerSpan.onclick = (e) => {
+                        console.log("Speaker label clicked (editing mode)");
                         e.stopPropagation(); 
-                        audio.pause(); // Pause when opening editor
+                        audio.pause(); 
                         
-                        // Create input with datalist
                         const input = document.createElement('input');
                         input.type = 'text';
-                        // Stop propagation immediately so programmatic click() doesn't trigger parent p.onclick
                         input.onclick = (e) => e.stopPropagation();
                         
                         const currentValue = speakerMap[seg.speaker] || seg.speaker;
                         input.value = currentValue;
-                        input.dataset.original = currentValue; // Store original
+                        input.dataset.original = currentValue;
                         input.setAttribute('list', 'known-speakers');
-                        input.setAttribute('autocomplete', 'off'); // Disable browser history, use datalist
+                        input.setAttribute('autocomplete', 'off');
                         input.style.width = '150px';
                         input.style.marginRight = '5px';
                         
-                        // Replace span with input
-                        p.replaceChild(input, speakerSpan);
+                        headerDiv.replaceChild(input, speakerSpan);
                         
-                        // Clear on focus to show list (User Request)
-                        input.onfocus = () => {
-                            input.value = '';
-                        };
-                        
+                        input.onfocus = () => { input.value = ''; };
                         input.focus();
-                        input.click(); // Attempt to open dropdown immediately
+                        input.click();
                         
                         let saved = false;
-                        
-                        const revert = () => {
-                            renderTranscriptions(currentClip.transcriptions);
-                        };
+                        const revert = () => { renderTranscriptions(currentClip.transcriptions); };
 
-                        // Handle save
                         const save = async (triggerPlay = false) => {
                             if (saved) return;
                             saved = true;
                             
                             let newName = input.value.trim();
-                            // Remove colon
                             newName = newName.replace(':', '').trim();
                             
                             if (newName) {
-                                // Optimistic update
-                                // 1. Always update the specific segment
                                 if (currentClip.transcriptions[modelName] && currentClip.transcriptions[modelName][index]) {
                                     currentClip.transcriptions[modelName][index].speaker = newName;
                                 }
 
-                                // 2. Update Map ONLY if it was a machine ID (Global Rename convenience)
-                                // If it was already a name (e.g. "Joe"), we assume we are splitting/correcting just this segment.
                                 const isMachineID = (s) => s.startsWith('SPEAKER_') || s.startsWith('SEG_SPK_') || s.startsWith('UNKNOWN');
-                                
                                 if (isMachineID(seg.speaker)) {
                                     speakerMap[seg.speaker] = newName;
                                 }
-                                
-                                // 3. Ensure new name maps to itself
                                 speakerMap[newName] = newName;
 
                                 updateKnownSpeakers(); 
                                 renderSpeakerInputs();
                                 renderTranscriptions(currentClip.transcriptions);
                                 
-                                // Active Learning Call
                                 if (modelName === 'mlx_whisper_turbo_seg_level') {
-                                    console.log(`Correcting segment ${index} to ${newName}`);
                                     try {
-                                        const response = await fetch('/correct_segment', {
+                                        await fetch('/correct_segment', {
                                             method: 'POST',
                                             headers: {'Content-Type': 'application/json'},
                                             body: JSON.stringify({
@@ -616,65 +652,102 @@
                                                 new_label: newName
                                             })
                                         });
-                                        if (response.ok) {
-                                            console.log("Correction applied/learned!");
-                                            // Optional: Show a toast
-                                        } else {
-                                            console.error("Correction failed:", await response.text());
-                                        }
-                                    } catch (e) {
-                                        console.error("Correction error:", e);
-                                    }
+                                    } catch (e) { console.error("Correction error:", e); }
                                 }
                                 
-                                // Play if requested OR if the name is a known speaker (implies selection)
-                                // User requested to resume audio on selection/save
-                                if (triggerPlay) {
-                                    audio.play();
-                                }
+                                if (triggerPlay) audio.play();
                             } else {
                                 revert();
                             }
                         };
 
                         input.onkeydown = (e) => {
-                            if (e.key === 'Enter') {
-                                e.preventDefault();
-                                save(true); // Save and play
-                            } else if (e.key === 'Escape') {
-                                e.preventDefault();
-                                saved = true; // Prevent blur from doing anything weird
-                                revert();
-                            }
+                            if (e.key === 'Enter') { e.preventDefault(); save(true); } 
+                            else if (e.key === 'Escape') { e.preventDefault(); saved = true; revert(); }
                         };
-                        
-                        input.onchange = () => {
-                            // On selection (or blur with change)
-                            // We want to save.
-                            save(true);
-                        };
-                        
-                        input.onblur = () => {
-                            // If we clicked out without saving (e.g. no change, or just clicked away)
-                            // If onchange fired, saved is true.
-                            // If onchange didn't fire (no change), saved is false.
-                            // We want to revert.
-                            if (!saved) {
-                                revert();
-                            }
-                        };
-                        
-                        // input.onclick handled above
+                        input.onchange = () => { save(true); };
+                        input.onblur = () => { if (!saved) revert(); };
                     };
                     
-                    // Text
-                    const textSpan = document.createElement('span');
-                    textSpan.textContent = seg.text;
+                    headerDiv.appendChild(speakerSpan);
+                    p.appendChild(headerDiv);
                     
-                    p.appendChild(timeSpan);
-                    p.appendChild(speakerSpan);
-                    p.appendChild(textSpan);
+                    // --- TEXT BODY ---
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'segment-text';
+                    textDiv.textContent = seg.text;
+                    textDiv.title = "Click to edit text";
                     
+                    // Text Edit Click
+                    textDiv.onclick = (e) => {
+                        e.stopPropagation();
+                        audio.pause();
+
+                        const textarea = document.createElement('textarea');
+                        textarea.value = seg.text.trim();
+                        textarea.style.width = '100%';
+                        textarea.style.minHeight = '60px';
+                        textarea.style.fontFamily = 'inherit';
+                        textarea.style.fontSize = 'inherit';
+                        textarea.style.padding = '4px';
+                        textarea.style.border = '1px solid #2196f3';
+                        textarea.style.borderRadius = '4px';
+                        
+                        p.replaceChild(textarea, textDiv);
+                        textarea.focus();
+                        
+                        let saved = false;
+                        
+                        const saveText = () => {
+                            if (saved) return;
+                            saved = true;
+                            
+                            const newText = textarea.value;
+                            const lines = newText.split('\n').map(l => l.trim()).filter(l => l);
+                            
+                            if (lines.length === 0) { renderTranscriptions(currentClip.transcriptions); return; }
+                            
+                            if (lines.length === 1) {
+                                if (lines[0] !== seg.text.trim()) {
+                                    currentClip.transcriptions[modelName][index].text = lines[0];
+                                    saveData();
+                                }
+                                renderTranscriptions(currentClip.transcriptions);
+                            } else {
+                                statusSpan.textContent = "Splitting...";
+                                fetch('/split_segment', {
+                                    method: 'POST',
+                                    headers: {'Content-Type': 'application/json'},
+                                    body: JSON.stringify({
+                                        clip_id: currentClip.id,
+                                        segment_index: index,
+                                        lines: lines,
+                                        model_name: modelName
+                                    })
+                                })
+                                .then(r => r.json())
+                                .then(data => {
+                                    currentClip.transcriptions[modelName].splice(index, 1, ...data.segments);
+                                    statusSpan.textContent = "Split saved!";
+                                    setTimeout(() => statusSpan.textContent = "", 2000);
+                                    renderTranscriptions(currentClip.transcriptions);
+                                })
+                                .catch(err => {
+                                    console.error("Error splitting:", err);
+                                    renderTranscriptions(currentClip.transcriptions);
+                                });
+                            }
+                        };
+
+                        textarea.onblur = saveText;
+                        textarea.onkeydown = (e) => {
+                            if (e.key === 'Escape') { saved = true; renderTranscriptions(currentClip.transcriptions); }
+                        };
+                        
+                        textarea.style.height = (textarea.scrollHeight) + 'px';
+                    };
+                    
+                    p.appendChild(textDiv);
                     col.appendChild(p);
                 });
                 
