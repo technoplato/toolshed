@@ -1,0 +1,47 @@
+--- Benchmark Report ---
+Date: 2025-12-02 14:25:51
+Clip: clip_youtube_jAlKYYr1bpY_240_180.wav
+Workflow: segment_level
+Commit: d8401095aa3fb45f3a670c49fdc8b885dca9a5d8 (Dirty: True)
+Arguments: Namespace(clip_path='data/clips/clip_youtube_jAlKYYr1bpY_240_180.wav', threshold=0.5, window=0, cluster_threshold=0.5, id_threshold=0.4, output_dir='data/clips', append_to=None, workflow='segment_level')
+
+--- Timing Stats ---
+Transcription: 0.00s
+Embedding:     0.88s
+Segmentation:  0.00s
+Clustering:    0.03s
+Total:         1.51s
+
+--- Full Transcription ---
+yeah bofos an australian man or he's or he might be from um because if that's the case he lives actually on new zealand i think he's new zealand oh okay yeah that guy he was in that movie when we were kings which i feel like i always i don't even think i've heard of that movie as i was saying it i was like i feel like shane there's a movie shane would love but i'm basing that only on the title when we were kings it's just something movie you would love every night we was king the movie takes place in a bus stop it takes place in a bus stop in west philadelphia i think it's about like i think it's kind of like um slum dog millionaire except in new zealand or one of those kind of movies okay i think or like city of god maybe it's like that city of god's awesome i've never seen either movie i heard they're both great city of god's awesome yeah i'm a great title i like subtitles better than the irish i'm a big subtitle movie guy i like that let's talk movies what let's talk movies we've never seen city of god city of god rules you'd like it wait i want to look up what when we were i'm going to look it up at one point what what when we were king the best movie analysis ever i don't know what it's about it's like two movies i've never seen it's a guy from new zealand i just saw one of the shittiest movies i've ever seen what uh opus the new john malkovich movie where all right let me just shoot the premise at you yeah and you'll immediately know we're off to a bad start john malkovich plays a uh once famous uh r b pop singer how does how does he do that who disappears he was like big in the 80s and he disappears and comes back 30 years later and for his opus he's putting out another album after 30 years of absence that always works yeah and it's john malkovich damn it'd be nice if it was like late kel's like yo pussy is a buffet i love your pussy i thought they were going to make him like a you know like a pink floyd dude yeah when i heard the premise and i'm like oh no he's like a dance singer like a like like like uh it's so but and then they so all these people get invited to his big compound to listen to the record and everybody starts dying and it's it's it's get out it's like the 57th time they've remade get out since get out came out it sucks dick it is a terrible movie who's the villain who's who's he is he is you're describing a pretty sick movie you'd think you'd think it sucks dude also sounds like uh an event that me and my squad should probably breach and yes yeah tie up the civilians make sure everybody's taking care of you could have stopped you could have stopped the onslaught there's gonna be some people this game's a hit dude
+
+--- Segmentation & Diarization ---
+[  0.00 -   4.84] SPEAKER_10: yeah bofos an australian man or he's or he might be from um because if that's the case he lives
+[  4.84 -   9.58] SPEAKER_01: actually on new zealand i think he's new zealand oh okay yeah that guy he was in that movie when
+[  9.58 -  14.18] SPEAKER_01: we were kings which i feel like i always i don't even think i've heard of that movie
+[ 14.98 -  18.76] SPEAKER_02: as i was saying it i was like i feel like shane there's a movie shane would love but i'm basing
+[ 18.76 -  22.60] SPEAKER_09: that only on the title when we were kings it's just something movie you would love
+[ 23.98 -  26.48] SPEAKER_15: every night we was king
+[ 32.78 -  37.38] SPEAKER_07: the movie takes place in a bus stop it takes place in a bus stop in west philadelphia
+[ 38.92 -  45.76] SPEAKER_03: i think it's about like i think it's kind of like um slum dog millionaire except in new zealand or one
+[ 45.76 -  50.60] SPEAKER_12: of those kind of movies okay i think or like city of god maybe it's like that city of god's awesome
+[ 50.60 -  56.10] SPEAKER_17: i've never seen either movie i heard they're both great city of god's awesome yeah i'm a great title
+[ 56.10 -  61.54] SPEAKER_08: i like subtitles better than the irish i'm a big subtitle movie guy i like that let's talk movies
+[ 62.40 -  69.68] SPEAKER_11: what let's talk movies we've never seen city of god city of god rules you'd like it wait i want to
+[ 69.68 -  73.94] SPEAKER_06: look up what when we were i'm going to look it up at one point what what when we were king the best
+[ 73.94 -  78.98] SPEAKER_07: movie analysis ever i don't know what it's about it's like two movies i've never seen it's a guy from
+[ 78.98 -  88.16] SPEAKER_14: new zealand i just saw one of the shittiest movies i've ever seen what uh opus the new john malkovich
+[ 88.16 -  95.74] SPEAKER_03: movie where all right let me just shoot the premise at you yeah and you'll immediately know we're off to
+[ 95.74 - 103.46] SPEAKER_03: a bad start john malkovich plays a uh once famous uh r b pop singer
+[107.80 - 113.54] SPEAKER_05: how does how does he do that who disappears he was like big in the 80s and he disappears and comes
+[113.54 - 118.38] SPEAKER_03: back 30 years later and for his opus he's putting out another album after 30 years of absence that
+[118.38 - 125.32] SPEAKER_06: always works yeah and it's john malkovich damn it'd be nice if it was like late kel's like yo
+[125.32 - 130.90] SPEAKER_16: pussy is a buffet i love your pussy i thought they were going to make him like a you know like a
+[130.90 - 135.30] SPEAKER_03: pink floyd dude yeah when i heard the premise and i'm like oh no he's like a dance singer
+[135.88 - 142.52] SPEAKER_02: like a like like like uh it's so but and then they so all these people get invited to his big
+[142.52 - 148.00] SPEAKER_03: compound to listen to the record and everybody starts dying and it's it's it's get out it's
+[148.00 - 154.70] SPEAKER_03: like the 57th time they've remade get out since get out came out it sucks dick it is a terrible
+[154.70 - 160.34] SPEAKER_04: movie who's the villain who's who's he is he is you're describing a pretty sick movie
+[160.34 - 167.44] SPEAKER_00: you'd think you'd think it sucks dude also sounds like uh an event that me and my squad should
+[167.44 - 175.14] SPEAKER_00: probably breach and yes yeah tie up the civilians make sure everybody's taking care of you could have
+[175.14 - 179.88] SPEAKER_13: stopped you could have stopped the onslaught there's gonna be some people this game's a hit dude
