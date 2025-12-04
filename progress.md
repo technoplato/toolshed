@@ -26,6 +26,17 @@
 
 ---
 
+### December 4th, 2025 at 2:55:28 p.m.
+
+🧹 Vendored WhisperPlus diarization
+
+[Commit](https://github.com/technoplato/toolshed/commit/cb01c5f)
+
+- Vendored pipeline to 
+- Removed external dependency on unstable  package
+
+
+
 ### December 3rd, 2025 at 10:25:11 p.m.
 
 🧹 Suppress noisy BrokenPipeError in server.py
