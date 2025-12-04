@@ -26,6 +26,18 @@
 
 ---
 
+### December 4th, 2025 at 2:56:01 p.m.
+
+✨ Implemented Overlapped Speech Detection
+
+[Commit](https://github.com/technoplato/toolshed/commit/5ec311a)
+
+- Added  workflow using 
+- Implemented manual chunk processing and merging logic
+- Fixed manifest update bugs
+
+
+
 ### December 4th, 2025 at 2:55:28 p.m.
 
 🧹 Vendored WhisperPlus diarization
