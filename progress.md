@@ -30,7 +30,7 @@
 
 🧹 Refactored audio ingestion system
 
-[Commit](https://github.com/technoplato/toolshed/commit/61d3d14)
+[Commit](https://github.com/technoplato/toolshed/commit/b63c5a1)
 
 - Created modular ingestion package
 - Implemented base Workflow class
