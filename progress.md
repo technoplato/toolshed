@@ -26,6 +26,17 @@
 
 ---
 
+### December 5th, 2025 at 12:54:16 p.m.
+
+📝 Added Good/Bad examples to AGENTS.md
+
+[Commit](https://github.com/technoplato/toolshed/commit/9ff6350)
+
+- Added explicit examples of poor vs high-quality documentation
+- Clarified expectations for agents
+
+
+
 ### December 5th, 2025 at 12:53:12 p.m.
 
 📝 Improved documentation guidelines in AGENTS.md

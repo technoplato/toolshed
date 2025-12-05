@@ -53,6 +53,67 @@ WHERE:
 WHY:
   [The "Why". Why does this exist? What problem does it solve?]
   [Design Rationale / Trade-offs]
+### Examples: The Good, The Bad, and The Ugly
+
+**❌ The Bad (Lazy, Unhelpful):**
+```text
+WHO:  Antigravity
+WHAT: Uploads a file.
+WHEN: 2025-12-05
+WHERE: utils/upload.py
+WHY:  To upload things.
+```
+
+**❌ The Ugly (Incomplete):**
+```text
+WHO:  Antigravity, User
+WHAT: Helper for S3.
+      [Inputs] - file
+      [Outputs] - url
+WHEN: 2025-12-05
+WHERE: utils/upload.py
+WHY:  Need S3 support.
+```
+
+**✅ The Good (Gold Standard):**
+```text
+HOW:
+  `uv run utils/s3_uploader.py --bucket my-bucket data/image.png`
+
+  [Inputs]
+  - file_path: Path to the local file to upload.
+  - --bucket: Target S3 bucket name.
+  - AWS_ACCESS_KEY_ID (env): Required for auth.
+
+  [Outputs]
+  - Prints the public URL of the uploaded file to stdout.
+  - Returns exit code 0 on success, 1 on failure.
+
+  [Side Effects]
+  - Uploads a file to AWS S3.
+  - Generates a public URL.
+
+WHO:
+  Antigravity, User
+  (Context: Implementing User Avatar Upload feature)
+
+WHAT:
+  A standalone utility to upload files to S3 with content-type detection.
+  It handles authentication via environment variables and supports different regions.
+
+WHEN:
+  2025-12-05
+  Last Modified: 2025-12-05
+  [Change Log:
+    - 2025-12-05: Initial creation with basic S3 support.
+  ]
+
+WHERE:
+  utils/s3_uploader.py
+
+WHY:
+  To provide a unified way to handle file uploads without duplicating boto3 logic across services.
+  We chose boto3 directly over a wrapper library for better control over retries.
 ```
 
 ## Workflows
