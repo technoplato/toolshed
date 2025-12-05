@@ -5,15 +5,32 @@ WHO:
 
 WHAT:
   Argument parsing logic for the audio ingestion CLI.
+  
+  [Inputs]
+  - Command line arguments (sys.argv)
+  
+  [Outputs]
+  - IngestionConfig or DownloadConfig object
+
+  [Side Effects]
+  - Prints help message and exits if arguments are invalid.
+
+  [How to run/invoke it]
+  - Used internally by `audio_ingestion.py`.
+  - `config = parse_args()`
 
 WHEN:
   2025-12-03
+  Last Modified: 2025-12-05
+  Change Log:
+  - 2025-12-05: Added `download` subcommand support.
 
 WHERE:
   apps/speaker-diarization-benchmark/ingestion/args.py
 
 WHY:
-  To handle command-line arguments and convert them into configuration objects.
+  To handle command-line arguments and convert them into structured configuration objects,
+  separating CLI concern from business logic.
 """
 
 import argparse

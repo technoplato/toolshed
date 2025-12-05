@@ -4,20 +4,31 @@ WHO:
   (Context: Audio Ingestion System)
 
 WHAT:
-  Configuration objects for the audio ingestion pipeline.
+  Configuration objects using Pydantic for the audio ingestion pipeline.
   
   [Classes]
-  - IngestionConfig: Main configuration object.
-  - WorkflowConfig: Configuration for specific workflows.
+  - WorkflowConfig: Settings for specific diarization workflows (thresholds, models).
+  - IngestionConfig: Settings for the main ingestion process (input paths, flags).
+  - DownloadConfig: Settings for the video download process (URL, output).
+
+  [Inputs]
+  - None (these are data structures)
+
+  [Outputs]
+  - Pydantic models for type-safe configuration.
 
 WHEN:
   2025-12-03
+  Last Modified: 2025-12-05
+  Change Log:
+  - 2025-12-05: Added `DownloadConfig` class.
 
 WHERE:
   apps/speaker-diarization-benchmark/ingestion/config.py
 
 WHY:
-  To provide a structured way to pass configuration around the system.
+  To provide a structured, type-safe, and immutable way to pass configuration around the system,
+  leveraging Pydantic for validation.
 """
 
 from pydantic import BaseModel, Field

@@ -5,7 +5,7 @@
 # ///
 
 """
-WHO:   Cursor Agent, User
+WHO:   Antigravity, User
        (Context: Created to standardize progress tracking across local and global logs)
 
 WHAT:  Updates progress.md in the local repository and a global log in ~/.agents/progress.md.
@@ -468,6 +468,34 @@ def push_changes(repo_url=None):
     except subprocess.CalledProcessError as e:
         print(f"Error during push: {e}")
 
+def check_documentation_reminder():
+    """
+    Checks for staged files and reminds the user to update documentation.
+    """
+    try:
+        # Get list of staged files
+        staged_files = subprocess.check_output(['git', 'diff', '--name-only', '--cached'], text=True).strip().splitlines()
+        
+        source_extensions = ('.py', '.js', '.ts', '.tsx', '.jsx', '.sh')
+        source_files = [f for f in staged_files if f.endswith(source_extensions)]
+        
+        if source_files:
+            print("\n" + "="*60)
+            print("🔍 DOCUMENTATION REMINDER")
+            print("="*60)
+            print("You have staged source files:")
+            for f in source_files[:5]:
+                print(f" - {f}")
+            if len(source_files) > 5:
+                print(f" ... and {len(source_files) - 5} more")
+            print("\n⚠️  DID YOU UPDATE THE DOCSTRINGS?")
+            print("   Remember the WHO, WHAT, WHEN, WHERE, WHY format!")
+            print("="*60 + "\n")
+            
+    except Exception:
+        # Don't fail if git check fails
+        pass
+
 def main():
     parser = argparse.ArgumentParser(description="Update progress logs")
     parser.add_argument("--type", choices=EMOJI_MAP.keys(), default='wip', help="Type of update")
@@ -476,6 +504,9 @@ def main():
     parser.add_argument("--push", action="store_true", help="Add progress.md, amend commit, and push")
     
     args = parser.parse_args()
+
+    # check for documentation updates
+    check_documentation_reminder()
     
     commit_hash, repo_url, project_root = get_git_info()
     

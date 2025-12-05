@@ -5,15 +5,30 @@ WHO:
 
 WHAT:
   Module to handle video downloading using yt-dlp.
+  
+  [Inputs]
+  - DownloadConfig object containing URL and output directory.
+
+  [Outputs]
+  - Downloads a video file to the specified directory.
+  - Logs progress to stdout.
+
+  [Side Effects]
+  - Creates files on disk.
+  - Network usage.
+
+  [How to run/invoke it]
+  - `download_video(config)`
 
 WHEN:
   2025-12-05
+  Last Modified: 2025-12-05
 
 WHERE:
   apps/speaker-diarization-benchmark/ingestion/download.py
 
 WHY:
-  To allow downloading videos directly from the audio ingestion CLI.
+  To allow downloading videos directly from the audio ingestion CLI using the robust yt-dlp library.
 """
 
 import logging
