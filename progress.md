@@ -30,7 +30,7 @@
 
 ✨ Added video download command using yt-dlp
 
-[Commit](https://github.com/technoplato/toolshed/commit/ada0ece)
+[Commit](https://github.com/technoplato/toolshed/commit/240fe06)
 
 - Implemented download subcommand in audio_ingestion.py
 - Verified with YouTube and TikTok
