@@ -30,7 +30,7 @@
 
 📝 Improved documentation guidelines in AGENTS.md
 
-[Commit](https://github.com/technoplato/toolshed/commit/4cd70b3)
+[Commit](https://github.com/technoplato/toolshed/commit/4d0f152)
 
 - Promoted HOW to top-level section
 - Added mandatory Input/Output details
