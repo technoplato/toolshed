@@ -30,7 +30,7 @@
 
 🧹 Updated legacy documentation and progress script
 
-[Commit](https://github.com/technoplato/toolshed/commit/0586496)
+[Commit](https://github.com/technoplato/toolshed/commit/0931a0f)
 
 - Updated docstrings in key files to match guidelines
 - Added docstring check to update_progress.py
