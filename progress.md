@@ -26,6 +26,18 @@
 
 ---
 
+### December 5th, 2025 at 12:53:12 p.m.
+
+📝 Improved documentation guidelines in AGENTS.md
+
+[Commit](https://github.com/technoplato/toolshed/commit/4cd70b3)
+
+- Promoted HOW to top-level section
+- Added mandatory Input/Output details
+- Clarified context requirements
+
+
+
 ### December 5th, 2025 at 12:31:42 p.m.
 
 🧹 Updated legacy documentation and progress script

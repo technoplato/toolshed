@@ -9,40 +9,50 @@ This file serves as the primary source of truth for Agents and AI assistants wor
 3.  **CLI Bias**: Bias towards using tools that allow for CLI interactions. This enables agents to do more work programmatically.
 4.  **Clean Git State**: Always check `git status` before starting work. Anticipate changes, perform them, and then verify the resulting `git status` matches expectations.
 
-## Documentation Standards (Who, What, When, Where, Why)
+## Documentation Standards (Who, What, When, Where, Why, How)
 
 Every source code file (Python, TypeScript, React, Scripts, etc.) MUST start with a comprehensive documentation block (Docstring in Python, Block comment in JS/TS).
+
+**Crucial:** Do not just fill in the blanks. Write for the next developer (or future you) who has zero context.
 
 **Format:**
 
 ```text
+HOW:
+  [Quick Start / Usage command]
+  (e.g., `uv run my_script.py --arg value`)
+
+  [Inputs]
+  - [Argument 1]: [Description]
+  - [Environment Variable]: [Description]
+
+  [Outputs]
+  - [File/Console Output]: [Description]
+
+  [Side Effects]
+  - [Network calls, File system changes, etc.]
+
 WHO:
-  [Agent Name/Version], [User Name]
-  (Context: What conversation/task was this created in?)
+  [Agent Name], [User Name]
+  (Context: [Brief context of creation, e.g. "Refactoring Auth"])
 
 WHAT:
-  [Description of the file's purpose]
-  [Inputs]
-  [Outputs]
-  [Side Effects]
-  [How to run/invoke it]
-  (Example usage should be copy-pasteable)
+  [High-level summary of the file's purpose]
+  [Detailed description of what it does]
 
 WHEN:
-  [Created Date]
-  [Last Modified Date]
+  [Created Date (YYYY-MM-DD)]
+  Last Modified: [Date]
   [Change Log:
-    - YYYY-MM-DD: Initial creation
-    - YYYY-MM-DD: Added feature X
+    - [Date]: [Change description]
   ]
 
 WHERE:
-  [Known usages]
-  [Deployment location - or "Not deployed yet"]
+  [File Path]
 
 WHY:
-  [Reason for existence - e.g., "Playground for speaker diarization", "Fixing bug X"]
-  [Design decisions/Rationale]
+  [The "Why". Why does this exist? What problem does it solve?]
+  [Design Rationale / Trade-offs]
 ```
 
 ## Workflows
