@@ -1,19 +1,68 @@
 """
+HOW:   
+HOW:   
+  Run this script to ingest audio, transcribe it, and optionally run various diarization/embedding workflows.
+  You can also use it to download videos from various providers supported by yt-dlp.
+
+  [IMPORTANT: Directory Context]
+  You MUST run this script from the `apps/speaker-diarization-benchmark` directory to ensure all dependencies 
+  (especially those managed by `uv`) are correctly resolved.
+  
+  Correct usage:
+    cd apps/speaker-diarization-benchmark
+    uv run audio_ingestion.py <command> ...
+
+  [Commands]
+  1. Process an audio file:
+     uv run audio_ingestion.py diarize <clip_path> --workflow <workflow_name>
+
+  2. Download a video:
+     uv run audio_ingestion.py download <URL> --output-dir <dir>
+
+     Supported Providers:
+     - YouTube (Verified)
+     - TikTok (Verified)
+     - Any other platform supported by yt-dlp
+
+  [Inputs (Diarize)]
+  - clip_path: Path to the audio file (wav, mp3, etc.)
+  - --workflow: Workflow to use (default: pyannote)
+     Choices: pyannote, wespeaker, segment_level, etc.
+  - --threshold: Cosine distance threshold for segmentation
+  - --window: Context window size for embedding
+  - --identify: Run speaker identification using local embeddings
+  - --overwrite: Overwrite existing identifications
+
+  [Inputs (Download)]
+  - url: URL of the video (YouTube, etc.)
+  - --output-dir: Directory to save the video
+  
+  [Outputs]
+  - Updates manifest.json with results.
+  - Generates a text report (unless --dry-run is used).
+  - Caches transcriptions in data/cache/transcriptions.
+
 WHO:
   Antigravity
   (Context: Audio Ingestion System)
 
 WHAT:
   Main entry point for the audio ingestion system.
+  It orchestrates:
+  1. Audio/Video downloading via `yt-dlp`.
+  2. Transcription via `mlx_whisper` (cached).
+  3. Diarization/Embedding via configured workflows.
+  4. Reporting and Manifest updating.
 
 WHEN:
-  2025-12-03
-
+  2025-12-05
+  Last Modified: 2025-12-05
+  
 WHERE:
   apps/speaker-diarization-benchmark/audio_ingestion.py
 
 WHY:
-  To orchestrate the audio ingestion process using modular components.
+  To provide a unified CLI for bringing audio data into the benchmarking system and running experiments.
 """
 
 import os
@@ -31,7 +80,8 @@ load_dotenv()
 sys.path.append(str(Path(__file__).parent))
 
 from ingestion.args import parse_args
-from ingestion.config import IngestionConfig
+from ingestion.config import IngestionConfig, DownloadConfig
+from ingestion.download import download_video
 from ingestion.manifest import update_manifest
 from ingestion.report import generate_report
 from transcribe import transcribe, TranscriptionResult, Segment, Word
@@ -47,7 +97,13 @@ def main():
     if config.verbose:
         logger.setLevel(logging.DEBUG)
         
-    logger.info(f"Starting audio ingestion for {config.clip_path}")
+    logger.info(f"Starting audio ingestion")
+    
+    if isinstance(config, DownloadConfig):
+        download_video(config)
+        return
+        
+    logger.info(f"Processing clip: {config.clip_path}")
     
     if not config.clip_path.exists():
         logger.error(f"Clip not found: {config.clip_path}")

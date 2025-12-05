@@ -43,3 +43,10 @@ class IngestionConfig(BaseModel):
     overwrite: bool = False
     verbose: bool = False
     dry_run: bool = False
+
+class DownloadConfig(BaseModel):
+    url: str
+    output_dir: Path = Path(".")
+    verbose: bool = False
+    dry_run: bool = False
+

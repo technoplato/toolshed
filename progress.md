@@ -26,6 +26,18 @@
 
 ---
 
+### December 5th, 2025 at 12:25:59 p.m.
+
+✨ Added video download command using yt-dlp
+
+[Commit](https://github.com/technoplato/toolshed/commit/ada0ece)
+
+- Implemented download subcommand in audio_ingestion.py
+- Verified with YouTube and TikTok
+- Updated documentation
+
+
+
 ### December 4th, 2025 at 2:57:48 p.m.
 
 🧹 Updated project dependencies

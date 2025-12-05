@@ -18,9 +18,11 @@ WHY:
 
 import argparse
 from pathlib import Path
-from .config import IngestionConfig, WorkflowConfig
+from pathlib import Path
+from typing import Union
+from .config import IngestionConfig, WorkflowConfig, DownloadConfig
 
-def parse_args() -> IngestionConfig:
+def parse_args() -> Union[IngestionConfig, DownloadConfig]:
     parser = argparse.ArgumentParser(description="Audio Ingestion CLI")
     
     # Subcommands
@@ -47,6 +49,17 @@ def parse_args() -> IngestionConfig:
     diarize_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging.")
     diarize_parser.add_argument("--dry-run", action="store_true", help="Simulate actions.")
 
+    # Download command
+    download_parser = subparsers.add_parser(
+        "download", 
+        help="Download video using yt-dlp",
+        description="Download a video from a URL using yt-dlp. Check the logs for progress. The video will be saved to the specified output directory. If the video already exists, it will be skipped."
+    )
+    download_parser.add_argument("url", type=str, help="URL of the video to download.")
+    download_parser.add_argument("--output-dir", type=str, default=".", help="Directory to save the downloaded video. Defaults to current directory. Filename format: 'Title [ID].ext'.")
+    download_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging.")
+    download_parser.add_argument("--dry-run", action="store_true", help="Simulate actions without downloading.")
+
     args = parser.parse_args()
     
     if args.command == "diarize":
@@ -65,6 +78,13 @@ def parse_args() -> IngestionConfig:
             append_to=Path(args.append_to) if args.append_to else None,
             identify=args.identify,
             overwrite=args.overwrite,
+            verbose=args.verbose,
+            dry_run=args.dry_run
+        )
+    elif args.command == "download":
+        return DownloadConfig(
+            url=args.url,
+            output_dir=Path(args.output_dir),
             verbose=args.verbose,
             dry_run=args.dry_run
         )
