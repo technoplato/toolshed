@@ -30,7 +30,7 @@
 
 📝 Added Good/Bad examples to AGENTS.md
 
-[Commit](https://github.com/technoplato/toolshed/commit/9ff6350)
+[Commit](https://github.com/technoplato/toolshed/commit/8cfb57e)
 
 - Added explicit examples of poor vs high-quality documentation
 - Clarified expectations for agents
