@@ -1,0 +1,3 @@
+[submodule "swift-sharing-exploration-root"]
+	path = swift-sharing-exploration-root
+	url = git@github.com:technoplato/swift-sharing-exploration-root.git
