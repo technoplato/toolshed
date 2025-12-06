@@ -51,4 +51,4 @@ apps/speaker-diarization-benchmark/data/clips/jAlKYYr1bpY.wav
 # Local Exploration
 # This was a local exploration about how the Anti-gravity IDE works and isn't super pertinent to our work right now.
 apps/gemini-debugger/
-.agent/
+
