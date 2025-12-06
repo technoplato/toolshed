@@ -1,170 +1,160 @@
-// Docs: https://www.instantdb.com/docs/modeling-data
+/*
+  HOW:
+  To deploy this schema to InstantDB, use the Instant CLI:
+  
+  1. Push Schema (Apply changes):
+     `npx instant-cli@latest push schema`
+     
+  2. Pull Schema (Sync remote changes):
+     `npx instant-cli@latest pull schema`
+     
+  [Troubleshooting]
+  - "Schema mismatch": If you see errors about "Triple missing" or type errors after pushing, 
+    it means your local schema definitions (e.g. `indexed()` fields) conflict with existing data. 
+    You may need to wipe the DB or manually fix the data via the Dashboard.
+  - "Auth Error": Ensure `INSTANT_APP_ID` and `INSTANT_ADMIN_SECRET` are set in `.env`.
+ 
+  WHO:
+  Antigravity, User
+  (Context: Schema Definition)
+
+  WHAT:
+  InstantDB Schema for the Video Analysis Pipeline.
+  Entities: videos, transcriptionRuns, diarizationRuns, stableSegments, speakers, shazamMatches.
+*/
 
 import { i } from "@instantdb/core";
 
-const _schema = i.schema({
-  // We are going to comprehensively model and map this domain.
-  entities: {
-    $files: i.entity({
-      path: i.string().unique().indexed(),
-      url: i.string(),
-    }),
-    $users: i.entity({
-      email: i.string().unique().indexed().optional(),
-      imageURL: i.string().optional(),
-      type: i.string().optional(),
-    }),
-    jobs: i.entity({
-      created_at: i.string().indexed().optional(),
-      error: i.any().optional(),
-      progress: i.string().optional(),
-      type: i.string().optional(),
-    }),
-    channels: i.entity({
-      name: i.string(),
-      platform: i.string(),
-      external_id: i.string().unique(),
-      url: i.string().optional(),
-      description: i.string().optional(),
-      thumbnail_url: i.string().optional(),
-    }),
+const graph = i.graph(
+  {
+    // ---------------------------------------------------------
+    // Legacy / Core
+    // ---------------------------------------------------------
     videos: i.entity({
       title: i.string(),
-      original_url: i.string().unique(),
-      platform: i.string(),
-      upload_date: i.string().optional(),
-      external_id: i.string().unique().optional(),
-      duration: i.number().optional(),
-      created_at: i.string().indexed().optional(),
-      // Metadata
-      view_count: i.number().optional(),
-      like_count: i.number().optional(),
-      description: i.string().optional(),
-      thumbnail_url: i.string().optional(),
-    }),
-    transcriptions: i.entity({
+      url: i.string(), // "titleUrl"
+      filepath: i.string(),
+      duration: i.number(),
+
+      // Legacy Metadata
+      channel_id: i.string(),
+      upload_date: i.string(),
+      view_count: i.number(),
+      
       created_at: i.string(),
-      model: i.string().optional(),
-      tool: i.string().optional(),
-      language: i.string().optional(),
     }),
-    transcriptionSegments: i.entity({
-      start: i.number(),
-      end: i.number(),
+
+    stableSegments: i.entity({
+      video_id: i.string().indexed(),
+      index: i.number().indexed(), // 0, 1, 2...
+      start_time: i.number(),
+      end_time: i.number(),
+      created_at: i.string(),
+    }),
+
+    correctedSegments: i.entity({
+      stable_segment_id: i.string().indexed(), 
+      video_id: i.string().indexed(),
       text: i.string(),
-      // Words are stored as a JSON blob for simplicity and performance
-      // Structure: Array<{ word: string, start: number, end: number }>
-      words: i.json().optional(),
-      index: i.number().indexed(), // To order segments
+      speaker_id: i.string().indexed(),
+      created_at: i.string(),
     }),
-    speakers: i.entity({
+
+    transcriptionRuns: i.entity({
+      video_id: i.string().indexed(),
       name: i.string(),
-      is_generated: i.boolean().optional(), // True if computer generated
-      voice_id: i.string().optional(), // For 11labs or similar
-      metadata: i.json().optional(),
+      model: i.string().indexed(),
+      created_at: i.string(),
+      segmentation_threshold: i.number().indexed(),
+      context_window: i.number().indexed(),
     }),
-    logs: i.entity({
-      created_at: i.string().indexed(),
-      level: i.string(),
-      message: i.string(),
-      job_id: i.string().optional(),
+
+    transcriptionSegments: i.entity({
+      run_id: i.string().indexed(),
+      start_time: i.number().indexed(),
+      end_time: i.number(),
+      text: i.string(),
+    }),
+
+    diarizationRuns: i.entity({
+      video_id: i.string().indexed(),
+      transcription_run_id: i.string().indexed(),
+      created_at: i.string(),
+      clustering_threshold: i.number().indexed(),
+      identification_threshold: i.number().indexed(),
+      embedding_model: i.string().indexed(),
+    }),
+
+    diarizationSegments: i.entity({
+      run_id: i.string().indexed(),
+      start_time: i.number().indexed(),
+      end_time: i.number(),
+      speaker_id: i.string().indexed(),
+    }),
+
+    speakers: i.entity({
+      name: i.string().indexed(),
+      is_human: i.boolean(),
+      created_at: i.string(),
+    }),
+
+    shazamMatches: i.entity({
+      video_id: i.string().indexed(),
+      start_time: i.number().indexed(),
+      end_time: i.number(),
+      shazam_track_id: i.string().indexed(),
+      title: i.string(),
+      artist: i.string(),
+      match_offset: i.number(),
+      created_at: i.string(),
     }),
   },
-  links: {
-    $usersLinkedPrimaryUser: {
-      forward: {
-        on: "$users",
-        has: "one",
-        label: "linkedPrimaryUser",
-        onDelete: "cascade",
+  {
+      videoStableSegments: {
+        forward: { on: "videos", has: "many", label: "stableSegments" },
+        reverse: { on: "stableSegments", has: "one", label: "video" },
       },
-      reverse: {
-        on: "$users",
-        has: "many",
-        label: "linkedGuestUsers",
+      videoCorrectedSegments: {
+        forward: { on: "videos", has: "many", label: "correctedSegments" },
+        reverse: { on: "correctedSegments", has: "one", label: "video" },
       },
-    },
-    jobsVideo: {
-      forward: {
-        on: "jobs",
-        has: "many",
-        label: "video",
+      stableSegmentCorrectedSegments: {
+        forward: { on: "stableSegments", has: "many", label: "corrections" },
+        reverse: { on: "correctedSegments", has: "one", label: "stableSegment" },
       },
-      reverse: {
-        on: "videos",
-        has: "many",
-        label: "jobs",
+      videoTranscriptionRuns: {
+        forward: { on: "videos", has: "many", label: "transcriptionRuns" },
+        reverse: { on: "transcriptionRuns", has: "one", label: "video" },
       },
-    },
-    jobsLogs: {
-      forward: {
-        on: "jobs",
-        has: "many",
-        label: "logs",
+      runTranscriptionSegments: {
+        forward: { on: "transcriptionRuns", has: "many", label: "segments" },
+        reverse: { on: "transcriptionSegments", has: "one", label: "run" },
       },
-      reverse: {
-        on: "logs",
-        has: "one",
-        label: "job",
+      videoDiarizationRuns: {
+        forward: { on: "videos", has: "many", label: "diarizationRuns" },
+        reverse: { on: "diarizationRuns", has: "one", label: "video" },
       },
-    },
-    // Domain Links
-    channelsVideos: {
-      forward: {
-        on: "channels",
-        has: "many",
-        label: "videos",
+      diarizationRunTranscriptionRun: {
+        forward: { on: "diarizationRuns", has: "one", label: "transcriptionRun" },
+        reverse: { on: "transcriptionRuns", has: "many", label: "diarizationRuns" },
       },
-      reverse: {
-        on: "videos",
-        has: "one",
-        label: "channel",
+      runDiarizationSegments: {
+        forward: { on: "diarizationRuns", has: "many", label: "segments" },
+        reverse: { on: "diarizationSegments", has: "one", label: "run" },
       },
-    },
-    videosTranscriptions: {
-      forward: {
-        on: "videos",
-        has: "many", // Allowing multiple versions/models
-        label: "transcriptions",
+      diarizationSegmentSpeaker: {
+        forward: { on: "diarizationSegments", has: "one", label: "speaker" },
+        reverse: { on: "speakers", has: "many", label: "diarizationSegments" },
       },
-      reverse: {
-        on: "transcriptions",
-        has: "one",
-        label: "video",
+      correctedSegmentSpeaker: {
+        forward: { on: "correctedSegments", has: "one", label: "speaker" },
+        reverse: { on: "speakers", has: "many", label: "correctedSegments" },
       },
-    },
-    transcriptionsSegments: {
-      forward: {
-        on: "transcriptions",
-        has: "many",
-        label: "segments",
+      videoShazamMatches: {
+          forward: { on: "videos", has: "many", label: "shazamMatches" },
+          reverse: { on: "shazamMatches", has: "one", label: "video" },
       },
-      reverse: {
-        on: "transcriptionSegments",
-        has: "one",
-        label: "transcription",
-      },
-    },
-    segmentsSpeakers: {
-      forward: {
-        on: "transcriptionSegments",
-        has: "one",
-        label: "speaker",
-      },
-      reverse: {
-        on: "speakers",
-        has: "many",
-        label: "segments",
-      },
-    },
-  },
-  rooms: {},
-});
+  }
+);
 
-// This helps Typescript display nicer intellisense
-type _AppSchema = typeof _schema;
-interface AppSchema extends _AppSchema {}
-const schema: AppSchema = _schema;
-
-export type { AppSchema };
-export default schema;
+export default graph;
