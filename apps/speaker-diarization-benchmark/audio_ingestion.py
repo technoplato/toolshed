@@ -1,6 +1,5 @@
 """
 HOW:   
-HOW:   
   Run this script to ingest audio, transcribe it, and optionally run various diarization/embedding workflows.
   You can also use it to download videos from various providers supported by yt-dlp.
 

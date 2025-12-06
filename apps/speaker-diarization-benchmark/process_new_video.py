@@ -64,6 +64,8 @@ def main():
     logger.info("Transcribing with pywhispercpp (small)...")
     model = Model('small', print_realtime=False, print_progress=False)
     transcription = transcribe_clip(model, clip_path)
+    # Add full video to manifest
+    # (TODO) ShazamKit Integration for audio fingerprinting
     
     # 4. Update Manifest
     if MANIFEST_FILE.exists():
