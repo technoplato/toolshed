@@ -222,6 +222,17 @@
                 // Update Player
                 document.getElementById('video-title').textContent = video.title;
                 let path = video.filepath || "";
+                
+                // Convert absolute filepath to relative path for server
+                // e.g., /Users/.../apps/speaker-diarization-benchmark/data/clips/file.wav -> /data/clips/file.wav
+                if (path.includes('/apps/speaker-diarization-benchmark/')) {
+                    path = path.split('/apps/speaker-diarization-benchmark')[1];
+                } else if (path.includes('data/clips/')) {
+                    // Already relative or partially relative
+                    const match = path.match(/(data\/clips\/.+)/);
+                    if (match) path = '/' + match[1];
+                }
+                
                 if (path && !path.startsWith('/') && !path.startsWith('http')) { path = '/' + path; }
                 const currentSrc = audio.getAttribute('src');
                 if (currentSrc !== path) audio.src = path;
