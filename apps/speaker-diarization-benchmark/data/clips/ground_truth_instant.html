@@ -219,10 +219,10 @@
             color: #666;
         }
         
-        /* Hovered segment highlight for keyboard nav */
-        .segment.keyboard-focus {
-            outline: 2px solid #ff9800;
-            outline-offset: 2px;
+        /* Active segment has keyboard focus indicator */
+        .segment.active {
+            outline: 2px solid #2196f3;
+            outline-offset: 1px;
         }
     </style>
     <!-- <script type="module" src="https://js.instantdb.com/v0.12.7/client.js"></script> -->
@@ -239,7 +239,7 @@
         <div class="shortcut-list" id="shortcut-list">
             <div class="shortcut-row">
                 <span class="shortcut-key">Enter</span>
-                <span class="shortcut-desc">Edit speaker (on hover)</span>
+                <span class="shortcut-desc">Edit speaker (active segment)</span>
             </div>
             <div class="shortcut-row">
                 <span class="shortcut-key">Space</span>
@@ -587,16 +587,6 @@
                 <div class="segment-text" title="Click to edit • Cmd+Enter to split at newlines">${text}</div>
             `;
             
-            // Track hovered segment for keyboard shortcuts
-            item.onmouseenter = () => {
-                hoveredSegment = item;
-                item.classList.add('keyboard-focus');
-            };
-            item.onmouseleave = () => {
-                if (hoveredSegment === item) hoveredSegment = null;
-                item.classList.remove('keyboard-focus');
-            };
-            
             // Click on card (not text) = seek and play
             item.onclick = (e) => { 
                 if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
@@ -774,6 +764,8 @@
         // Auto-scroll / Active Class
         audio.ontimeupdate = () => {
             const t = audio.currentTime;
+            activeSegmentEl = null; // Reset
+            
             document.querySelectorAll('.segment').forEach(el => {
                 const s = parseFloat(el.dataset.start);
                 const e = parseFloat(el.dataset.end);
@@ -784,6 +776,8 @@
                         el.classList.add('active');
                         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
+                    // Track the active segment for keyboard shortcuts
+                    activeSegmentEl = el;
                 } else {
                     el.classList.remove('active');
                 }
@@ -792,8 +786,8 @@
         
         // --- EDITING LOGIC ---
         
-        // Track hovered segment for keyboard shortcuts
-        let hoveredSegment = null;
+        // Track active (playing) segment for keyboard shortcuts
+        let activeSegmentEl = null;
         let allSpeakers = []; // All speakers from DB
         let currentVideoSpeakers = []; // Speakers in current video
         
@@ -821,10 +815,10 @@
                 else audio.pause();
             }
             
-            // Enter on hovered segment = edit speaker
-            if (e.key === 'Enter' && hoveredSegment) {
+            // Enter on active (playing) segment = edit speaker
+            if (e.key === 'Enter' && activeSegmentEl) {
                 e.preventDefault();
-                editSpeaker(hoveredSegment);
+                editSpeaker(activeSegmentEl);
             }
         });
         
