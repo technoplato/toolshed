@@ -109,11 +109,165 @@
         
         /* Loading overlay */
         #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        
+        /* Speaker autocomplete dropdown */
+        .speaker-autocomplete {
+            position: relative;
+            display: inline-block;
+        }
+        .speaker-autocomplete input {
+            width: 180px;
+            padding: 6px 10px;
+            border: 2px solid #2196f3;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .speaker-autocomplete input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            z-index: 100;
+        }
+        .autocomplete-item {
+            padding: 8px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .autocomplete-item:hover, .autocomplete-item.selected {
+            background: #e3f2fd;
+        }
+        .autocomplete-item.current-video {
+            border-left: 3px solid #4caf50;
+            background: #f1f8e9;
+        }
+        .autocomplete-item.current-video:hover, .autocomplete-item.current-video.selected {
+            background: #dcedc8;
+        }
+        .autocomplete-section {
+            padding: 4px 10px;
+            font-size: 0.75em;
+            color: #666;
+            background: #f5f5f5;
+            font-weight: bold;
+            border-top: 1px solid #eee;
+        }
+        
+        /* Shortcuts help panel */
+        #shortcuts-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 0.85em;
+            z-index: 50;
+            max-width: 280px;
+        }
+        #shortcuts-panel h4 {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #shortcuts-panel .toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 0;
+            color: #666;
+        }
+        .shortcut-list {
+            display: none;
+        }
+        .shortcut-list.expanded {
+            display: block;
+        }
+        .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .shortcut-row:last-child { border-bottom: none; }
+        .shortcut-key {
+            font-family: monospace;
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+        .shortcut-desc {
+            color: #666;
+        }
+        
+        /* Hovered segment highlight for keyboard nav */
+        .segment.keyboard-focus {
+            outline: 2px solid #ff9800;
+            outline-offset: 2px;
+        }
     </style>
     <!-- <script type="module" src="https://js.instantdb.com/v0.12.7/client.js"></script> -->
 </head>
 <body>
     <div id="loading">Loading...</div>
+    
+    <!-- Keyboard Shortcuts Help Panel -->
+    <div id="shortcuts-panel">
+        <h4>
+            ⌨️ Shortcuts
+            <button class="toggle-btn" onclick="toggleShortcuts()">▼</button>
+        </h4>
+        <div class="shortcut-list" id="shortcut-list">
+            <div class="shortcut-row">
+                <span class="shortcut-key">Enter</span>
+                <span class="shortcut-desc">Edit speaker (on hover)</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="shortcut-key">Space</span>
+                <span class="shortcut-desc">Play/pause audio</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="shortcut-key">Click segment</span>
+                <span class="shortcut-desc">Seek & play</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="shortcut-key">Click text</span>
+                <span class="shortcut-desc">Edit text for splitting</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="shortcut-key">⌘+Enter</span>
+                <span class="shortcut-desc">Split at newlines</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="shortcut-key">Escape</span>
+                <span class="shortcut-desc">Cancel editing</span>
+            </div>
+            <div class="shortcut-row">
+                <span class="shortcut-key">↑/↓</span>
+                <span class="shortcut-desc">Navigate suggestions</span>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
         <div class="header">
             <h1>Ground Truth Creator <small style="font-size:0.5em; color:#888;">(New Schema - Dec 2025)</small></h1>
@@ -159,6 +313,16 @@
                 return;
             }
             populateVideoSelect(resp.data.videos);
+        });
+        
+        // Subscribe to all speakers for autocomplete
+        db.subscribeQuery({ speakers: {} }, (resp) => {
+            if (resp.error) return console.error("Failed to load speakers:", resp.error);
+            allSpeakers = (resp.data.speakers || [])
+                .map(s => s.name)
+                .filter(Boolean)
+                .sort();
+            console.log("Loaded", allSpeakers.length, "speakers for autocomplete");
         });
         
         function populateVideoSelect(videos) {
@@ -237,8 +401,36 @@
                 const currentSrc = audio.getAttribute('src');
                 if (currentSrc !== path) audio.src = path;
 
+                // Extract speakers from current video for autocomplete
+                currentVideoSpeakers = extractSpeakersFromVideo(video);
+                
                 renderLayout(video);
             });
+        }
+        
+        // Extract unique speaker names from a video's diarization segments
+        function extractSpeakersFromVideo(video) {
+            const speakers = new Set();
+            const diarRuns = video.diarizationRuns || [];
+            for (const run of diarRuns) {
+                for (const seg of (run.diarizationSegments || [])) {
+                    // Get speaker from assignment if available
+                    const assignments = seg.speakerAssignments || [];
+                    if (assignments.length > 0) {
+                        const mostRecent = assignments.sort((a, b) => 
+                            new Date(b.assigned_at || 0) - new Date(a.assigned_at || 0)
+                        )[0];
+                        const spk = mostRecent.speaker?.[0];
+                        if (spk?.name) speakers.add(spk.name);
+                    }
+                    // Also add speaker_label if it looks like a name
+                    const label = seg.speaker_label || '';
+                    if (label && !label.match(/^SPEAKER_\d+$/) && !label.match(/^SPLIT_\d+$/) && label !== 'UNKNOWN') {
+                        speakers.add(label);
+                    }
+                }
+            }
+            return Array.from(speakers).sort();
         }
         
         function renderLayout(video) {
@@ -394,6 +586,16 @@
                 </div>
                 <div class="segment-text" title="Click to edit • Cmd+Enter to split at newlines">${text}</div>
             `;
+            
+            // Track hovered segment for keyboard shortcuts
+            item.onmouseenter = () => {
+                hoveredSegment = item;
+                item.classList.add('keyboard-focus');
+            };
+            item.onmouseleave = () => {
+                if (hoveredSegment === item) hoveredSegment = null;
+                item.classList.remove('keyboard-focus');
+            };
             
             // Click on card (not text) = seek and play
             item.onclick = (e) => { 
@@ -590,6 +792,42 @@
         
         // --- EDITING LOGIC ---
         
+        // Track hovered segment for keyboard shortcuts
+        let hoveredSegment = null;
+        let allSpeakers = []; // All speakers from DB
+        let currentVideoSpeakers = []; // Speakers in current video
+        
+        // Toggle shortcuts panel
+        function toggleShortcuts() {
+            const list = document.getElementById('shortcut-list');
+            const btn = document.querySelector('#shortcuts-panel .toggle-btn');
+            list.classList.toggle('expanded');
+            btn.textContent = list.classList.contains('expanded') ? '▲' : '▼';
+        }
+        // Start with shortcuts visible
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('shortcut-list').classList.add('expanded');
+        });
+        
+        // Global keyboard handler
+        document.addEventListener('keydown', (e) => {
+            // Don't capture when in an input/textarea
+            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+            
+            // Space = play/pause
+            if (e.key === ' ' && e.target === document.body) {
+                e.preventDefault();
+                if (audio.paused) audio.play();
+                else audio.pause();
+            }
+            
+            // Enter on hovered segment = edit speaker
+            if (e.key === 'Enter' && hoveredSegment) {
+                e.preventDefault();
+                editSpeaker(hoveredSegment);
+            }
+        });
+        
         function editSpeaker(segEl) {
             const spkEl = segEl.querySelector('.seg-speaker');
             if (!spkEl) return;
@@ -598,33 +836,160 @@
             const currentName = spkEl.textContent.replace(/^[✓🤖]\s*/, '').trim();
             const speakerLabel = segEl.dataset.speakerLabel || '';
             
+            // Create autocomplete container
+            const container = document.createElement('div');
+            container.className = 'speaker-autocomplete';
+            container.onclick = (e) => e.stopPropagation();
+            
             const input = document.createElement('input');
             input.type = 'text';
             input.value = (currentName === "UNKNOWN" || currentName === speakerLabel) ? "" : currentName;
-            input.placeholder = `Speaker Name (was: ${speakerLabel})`;
-            input.style.width = "150px";
-            input.onclick = (e) => e.stopPropagation();
+            input.placeholder = `Speaker name...`;
+            
+            const dropdown = document.createElement('div');
+            dropdown.className = 'autocomplete-dropdown';
+            dropdown.style.display = 'none';
+            
+            container.appendChild(input);
+            container.appendChild(dropdown);
             
             const originalParent = spkEl.parentNode;
-            originalParent.replaceChild(input, spkEl);
+            originalParent.replaceChild(container, spkEl);
             audio.pause();
             input.focus();
+            input.select();
             
-            const save = () => {
-                const newName = input.value.trim();
-                if (newName && newName !== currentName) {
-                    // New schema: Create speaker assignment
-                    createSpeakerAssignment(segEl.dataset.id, newName);
+            let selectedIndex = -1;
+            
+            // Build speaker suggestions
+            function getSuggestions(query) {
+                const q = query.toLowerCase();
+                const suggestions = [];
+                
+                // Current video speakers first
+                const currentMatches = currentVideoSpeakers
+                    .filter(s => s.toLowerCase().includes(q))
+                    .sort((a, b) => {
+                        // Exact start match first
+                        const aStarts = a.toLowerCase().startsWith(q);
+                        const bStarts = b.toLowerCase().startsWith(q);
+                        if (aStarts && !bStarts) return -1;
+                        if (!aStarts && bStarts) return 1;
+                        return a.localeCompare(b);
+                    });
+                
+                currentMatches.forEach(s => {
+                    suggestions.push({ name: s, isCurrentVideo: true });
+                });
+                
+                // All speakers (excluding ones already shown)
+                const otherMatches = allSpeakers
+                    .filter(s => s.toLowerCase().includes(q) && !currentVideoSpeakers.includes(s))
+                    .sort((a, b) => a.localeCompare(b));
+                
+                otherMatches.forEach(s => {
+                    suggestions.push({ name: s, isCurrentVideo: false });
+                });
+                
+                return suggestions;
+            }
+            
+            function renderDropdown() {
+                const suggestions = getSuggestions(input.value);
+                dropdown.innerHTML = '';
+                
+                if (suggestions.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
                 }
-                // Revert input to span (subscription will update with real data)
-                originalParent.replaceChild(spkEl, input);
+                
+                let hasCurrentVideo = false;
+                let hasOther = false;
+                
+                suggestions.forEach((s, idx) => {
+                    // Section headers
+                    if (s.isCurrentVideo && !hasCurrentVideo) {
+                        const header = document.createElement('div');
+                        header.className = 'autocomplete-section';
+                        header.textContent = '📍 This Video';
+                        dropdown.appendChild(header);
+                        hasCurrentVideo = true;
+                    } else if (!s.isCurrentVideo && !hasOther) {
+                        const header = document.createElement('div');
+                        header.className = 'autocomplete-section';
+                        header.textContent = '🌐 All Speakers';
+                        dropdown.appendChild(header);
+                        hasOther = true;
+                    }
+                    
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item' + (s.isCurrentVideo ? ' current-video' : '');
+                    if (idx === selectedIndex) item.classList.add('selected');
+                    item.textContent = s.name;
+                    item.onmousedown = (e) => {
+                        e.preventDefault();
+                        input.value = s.name;
+                        input.blur();
+                    };
+                    dropdown.appendChild(item);
+                });
+                
+                dropdown.style.display = 'block';
+            }
+            
+            input.oninput = () => {
+                selectedIndex = -1;
+                renderDropdown();
+            };
+            
+            input.onfocus = () => {
+                renderDropdown();
             };
             
             input.onkeydown = (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-                if (e.key === 'Escape') { input.value = currentName; input.blur(); }
+                const items = dropdown.querySelectorAll('.autocomplete-item');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    renderDropdown();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    renderDropdown();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (selectedIndex >= 0 && items[selectedIndex]) {
+                        input.value = items[selectedIndex].textContent;
+                    }
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    input.value = currentName;
+                    input.blur();
+                } else if (e.key === 'Tab' && items.length > 0) {
+                    e.preventDefault();
+                    const idx = selectedIndex >= 0 ? selectedIndex : 0;
+                    if (items[idx]) input.value = items[idx].textContent;
+                    input.blur();
+                }
             };
-            input.onblur = save;
+            
+            const cleanup = () => {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    createSpeakerAssignment(segEl.dataset.id, newName);
+                }
+                originalParent.replaceChild(spkEl, container);
+            };
+            
+            input.onblur = () => {
+                // Small delay to allow click on dropdown
+                setTimeout(cleanup, 150);
+            };
+            
+            // Initial render
+            renderDropdown();
         }
         
         // Legacy function kept for compatibility
