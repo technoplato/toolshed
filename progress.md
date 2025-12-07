@@ -26,6 +26,19 @@
 
 ---
 
+### December 7th, 2025 at 3:01:50 p.m.
+
+✨ Updated Python models and adapter to match new InstantDB schema
+
+[Commit](https://github.com/technoplato/toolshed/commit/5f6bcb5)
+
+- Pushed new schema to InstantDB (deleted old namespaces, created new ones)
+- models.py: Added Publication, Word, SpeakerAssignment, SegmentSplit, WordTextCorrection
+- instant_db_adapter.py: Complete rewrite - words as first-class, speaker assignments with history
+- repository.py: Updated interface to match new entities and methods
+
+
+
 ### December 7th, 2025 at 2:58:01 p.m.
 
 ✨ Picked up beautiful-schema-fresh-restart handoff, nuked database for schema migration
