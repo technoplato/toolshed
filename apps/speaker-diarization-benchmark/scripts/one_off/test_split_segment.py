@@ -151,11 +151,28 @@ def test_split_segment():
         # =====================================================================
         print("\n2. Performing segment split...")
         
-        # Input: User wants to split into 2 parts
+        # SIMPLIFIED API: Just segment_id and lines
+        # Server fetches start_time, end_time, run_id from the segment
         lines = ["Hello world", "this is a test"]  # 11 chars, 14 chars
-        start_time = 0.0
-        end_time = 3.0
         split_by = "test_script"
+        
+        # Fetch segment to get its properties (this is what the server does)
+        q_seg = {
+            "diarizationSegments": {
+                "$": {"where": {"id": original_segment_id}},
+                "diarizationRun": {}
+            }
+        }
+        seg_result = repo._query(q_seg)
+        segment = seg_result.get("diarizationSegments", [])[0]
+        start_time = segment.get("start_time")
+        end_time = segment.get("end_time")
+        fetched_run_id = segment.get("diarizationRun", [{}])[0].get("id")
+        
+        print(f"   Fetched from segment: {start_time}s - {end_time}s, run: {fetched_run_id}")
+        
+        # Verify we got the right run
+        assert fetched_run_id == run_id, f"Run ID mismatch: {fetched_run_id} != {run_id}"
         
         # Calculate split times (proportional to character count)
         total_chars = sum(len(line) for line in lines)

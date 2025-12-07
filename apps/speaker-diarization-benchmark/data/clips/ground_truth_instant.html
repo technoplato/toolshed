@@ -631,9 +631,11 @@
             
             const currentText = textEl.textContent;
             const segmentId = segEl.dataset.id;
-            const runId = segEl.dataset.runId;
-            const startTime = parseFloat(segEl.dataset.start);
-            const endTime = parseFloat(segEl.dataset.end);
+            
+            if (!segmentId) {
+                alert("No segment ID found. Cannot split this segment.");
+                return;
+            }
             
             const textarea = document.createElement('textarea');
             textarea.value = currentText.trim();
@@ -671,16 +673,13 @@
                     
                     const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l);
                     
-                    if (lines.length > 1 && segmentId && runId) {
-                        // Split the segment!
-                        performSplit(segmentId, runId, startTime, endTime, lines);
-                        cleanup();
-                    } else if (lines.length === 1) {
-                        // Just one line - no split needed
-                        console.log("Only one line, no split performed");
+                    if (lines.length > 1) {
+                        // Split the segment! Server will look up all the details.
+                        performSplit(segmentId, lines);
                         cleanup();
                     } else {
-                        alert("Need segment ID and run ID to split. Make sure you're editing a diarization segment.");
+                        // Just one line - no split needed
+                        console.log("Only one line, no split performed");
                         cleanup();
                     }
                 }
@@ -702,15 +701,26 @@
         /**
          * Split a diarization segment into multiple segments.
          * 
-         * NEW SCHEMA FLOW:
+         * SIMPLIFIED API - just send:
+         * - segment_id: The segment to split
+         * - lines: Array of text lines (one per resulting segment)
+         * 
+         * Server looks up start_time, end_time, run_id from the segment.
+         * 
+         * FLOW:
          * 1. User edits segment text and adds newlines
          * 2. Press Cmd+Enter to split
-         * 3. Server creates SegmentSplit record
+         * 3. Server creates SegmentSplit record (audit trail)
          * 4. Original segment marked is_invalidated=true
          * 5. New segments created with SPLIT_0, SPLIT_1, etc. labels
          * 6. UI refreshes via InstantDB subscription
          */
-        async function performSplit(segmentId, runId, startTime, endTime, lines) {
+        async function performSplit(segmentId, lines) {
+            if (!segmentId) {
+                alert("No segment ID - cannot split.");
+                return;
+            }
+            
             if (lines.length < 2) {
                 alert("Need at least 2 lines to split. Add newlines to indicate split points.");
                 return;
@@ -722,11 +732,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         segment_id: segmentId,
-                        run_id: runId,
-                        start_time: startTime,
-                        end_time: endTime,
-                        lines: lines,
-                        split_by: 'ground_truth_ui'
+                        lines: lines
                     })
                 });
                 

@@ -1,0 +1,1051 @@
+--- Benchmark Report ---
+Date: 2025-12-03 22:21:36
+Clip: jAlKYYr1bpY.wav
+Workflow: assemblyai
+Commit: 9cabd160532844f572d75af14cdade75ee922a4b (Dirty: True)
+Arguments: Namespace(clip_path='apps/speaker-diarization-benchmark/data/clips/jAlKYYr1bpY.wav', threshold=0.5, window=0, cluster_threshold=0.5, id_threshold=0.4, output_dir='.', append_to=None, workflow='assemblyai')
+  --threshold: 0.5
+  --window: 0
+  --cluster-threshold: 0.5
+  --id-threshold: 0.4
+
+--- Timing Stats ---
+Transcription: 0.04s
+Embedding:     0.00s
+Segmentation:  96.74s
+Clustering:    0.00s
+Total:         100.36s
+
+--- Full Transcription ---
+The Wild Wild West. Two hours. We're doing two. Whatever you want to do. Yeah, just know the pace. We're going to talk to the page. Oh, I like that, man. I like that approach. Can you guys not release this till October? Oh, wow. I'm joking. I was going to say, I thought they're special. Yeah, totally. Also, I was waiting to share it for this episode. Thank you. I was in a tomb on Monday. Dude, trust me. When you hit me back, I was like, he just did it. He's in the tomb. He's in the tomb. I... Sorry, because discussing the tomb I was just in is... The tomb was... Sacrophagus? I was in... I've risen. I'm Lazarus right now. This is the third day. I'm actually... What's the tomb? Like, is the tomb the bed or the couch? The tomb is... I just played... There's a new game called Ready or Not. Nice. And I played it for two days. That's awesome. I played the entire... I played every mission. Meanwhile... That's so long. Psychologically, what's the thought... Is the thought process all on the mission? It's... Usually, it's 100% on the mission, which is... All right. So, that's one... It might be a bad way to deal with stress. Mm-hmm. Because I'm just focused on that. And then you go, oh, shit. I forgot about all the problems. Ugh. You know what I mean? Every time... You're not trying to work out any problems. You're going, we got to fucking clear this room, fellas. Breach. Breach. But then while you respawn, you have 15 seconds. Fuck. You get killed on some bullshit way, and then you go, yeah, fucking bullshit game. Fucking this game sucks. Fuck. Oh, shit. I forgot my life sucked, too. Fuck. Fuck. The game's awesome. I suck. Is it a war game? Yeah. It's just... You're a SWAT team. Ooh. That's awesome. You're going to love it. And the video games are back, dude. Ooh. These guys made a wild-ass game. Oh, man. I want to get that. You're breaking into, like, child porn fucking facilities. You're breaking... Yeah. Wow. Yeah, yeah. It's really a dark, fucked-up game. I'm getting that today. Yeah, well, get ready to enter the tomb. How good's it feel to clear the child porn sanctuary? Feels good. Yeah, that's nice. It feels really good. Yeah, it's awesome. Yeah. And it's like... So there's just a blast... I was about to say, you blast everyone in there. Yep. You go, what the fuck are you guys doing, dude? That's totally fair. If you're in, like, an industrial child porn place... There's school shooting out, too. What? Yeah, you clear out, like, a school shooting. Can you run away? You can hide for a while. I would run away. Fucking A. This game sounds fucking awesome. It sounds like every dude's fantasy is wrapped up into one. It is. It's like, obviously, stopping a school shooting. Obviously, wearing SWAT gear. Just that alone. Everyone wants to wear SWAT tactical gear. Although, ever since I saw the picture of Big Chungus at the protest during BLM, I realized I could never rock the SWAT gear. What? Too big to wear SWAT gear. How so? When you're a big guy in SWAT gear, it looks fucking hilarious. Have you ever seen it? Have you ever seen a big, fat guy in SWAT gear? Never thought about it. I don't know. I'll show you Big Chungus. I feel like you would look like a juggernaut. There is that. Yeah. There is that. I could wear the Hurt Locker fucking... And just be juggernaut. But juggernaut sucks. You get shot fucking nine million times. You play games, man? No, I can't have it, man. I won't stop playing it. It's like a complete time suck. You got a full family, too. Yeah. I'd imagine there's not a ton of... But wait, do you play with the kids, though? Not yet. It's getting there, though. There could be some aerial cart with a five-year-old soon. Yo. He can't be the chungus. That's insane. He can't be the big chungus. He didn't have the right gear. His gear is too small. Yeah, it's a tough one. Getting too fat for your tactical gear would be tough. Yeah. Because then it's literally life or death. You have viscera exposed. Yeah, that looks like when they brought back Boba Fett, but he was fat now. And they didn't adjust the costume. It was like up here. Some Australian dude has just been drinking for 10 years. And they're like, you want to do the role again? He's like, yeah. Yeah. I've been waiting on this call. Fuck. His helmet's like a yarmulke on his head. I don't know. Boba Fett was an Australian man? Or he might be from... Because if that's the case, he lives actually on Tatooine. I think he's New Zealand. Oh, okay. Yeah. That guy, he was in that movie When We Were Kings, which I feel like is... I don't even think I've heard of that movie. As I was saying it, I was like, I feel like Shane, this is a movie Shane would love, but I'm basing that only on the title, When We Were Kings. It's just a movie you would love. It's just a drunk guy. Fucking every night. We Were Kings. Yeah, what's the movie about? We were the fucking best. What's it about? The movie takes place at a bus stop. It takes place at a bus stop in West Philadelphia. Yeah. We Was Kings. We Was Kings. I think it's about like... I think it's kind of like Slumdog Millionaire, except in New Zealand, or one of those kind of movies. Okay. I think, or like City of God, maybe it's like that. City of God's awesome. I've never seen either movie. I heard they're both great. City of God's awesome. Yeah. It's a great title. I like subtitles, man. I'm a big subtitle movie guy. I like that. Let's talk movies. What? Let's talk movies we've never seen. Let's talk movies. City of God. City of God rules. You'd like it. Wait. I want to look up when we were... I'm going to look it up at one point. When We Were Kings is actually... What would be the best movie analysis ever? I don't know what it's about. It's like two movies I've never seen before. I think it's a guy from New Zealand. I just saw one of the shittiest movies I've ever fucking seen. What? Opus. The new John Malkovich movie. Never seen it. Where? All right. Let me just shoot the premise at you. Yeah. And you'll immediately know we're off to a bad start. John Malkovich plays a once famous R&B pop singer. What? How does he do that? Who disappears. He was big in the 80s. And then he disappears and comes back 30 years later for his opus. He's putting out another album after 30 years of absence. That always works. Yeah. And it's John Malkovich. Damn. It'd be nice if it was like late Kells. Like, yo pussy is a buffet. I love your pussy. I thought they were going to make him like a, you know, like a fucking Pink Floyd-y dude. Yeah. When I heard the premise. And I'm like, oh no, he's like a dance singer. Like a fucking like, like, like, it's so. And then they, so all these people get invited to his big compound to listen to the record. And then everybody starts dying. And it's, it's, it's Get Out. It's like the 57th time they've remade Get Out since fucking Get Out came out. What? Sucks dick. It is a terrible fucking movie. Who's the villain? Who's, who's the. He is. You're describing a pretty sick fucking movie. You'd think. You'd think. It fucking sucks. It also sounds like an event that me and my squad should probably breach and. Yes. Yeah. Tie up the civilians. Make sure everybody's taken care of. You could have stopped it. I could have stopped it. You could have stopped the onslaught. There's going to be some people. This game's a hit, dude. Yeah. There's going to be some people breaching some houses. You think so? I think so. Because it does. It gives you that. Yeah. Desire. Yeah. Your ex-wife's got a new boyfriend. That would be. You get four of your boys. You go. All right. Stack the door. Yeah. They should be doing school drop off. Fucking shock on the lock. Fraggit. 745. They haven't left yet. They should be doing drop off right now. We're going in. I think they. I don't think I'm making this up. Didn't they use Forza to actually train race drivers? Didn't they actually play fucking Forza as like a simulation before they got on the actual road? I'm not sure. Probably. Gran Turismo. Yeah. Oh, Gran Turismo. That's what it was. Yeah. That makes sense. That's insane, though, that games are getting like. I actually think what you're saying is I think like these games actually could be like tactical training before you're in the field. I mean. You know? Yeah. Nate's all. I would have failed. Fucking civilian came running around the corner. I was like, oh. He was running right at me. Everybody saw that. Scared the shit out of me. They do scare you. How do you distinguish? There's a. Oh, the worst one. There's like a for real. There's like a pulse nightclub. What? And the thing that they did in the game that always fucked me up from the actual shooting that people described it was everyone's phones going off. That was dead. Whoa. Like when the cops went in to clear it out, you could just hear every phone in the building buzzing, which is so sad. Yeah. I didn't think about that. And they kept that in the game. That's in the game. Oh, it's like a fucked up game. Yeah, man. Shit. Yeah. That used to be. They used that used to get a lot of backlash. Remember, there was a modern warfare where you had to take down the airport shooter. There was like people were like, this is fucked up. This is too far. And then other people were like, no, this is important. Well, it's definitely not important. It's fucking crazy. That mission was awesome. That mission was crazy. I don't know. I feel like it is important. If you just sit there and do that for hours and hours and hours, I do feel like if the real thing happened, you might on some level be more prepared. Well, that's exactly the problem because in this mission, you are the shooters. Oh, no. First half, you walk around with a machine gun in a fucking airport. You're an airport shooter? Yes. It's a tough one. And the mission is. Wait, I don't remember that part. The first part, you were the shooter? No, you're not. You're literally just going through killing every civilian. Oh, my God. Yeah, yeah, yeah. It's really bad. All right. I forgot about that. That might be too far. It's nuts. Yeah, that's not good. That's why Call of Duty hit the old switcheroo. Zombies. It's like, I'm a purple woman sliding. Yeah. All right. I see it. They hit the peak. They're like, we made the top of the mountain. Although in Grand Theft Auto, you're essentially doing that anyway. Grand Theft Auto, there's rumors that there is a pride parade in the city. No. Fellas, don't. Don't. Don't let me catch you. Don't, dude. Those videos are going to be fucking chaos. Oh, no. Every single person that downloads the game. Straight to the parade. I do feel like, to be fair. No way. No way. And there you go. What would happen? To be fair, it's time the hookers in GTA get a break. Yeah. True. The hookers are going to be watching and be like, thank fucking God. Finally, we can relax. They're next. Once you get five stars from the fucking parade, you're headed straight to the fucking strip club. They're really doing that. You think I forgot about you? That's so funny. Yeah, they're doing that. That's, uh... I wonder if they'll make it off limits. I think they're going to reel this game back. Grand Theft Auto makes more. It'll get hacked. That game gets hacked, too. I think they're going to reel this one back. I was friends with this guy, Laszlo, that was one of the top developed guys. He was the guy that put us all into the games and shit. And he left. I forgot you were in Grand Theft Auto. Yeah, five. That's fucking awesome. It's wild. That is awesome. Faces in it. The mocap was insane. Damn. That mocap's a nightmare. It would suck. How much did you feel like it? You must have looked nuts in a mocap. By the way, it was old school mocap. It wasn't this fucking Harrison Ford shit where they put blue dots on your face. I had a helmet on with a camera in my face. It was crazy. You had to wear a frog suit, like Green Man. What was your role? What did you play? There's... When you go into the safe house or the safe house, whatever it's called, there's a TV and there's shows you can watch. And there's a show with the... Whoever the action star is in that series that's like the Stallone type. Yeah. It's a reality show about him. And I play his new agent. And I'm like this coke head. And it's me and him. We did like... We shot like 30 minutes. We shot a full episode of this thing. Whoa. And it's in the game. And then we went back and did additional content later that never got released. That I just had to sign crazy NDAs about. I'm not allowed to talk about it. Whoa, that's awesome. But anyway, it was awesome. It was fucking... He just fucks you in this. Yeah. Yeah. Yeah. Yeah. This episode is brought to you by Viore. So there's a lot of sports out there. Obviously, you've got basketball, baseball, and football. But then there's running, tennis, MMA, climbing, yoga, pickleball. And that's before you get into all the different ways you can train and work out. Right. But the good news is that you only need one pair of shorts for all of it. The core short from Viore. That's right. Wear one pair of shorts all the time. That's all you need. The workout. The core short. That's all I do. No one's going to think you stink. No, not at all. You can get two pairs. You can switch them every day. Or just do morning and afternoon. The core short is the short that started it all for Viore. Mm-hmm. Fitness versatility. One short every sport. Mm-hmm. Guys, they're ideal for fitness running and training, but also stylish and comfortable. That's important. That is important. I want to be stylish. I want to be stylish and comfortable. Matt, are they soft? They're soft. They're pretty soft. A lot of Viore stuff. How much do they weigh? Yeah. Pretty lightweight. The core shorts. Is it only three-way performance or how many? I'd say it's pretty multiplex. Is it a four-way performance stretch? Yeah. Oh, yeah. Yeah, definitely the fourth dimension. I can stretch backwards in them for sure. Also, the core is a little tougher. Some of their stuff is like borderline erotic. If you feel my shorts right here, I'm actually wearing them right now. Don't make me. I'm actually wearing them right now, dude. Please do not. Matt, Viore is an investment in happiness. And right now, you can get 20% off your first order and free shipping on any U.S. order of $75 and free returns. So get your core shorts now at viore.com slash secret. That's V-U-O-R-I dot com slash secret. Exclusions apply. Visit the website for full terms and conditions. But that guy, this guy Laszlo was like, he put Burr and Bobby Kelly, everybody in. Yeah, that's awesome. They had stand-up in, was it four or five? Yeah, I think Burr, no, Gervais is doing stand-up. I think Cat Williams. Yeah, Cat Williams. I'm just going to go watch stand-up than it actually as a comedian in. That's pretty crazy. Yeah, but he's... You can bring your gun in there and you can shoot Cat Williams. Bro, stand-up special, GTA animated. That'd be awesome. A special where you're just in a mo-cap suit, you perform live in a mo-cap suit, and they recreate it in GTA V, and people can just shoot people. Really? That's what I'm saying. That's fucking sick. It literally did that. That's awesome. You can walk in. There's a comedy club. It's Ricky Gervais. That's awesome. Yeah. Yeah. It was nuts when we did it because it was like early days of that. Not early, but early days. Yeah, you should do that now again. Yeah. And just put it out as a game. Yeah, true. Just be like, this is my special. You'd shoot me. It's live. Yeah, you guys get... Nobody hears the first joke ever. They had this fucking... We were in this green room, and they had all these plastic structures, and they'd be like, that's your car, so open the door and sit in it, whatever. And you would do it, and then they'd be like, okay, come over here and look at this. It was rendering in real time. Whoa. So you'd walk over, and it didn't look like it did in the game, but it was like you getting into a fucking car in a video game immediately. It was crazy. It was fucking crazy. Yeah, that's awesome. Dude, this is like 2009. This is a while ago. That's crazy, yeah. But anyway, yeah, the game made $5 billion. I got paid three grand. And I remember calling Lazlo and going, I want a copy of Max Payne 3. And he goes, you fucking comics, man. Always looking for free shit. I go, your game just made a billion dollars. You paid me three grand. Send me fucking Max Payne 3 right now. And he's like, all right, that's fair, dude. Okay, I'll send you one. Yeah, yeah, yeah. When you put it that way. But I think it's the point I'm ultimately getting at is I have a feeling with his absence, I feel like they're going to reel back in this one. I just don't think it's like Eminem saying like, look, man, time's changed. Nobody wants this anymore. I'm just not doing it anymore. I feel like they're going to pull back. Ready or not, it's kind of proven everyone wants it. Yeah, that's a good point. Yeah. That's a good point. It should be like in Mortal Kombat. Then you have to put in a setting for like, you should have settings. If you want to play kind of like, you know, reeled back GTA, you can just hit a setting. If you want to go nuts, you should just be, you get to be Hunter Biden. Yeah, there was the blood code. Hunter Biden's rocking right now. He's rocking right now. That would fire me up. He might be, dude, he might put his hat around. He's literally the O'Connor man. He is. Did you hear the way he was speaking? I've had that conversation with O'Connor 10 million times. I saw the clip. He's like, that motherfucker wants to fucking talk shit. I'm like, damn, this is the O'Connor man. I just fought him at Lala's for fucking 10 hours with this exact conversation. O'Connor, dude, is a psycho. You're a fucking idiot. O'Connor is a fucking psycho. He's a bad. I've seen him get angrier. And I'm an angry dude. O'Connor gets hot, man. O'Connor, yeah. And I know exactly how to do it. And it's so funny. Dude, you're fucking, you're Batman, dude. Remember Batman in the Justice League comics? He had a way to kill every member of the Justice League just in case it went sideways. That's Shane with every one of his friends. I know exactly how to piss you off, dude. And I'm going to do it right now. No, I'm going to be a comment. The O'Connor man's just the, I don't ever do that really to you guys. You do get the O'Connor, you get the comment. Oh, comments. It's really funny. He also, he knows too, though. He'll feel it. You'll start hitting the buttons and he'll go, I'm not doing this with you. And then, eventually. You can't, you can't. He always, he's like, Shane, I'm not doing that right now. And they go, yeah, you are. This is a classic O'Connor rule, right? When he starts getting hot, he goes like this. Dude, what the fuck are you talking about? You've reached his wall. Yeah, you've climbed his wall at that point. You're fully inside the Citadel. Dude, we were arguing. He took the Trojan horse. He fell asleep. You're cutting everybody's heads off. It's over. Shane and I were arguing about Prince. I was pro Prince. Shane was anti Prince. It was our argument. O'Connor jumped in. O'Connor got so hot. O'Connor lost his fucking mind. But, hold on. Hold on. That was, you want to talk about great, great drunks? Yeah. This was one of the all-time drunks. This was coming back from London, back to, back to the United States. And we had, like, a private room. Mm-hmm. We were flying. It wasn't private. It wasn't a private jet. But they have this thing. They're cheap as fuck. Yeah. Everybody should be doing this. There's, like, a VIP thing at big airports. Mm-hmm. For, like, $1,000. Yeah. Where they just, that you have your own security. You have your own thing. And then they just put you in a room. What? With free alcohol. And then they're like, guys, the flight got delayed by two hours. And everyone in the room was just, like, oh, shit. And we got, we drank vodka for three hours and argued about Prince for three straight hours. And Okaman was my staunchest ally. Okaman went nuts. Oh, he went nuts anti-Prince. He was like, play one fucking song. Play one fucking song. And Shane was being like, appreciate your support, Chris. You got to back it off. Like, you're going crazy right now, man. They should have reached out to air traffic control. Like, we got to get this plane up. But this is a disaster. We have a disaster on the ground. I think they let me smoke in the fucking room. Yeah, we were smoking in the room. It was. I didn't know this existed. Yeah. Either did I. I did it once. This is the second time I've done it. I did it once at JFK. And it was the biggest waste of money of all time. Really? Just a woman met me at baggage. Yeah. And walked me through and then took me to an airport lounge. And they were like. And then she left. And then they were like, you can't come in here. I was like, oh, shit. Oh, that sucks. That sucks, yeah. The closest I got to that. It was just a regular lounge. Did you ever do someone in a wheelchair at the airport? That's fucking VIP status. Yeah. My wife was super pregnant. She got the wheelchair. And you just go through, like, a weird corridor. It's awesome. Yeah. That would be a flex, dude. If you got hit the regular airport, hit the chair. I should start hitting the chair anyway. Blank it. Blank it. Blank it over my fucking head. Get it like a blackjack dealer poker player visor. Just get pushed through the airport. Float through the airport. It's the fucking move, dude. Just black out. Yeah. Just get blacked out. Start screaming about Prince from a wheelchair. Just get the Stephen Hawking set up for when you're blacked out. Just blink. Like, do you want another? Do you want some more peanuts? Just go. Yeah. Start blinking. Yes, yes, yes. Tony, you should get towed. Just get an application. I'd be like, all right, I'll have one more beer. Just walking up. Get towed by the cart. Have the guy, have the Egyptian guy scream, get out of the way. And you just get towed behind the chair. That would be nice. Yeah. Or squat up. Just have like six or four. Five or six. Get biker vests. Six or five. Hit the Mario cart. You're saying, turn the JFK into Toad's turn bike. Isn't that insane? Isn't that insane, though, that somebody could get so fat that you just get VIP? Oh, true. It's crazy. It's insane. It's crazy, dude. It's like ancient times. If someone was super fat back in the day, like, me must be a fucking ruler. Yeah, I think if people found like just vague records of our civilization, they'd be like, they worshipped fat people. Yeah. They did everything for the fats. Dude, when I was reading about the Aztecs, there was one of the guys that Cortez linked up with who was like a rival against Montezuma. He was a fat king and he had servants literally hold his belly up for him. So he would come talking like, yo, we got to fuck up Montezuma. And then he had two guys the whole time just holding his belly while he talked. That's what used to be like doing YKWD. He'd get in there, there'd be five dudes just, yes, Bobby, yes. Like, dude, you're a fucking punk. It's crazy. Yes, Bobby, get him. Shut the fuck up, dude. Yeah, fuck you, dude. Don't fucking talk to me like that, dude. I listen to the regs. You ever listen to the regs? Yeah, it's funny. The regs is great. It's great. It's funny. The regs clips come up for me. It is so funny. It's the best. Wait, wait. Speaking of dudes, it'll throw down the drama. Soty's another one. Soty will get fired up. Soty will get amped. They were playing college football. No, I've told this story a thousand times. I think Danny might hate it. I'm sorry. No, it's okay. Dan, I love you, dude. It's funny, though. He spas. I've never seen a hard ever. Obviously, I've seen you hit some hard spas. I'm a bad video game spas. You hit more. Girl. It's girl spas. I run away. I'm running up the steps. Yeah. I'm like, fuck this. This game sucks. I hate you. You guys are wasting all your time anyway, dude. Fuck this. Running up the steps. To an air mattress. You guys are the fucking losers. Going up stairs. I don't see why you waste your time. I literally played all day by myself. Like, I'm going to be chained in a video game. Got my ass handed to me. It was like, you guys are fucking losers. Wasting time with this shit and ran up the stairs. I get so mad. I get so mad. Just dick down on an air mattress. I fucking hate these guys. I get so... Oh, dude. I play by myself and scream at the TV. Dude. I was playing Last of Us, and I couldn't figure out how to get through this place. I was trying to get a ladder down to climb out of this room, and it wouldn't let me take the ladder down. There's nothing worse. And then you walk over to it, and it's like, press A. You're like, how the fuck did I miss that? It wasn't letting me. And the zombies kept attacking me, and I was dying instantly. And I was literally alone in my house in Pennsylvania, and I was going, well, it's fucking stupid if one fucking bite kills you. What's the fucking point? Dude, my neighbors must have been like, what the fuck is going on in there? I lose my shit, dude. I used to bite the fucking cable on the NES controller. Oh, no. That's nuts. Yeah, when I was a kid, I would get so mad. I'd go, I'd go, I've never heard the cable bite. The cable bite's intense. I would lose my shit. My friend used to cable whip his little brother with the PS2. That's a move. He would pull out the PS2 controller and go, whoosh, and start. Cable whip's just scary. Cable whip is crazy. Did you ever see what he did you? Oh, sorry. I'll still get, like when we, those Oklahoma kids were playing me in UFC, if it's a big game, the heart rate goes up. Oh, dude. Like that time you and me were playing, that might have been the most stressful video game of all time. That was. Just playing UFC in front of, I don't know. Honks. Honks. It was like Zac Efron. Zac Efron, Robert Pattinson, and Christian McCaffrey. It was literally a dream threesome. It's hilarious. It's fucking hilarious. For real. And Matt pulled the ups. I choked under pressure. He's beaten me like four times ever. That was one of them. Yeah. Wow. I just choked. You didn't go to the ground. You could have went to the ground. That was honorable. I had to get, I mean, it was too good of a fight, dude. It was such a good battle. Every kick that landed, people in the room were like, oh. Oh, he didn't get me. He didn't get me. Oh, dude, that's fucking good. Did you ever have, did you ever have somebody, like, I've had friends, like, literally punch me. Probably, if I had ever, probably there's been fights. Well, we were younger, but it's like, like when we were 16 in Street Fighter 2 on Super Nintendo was huge, whatever. Yeah, I remember I was, I would play with my friend Kevin, and if you beat him, he would literally punch you. That's so funny. And he would go, I could beat the fucking shit out of you in real life. Big Jay's one, that's a scary one. Really? He doesn't get violent, but that, like, it changes the day. If you beat him in a game, it changes. Like he gets a pouty? The rest of the day. A little. Like sad? Yeah, he'll get you there. He'll start getting you. He'll go, what the fuck are you being mean to me for? Oh, yeah, I forgot I beat you in Xbox last week. I'm also, I'm a sore, I'm a sore winner too. I'm better with it now. When I was younger, I was, I was always bad at video games. You are a sore winner. So when I win, I would do a thing where I would like just sit there, I grab what I, I have a drink next to me and just go, and just do shit like that. And like, dude, for real, stop doing that. I'm like, this is just water, I'm thirsty. I'm just drinking. Maybe you're, maybe you're upset. And then start being like, yeah, you know, it's just what I do. I kind of go low and you kind of go high to me and it's just, shut the fuck up, dude. The, I, I never, I think the only time I've ever beaten you in a video game was when we played Mortal Kombat. Every other game we've ever played each other against, you've beaten me. You guys are out doing activities. MK is the Achilles heel for sure. I'm working on it. You've got better than MK. No. I'm working on it. No. Bring it, dude. It's coming. Bring it. I'm fucking swinging swords with Conan right now. It's coming. Oh yeah, you downloaded the fucking game and started playing it. Yeah, fuck. You actually said to me, this is, that's bullshit. This was an insane thing to say to me. No, that's bullshit. I downloaded the game and you go, no, I downloaded the game and you go, don't get good at it because I'm not going to play it. And I'm like, oh, I can't have fun because you're not going to play it. no, no. It was crazy. Hold on. This is game stealing. This is almost worse than French stealing. Coming over, going, oh, the new Mortal Kombat's good because we were playing it together and having a nice time because we were just as good. Yeah. Go home and download it and practice. No, I want to play it. That's game stealing. That's coward shit. That game sucks. The game sucks by yourself. No, it doesn't, dude. You have not played with Conan, man. It's fucking righteous, dude. It's righteous. That game. When you win a match, he goes like this and they recreate the poster from Conan the Barbarian. It's fucking awesome. How many times do you get to see that? I've never been told. Seven dozen. You never get sold. No, it never gets sold, dude. It never gets sold and the guy doing his voice is good. T-1000's awesome. Yeah. Quest mode sucks in Mortal Kombat. Yeah. One player blows. One player sucks. Yeah. One player, I've tried it. It fucking sucks but training, just being in the dojo, training and just being like, yeah, let's pop it on. What are you guys playing? 17 hit combo. You're like, what the hell the fuck did I do that? Combos are nuts. The trailer for the new movie looks all right. Yeah, I like the more. Really? I disagree. I like that at the end when Scorpion flew in and they did the get over here. I didn't make it to the end. Oh, really? I turned it off with like 30 seconds or like 20 seconds. I don't think he's a good Johnny Cage. I think it's miscast. He's playing. I think so too. Carl Urban from, what's he on? The Boys? The Boys, the Boys, yeah. He doesn't look like Johnny Cage. Like Johnny Cage was kind of modeled after Jean-Claude Van Damme. Yeah. And like, Johnny Cage, he should be prettier. Like he's not, Carl Urban's not pretty enough. The whole cool thing about Johnny Cage is that he's like a pretty boy. He's a pretty boy. But he's a badass. Punches you in the dick. Yeah. It literally should be like Ryan Felipe. You know what I mean? Yeah. Wait, not Ryan Felipe. Ryan Gosling. I've never heard him called Ryan Felipe. No, Ryan Felipe's a dude. No, I know, but I always thought it was Felipe. No, I think it's Felipe. I thought it was Felipe too. Really? They should have, they should have Kevin Spacey as Johnny Cage. Hold on a second. By the way, shout out to Felipe. We were just chilling with him. He's a listener to the podcast. Felipe's gonna hear that. Oh, really? Yeah. Yeah. I'm a big fan of Felipe. The way, the way of the gun. Yeah. Yeah. He's the fucking cool. are we? Oh, you know what? Actually, Ryan, if you are listening, I know that, I know that you were friends with Sean Price and Sean Price is to me one of the greatest rappers that ever lived. Friend steal. What else you got? There it is. Shout out to Sean Price. Sean Price. Shout out to Ryan Felipe. Yeah. But yeah, Sean Price rips. Hold on. How am I first? You guys never heard of his? It's Felipe. I've always heard Felipe. Yeah, that's how I always pronounce it. This is nuts. My actor database is horrible. It's like embarrassing. People are like, well, I'm like, I've never, no. It's gotta be. It's Will Smith, Robert Williams. I'm like A plus actors. It has to be, you gotta be A plus. How do you pronounce it? Guys, produce the show. She's crying. There's four dudes. This guy's just staring at us. Look at LeMaire. He's cashing a check right now. He's doing mobile. Oh my God. LeMaire, you can't see it at home. LeMaire's feet aren't touching the ground. He's on a stool. Fully just. You guys got me fully charged to talk about Mortal Kombat. Nice. We can get some MK going. I hate Mortal Kombat now. Why? Why? It used to be, it sucks. The lore's bad. I knew it was Philippe. It is? Yes. Wait, who said, no, you can't go by the way the Google voice thing. They probably actually. Oh, really? Everybody's always, it's Ryan Philippe. Whoa, I've been calling him Felipe forever. Holy shit. Felipe is crazy. Philippe. I think it's got a beautiful ring to it. Felipe. I knew I wasn't wrong, dude. I knew me and Ryan were boys. Dang. Damn. Damn. You tried to friend steal and mispronounce his name? he's probably furious right now. That's crazy. Dude, I'm going to play fucking Mortal Kombat with Ryan. I'm going to let my bros ride on you, dude. You know what I'm going to? I'm going to let my, my, my, wild, wild, wild, wild, wild. This episode of Matt and Shane's secret podcast is brought to you by dude wipes. Have you left poop streaks in someone else's toilet? Yeah. Every time. Every single time. Yeah. I did it all week. Fucking disaster. I left a, I mean, I literally painted my bowl this morning. Yeah. It was crazy. There's nothing wrong with that. No, it was a little paint job. Uh, do you ever pack extra underwear when you travel? How much extra do you ever need it? Pretty much an extra pair per day. I always bring extra underwear. Yeah. Yeah. Cause I'm fucking shitting my pants constantly. Yeah. I just used to really work. Fuck you guys getting at here. Do you wipe standing or sitting down? Does it make a difference? What is going on? Dude? How horny are these people? What did they want to know? There's gotta be something about standing up though. Like I, I'm a standup wiper, honestly sitting down. I just smears. I don't know. I can't do it. Uh, well, Matt, whichever way you wipe, it's time to show your B holes, some respect and upgrade to dude wipes. Dude wipes tackle the mess without any fuss. And the flushable design makes cleanup a breeze. They leave no room for dingleberries or stray butt crumbs that TP might miss. Plus they're extra large and designed for adults. So no, uh, so no more endless roles or settling for a less than perfect wipe. Dude wipes, best clean pants down available. These guys are really funny. Amazon. Uh, it's available on Amazon and at major retailers nationwide. Hey guys, just a quick heads up. I'll be at the Ovation Hall in the ocean casino in Atlantic city, New Jersey, Saturday, August 16th, the year 2025. Please come. You can go to mattmccusker.com for tickets. There's also a link in the show description. Please come. It's going to be a lot of fun. It's going to be a hoot. It's going to be a good time. And I'm going to do the new materials coming new materials. The new material is coming. So I will have a whole slew of new stuff. If you see me in Philadelphia, check the fuck out. What are you waiting? I mean, it's going to be, it's ocean is a, it's a sick venue. Actually. Like I opened that for you. It's awesome. Yeah. So, uh, Matt, August 8th and 9th, I'll be in Louisville, Kentucky in St. Louis, Missouri, August 8th and 9th, Louisville, Kentucky, St. Louis, Missouri, huge. Then, uh, August 15th, Detroit 16th, Grand Rapids. Nice. Come on y'all. Come on gang. Just come out. Get in there. Meese. You get in there. Meese. Oh, turn him around. Yeah. Hey everybody. August 5th is Optimal Noctis. And then also at the end of the month, like the 26th to the 30th. Get the dates right before you come in here. August 26th to August 30th. I'll be in the East coast. So please come check out. Just on the East coast. I'll be in the Phillip. No, I'll be in Baltimore. I'll be in New Jersey, the dojo of comedy. And then I'm various other bars. So please check out all that information. A little merely dot fun. There you go. Nice. Oh, yes, yes, yes. There you have it, man. That's huge. I didn't know that. Yeah, it's big. Dude. I have actually, I've had a huge development. So, you know, I suffer from body acne. You know, I suffer in silence. My stomach breaks out, especially with the sweat and the heat down here. I'm sorry. Yeah. Thank you, man. It's fucking dude. I found, you know, I went to a dermatologist and like, dude, those guys, I, I, I don't, they don't do anything. Everything. I'm like, whenever I eat this, why don't you shower? True. All right. Thanks. No, they're like, well, there's no, you know, like whatever you eat, whatever. I'm like, no, dude, if I dairy, my whole stomach breaks out. They're like, there's no real science behind that. I'm like, dude, it literally has lived it. It's a lit. It happens to me. Yeah. It happens every time. Dude, recently I, it's been for real, like groundbreaking. Cause whenever you go to the ocean, you know, your skin clears up. Yeah. So I was like, how could I recreate that? I got a bucket of dead sea salt and I just go in the shower. Now I wet myself and I just cover myself in salt head to toe and just let it sit. Let it sit on me for like five minutes. Completely cleared my skin up. Yeah. My wife hates it. I'm going to have to grub you, dude. Grub me up. You better stop. I'm like, wag you. I'm like, you're grubbing yourself. Dude, it cleared it up. It's the only thing that's ever worked. And it's salt. It's fun. You get a big bucket of it for 30 bucks. Yeah. Sun and salt water are the two. I had, I don't know why I forget what happened, but I had like an act, like a full on acne outbreak a year ago. Really? And, uh, or a year and a half ago. And it was in the winter and I think it was, yeah, it was gross. It sucks. It sucks. Being our age and getting acne. It's the worst. What the fuck is happening? But it was because I was, I was still living in New York and it was like, it was raining every day and it was dark. And like, I just, it was, it was definitely related to weather. And I went and I did the Joker's cruise and it cleared up on the cruise. Yeah. Like it just cleared up immediately as soon as I got in the sun and there was like a saltwater pool. Bro, I had, I had a insane, like a rare skin disease when I was younger. That sucks. I get, yeah, just out of nowhere. I've told you that's peter Isis. Out of nowhere. I've never seen anything like it. It was just patches of red all over me and didn't itch. Didn't burn. It was nothing. Does it look like a red spot? Like sunburn? The first one does. There's a Harold patch that comes first. I was just looking at the mirror and I just had a big red mark here. Okay. And I was like, all right, whatever. I don't give a fuck. And then started multiplying. It was just all over me. Oh. But it was only where sun doesn't get you. So it's from your knees to your elbows. Like it was just where you wear clothes. Yeah. And then my family and I went to the beach. Clear it up. Clear it up. Did it ever. But I had to lay in public with a giant red skin rash. Yeah. Did it ever get like rashy and raised or was it always just like your skin? It was a little rashy and raised, but it still didn't itch or. Yeah. Yeah. I got you. Skin's fucking weird. Cause it is an organ. It's an organ on your body. You're right about dermatologists though. Like a dermatologist is a little bit like, yep, that's pretty gross. You know, here's some cream, you know, like in the cream, the reason you can't do it for more than two weeks is because a lot of it's, it will, it thins your skin. Yeah. And you buy what I've had with the creams. Use a lot. I have, I get a thing called sensitive. I get a thing called. Also, I've had it washed down to my balls and you know, and it like my ball skin is would go crazy from whatever they were giving me. Ball skin goes the craziest. Oh, ball skin. When it goes, the absolute, when that stuff goes down, you get dried out ball sack, bro, that's three years. It's the exact, that's not going away for three fucking years. It's the worst. Yeah. It sucks. I actually dealt with an armpit rash for an entire year last year. What were you using? A new deodorant with alcohol? it was the same old deodorants. I just, uh, it was almost like I got jock itch. Yes. I've gotten that before. And it just lingered. I think there's nothing worse than an armpit rash. Cause you have to put deodorant on it and it burns and it itches so bad. And you, you, I was plowing through it. I was just putting fucking, uh, antifungal cream on it. Filming tires. It was while we were filming. It went from the summer into when we were filming time. It was a nightmare. I don't wear it. I don't wear deodorant. I'll put it on like once every now and again. Do you not sweat though? I do. And I'll smell a little bit, but it's like, dude, my armpits get dry from deodorant. It's like, I fucking hate. I remember brute. Yeah. Dude, that stuff was flammable. I used to run it across the carpet and light it on fire and it would just go, make like a line. Jesus Christ. Sick. It was the carpet. I fucked up a beach rental when I was a little kid one time. Cause I would make designs in the carpet and like, you would light for two seconds. Just like little fight. Well, I didn't do the, I didn't do the, yeah. I didn't do the swat. You didn't do the coolest design possible to set on fire. I would do a little like loop de loop tracks. The one time it did get out of control. And I was like, fuck, fuck, fuck. How did your parents not know you were lighting the carpet on fire? I don't know. I would just do it. It was a beach trip. They were probably fucking shit face. But at one time I, yeah, they were. It was a beach trip. It was 11 a.m. They were blacked out at the beach. Yeah. Yeah. My parents never drank growing up. So they, they knew everything I was doing. I wish I had parents that fucking just got rocked. Sorry, I was a joke about it, but it is, it is the best. Yeah. I mean, you have a parent come home drunk. You go, Oh, for sure. This is a fun day. Yeah. Yeah. I missed out. Drunk dad is awesome. Your dad gets drunk when you're little. Although the first time I did get scared because I read a book in the library saying like, it was all about like, drunk and hitting your mom. So it was like, the book was called like, why does dad hit mom when he drinks? It was something like that. First time I saw my dad drunk, I was just like, he's beating the fuck out of my mom right now. And I was just a little coward. I just sat in my room. Like, I hope he doesn't go too hard on her. Yeah. He didn't at all. He was so friendly. He sat on the steps and cried. Yeah. I should go in there. He was just literally like, he would come in and be like, dad. I'd be like, well, dad, don't look at beat mom. Oh, that's great. Drunk dad. That's super friendly. Phil is still that. He gets, he comes home. He goes, fuck yeah. Then you see him in the morning. He's like, how are you? You're a fucking punk. Oh, you're hungover. You're being, I'm not hungover. He's never been hungover once. Hitting a girl with hungover is very funny. I've done it before. I'd be like, you're just hungover and being fucking great. I'm not even hungover at all. It's like, yeah, you're a little edgy. Everybody loves denying a hangover. Hey, it's crazy. Everybody's favorite thing to do is go. I'm not, you know, what's crazy. I feel pretty good. There you go. I'll tell you guys right now, I'm fucking hungover as shit. Really? Oh yeah. You put it on. That's why you asked how long this podcast was. No, no. I was just, I was literally just curious. Stop riding me, dude. That's too much lotion. That's thin skin. We were, we were in London in the van and you were fucking with me. I was like, back off, dude. You just kept going, I'm on your bumper, boy. I'm on your fucking bumper. You're trapped. You got three days in the UK. You're not going anywhere. You were on his ass in the UK. I was. It's so funny. Till we got off the flight. Till we landed back there. I mean, we were screaming in the fucking airport. Holy shit, dude. We got prime. I mean, you guys might have talked about it already, but we got prime O'Connor video over there. Yeah. We got some classics. Him at the height of his powers. Yeah. I saw him running through the streets of London. I'm from London. Like throwing shit. Yeah. He was a, he's a real problem. That's what I like about him though. He turns up that hard and then you won't see him for two weeks. He's got, he's got to mend himself. He goes home and he lays there. He enters the tent. Oh, I saw him last night. I got to read. I got to fucking cook. I got to become a good person. And then you go, why don't you come out? Yeah. Yeah. There's bounce backs are crazy. It's pretty impressive. I saw him last night. We were in the green room. We had two drinks and I was like, what are you doing, dude? He's like, I don't know. I might go see Sadie, whatever. And he fucking snuck out. I was like, he's dodging it. Yeah. He's trying to be good. You got to respect the dog. Yeah. I get it. I get it, man. I get it. I'm fucking terrible at it. I let everybody talk me into fucking hanging out. I am the worst. Yeah, but you do it. You do it just as much. You're one of the worst perpetrators of it. Yeah. Yeah. Come on, dude, take a shot. My birthday's next week. Yeah. I'm taking a thousand shots with you. And every time you go, you never take shots. It's, it's been literally years. Literally. We've, we've taken shots together. We took shots together last week at Mitzi's. I did not take any shots with you at Mitzi's. Yeah, we did. We did. Yeah. At the corner. Yeah. Shit. Well, you got me there. And you said it. I remember it. You go, you'd never take shots. My boy. We took shots for the last week. My dude. It's every week. It's so funny. It is usually late. Yeah. If I'm taking a shot. I was talking to Carrie at mothership last night about, she's like, what are you doing tomorrow, baby? I was like, I'm doing Matt and Shane. And, uh, I was just taught, telling her about when you just start pressuring to drink. And I was like, I'm going to be sitting on that couch. He's going to be like, come on, come on, let's get one. Come on. Let's go. I was like, she's like, wow. And I was like, I can't say no to the man. No, we got to, no, I can't today. I can't today. Stop, dude. No, stop, dude. No, I got spots tonight. No, I can't. Yeah. All right. I can't, I've got to remain in the tomb, dude. I put together a run. I got to. True. But I was just, I was like, Friday. True. I'll make it to Friday. I don't fly out till Saturday. Where are you headed? Uh, back up to PA. Cause I got to do some pods in New York and then Rhode Island gigs and, and then some other stuff. We haven't even talked about your special. Yeah. Oh, I'd love to talk about it. Yeah. It was great. Thank you, man. I liked the intro. I liked how spooky it was. Thanks, man. Yeah. Thanks a lot. Thank you. I appreciate it. And at first I didn't like the blurry shots and then I came around. All right. Thank you. I was a little on the fence about them too at first, but then the closer we got to, cause I was, I directed it too. So I was very involved from start to finish with everything. And, um, I was a little on the fence about it too, but then ultimately I was like, Oh no, it works. It's, it's, I don't know. It's, it was, you know, it was a nice device I thought or whatever, but, but yeah, man, I appreciate you. I missed the actual taping. I was at the after party. you showed up right as the party was starting. Yeah. Yeah. Yeah. I was bummed. I missed that. It was, it was a good, it was, I was thrilled. You, you came down, you rolled in with six, right? Yeah. Yeah. Yeah. Yeah. Yeah. Yeah. It's, I was thrilled you came down. Definitely got bullied into taking a shot. Well, it's always a special. Yeah. Yeah. It's always a special. Um, but, uh, yeah, it's called, I never promised you a rose garden. It's on my YouTube at Joe, at Joe, the Rosa. So youtube.com slash at Joe, the Rosa comedy. Uh, but anyway, I hope people enjoy it. Yeah, it's good. But, uh, I was, that's the hardest. It's a really good special. Thank you, dude. It means a lot to me to hear you say that because, and Matt, feel free to jump in with the compliment. I, I, I haven't seen it yet. So I always feel bad. I don't see it. And I usually, and I usually, uh, fuck, fuck, fuck. Don't watch. I watched yours a lot. I haven't finished it yet, but I've watched a lot of it. I'm not blowing smoke up your ass. I did the same thing with you. Like, I was like, you're one of, no, no, no, no. I'm saying though, like, I don't, I hear you. It's like, it's, it's kind of hard sometimes when you do comedy and you're around it all the time to jump into a special. But you're one of the guys where it's like, I'm like, I was like excited. And we've done enough shows where I know the material. Yeah. Yeah. Yeah. It was, it was stoked. Ask Ardini. He told me his special. I'm like, that's going to be awesome. I can't wait to see that. Thanks guys. They were actually singing your praises before you got in. Thanks guys. I really appreciate it. How much they liked the, I heard the way it started out and I was like, awesome. The starting, the starting bit of material. I was like, that's, let's not, let's not get any spoilers, but I can't wait for the start of your special. Yeah. Can't wait. No spoilers. No spoilers. But yeah, I heard, I was here and I was like, that's thanks brother. Perfect. Thanks dude. It's the, it's, it's literally the hardest I ever worked on anything in my whole life. That's like those three years of, uh, of touring and I was going to shoot it at one point. And Ari Shafir was like, it's not ready. It's not ready yet. It's not ready. You know? And then like when I finally did do it, like him being like, it's like I did it to, I was like, all right. That's awesome. Good for him for, cause that's hard to tell someone. But boy, if somebody told me it's not ready when I thought it was ready. We argued. I mean, me and Ari did argue. I wasn't just like, okay. Yeah. I was like, it's ready, dude. I don't need to do it for three years. And he goes, he goes, oh yeah, cause you're the one. And I was like, God damn. All right. But, but yeah, like you, but I don't know. It's like, it's nice having friends. Like again, I'm not blowing smoke, but it's nice having friends who also do comedy that when they put something out, like when you put out your last one, you're excited to watch it. Cause it's like, yeah, it's easy to get. I have a friend who sucked. Yes. Like check out this special. Yeah. Yeah. I'm excited for yours, dude. Thank you, man. Yeah. You were talking a little bit about it last night. I'm pumped. I was getting a dude. Brittany's been getting a lot of like people see her and they go, four times. Yeah. WMDA star. And last night I was doing standup and people brought it up. They're like, talk about your four time WMDA star wife. And I was just, I thought it was great. And now she's getting so much attention. I've just been like, she was fucking hacked. She was a fucking. I mean, come on. Turn on her. I just got it. Yeah. I just got to take her down. Just be like, she doesn't even look like an athlete. I don't know. I don't know what the fuck the joke is. I kept saying last night, I was like, he should have dressed me up, man. He should have dressed me up. I could have done that. I was like, I could have done that. I know the joke easily could have been NHL. I know. No, no. Or NASCAR. Or golf. you mean fucking. Let me put that shit on, dude. Well, then we wouldn't be talking right now, but we would be considered the greatest of all time. We wouldn't still be talking. I just showed up fully prepared for the role. What the fuck are you doing? We can save it. Oh, I thought she was like, what the joke's about? Oh shit. I got to take this off. Fuck. It's not coming off. It was, it was fun for me to watch it again. I'm sitting next to Jalen Carter. Fuck. I'm just like a black lady. Dude, I saw the rewatching it and seeing the people behind us, like clapping in earnest. And then it's revealed and they go, that was very, very fun to see. The, uh, fucking asshole. We can save that one though. Huh? Maybe I'll get another hosting job sometime. I'm not going to dress up as a, yeah. Just funny. Put it in to things. Save it for the Oscars. Yeah. Yeah. I'll be Ryan Felipe. Yeah. Yeah. You got that in the, you got that bullet in the chamber. We got that one locked and loaded. When it's time, it's time. Yeah. It's time to hang it up. You go, you know what? I got one more. Yeah. Oh yeah. Yes. You're, you're in the tomb on the come down of setting the internet ablaze. Yes. Yeah. It's all types of things. And also drank for a week. Yeah. That's enough to, so like after the ESPYs, I had to go do Kansas city and Oklahoma city. Yeah. And those, you know, you're doing a show like that. That's, that's a lot of fucking stress. I don't know how you also, I flew home on Friday and I for real thought I was going to fall down. Friday sucked ass. Oh fuck. Yeah. I had a later flight. Yeah. But like not that much later. I texted these guys like we're already there. I was walking through the airport. Like I felt like I was like not getting enough oxygen. That's how it feels. Because you were just so hung over to me. I didn't have like the headache or anything, but I was just, I had like three hours, two hours of liquor fast. Yes. I had like two hours of sleep and just walking through the airport with like my bag. Just like I for real might go down. I was like lightheaded. Bro. It's so bad. So that day I woke up in the hotel going, yes, I have nothing to do today. Perfect. And then I was like, oh shit, I got to fly to Oklahoma and do a show. Then the next morning I woke up like finally I can fucking go home. Fuck. I got to go to Kansas fucking city. God damn it. Yeah. I don't know what's going on. I guess this is what being burnt out is, but yeah. Anxious like dreams. Yeah. And then I wake up going, I don't have anything to do. Nice. Fuck. Dude, you just did a thing that six people have done. It was the movie. Yeah. The movie filming a movie for a month and a half was, yeah, I've never done anything like that. Yeah. And then shows. And then the, yeah, you're running through a very unique. It's time to, it's time to lay down. Yeah. Yeah. And oh yeah. And we filmed commercials that I'm seeing the edits to those. I don't fucking love them. I go, oh great. Yeah. There's nothing worse than watching yourself in a way where you're like, I don't like that. While you're anxious and hung over and you see a video of yourself, you go, it sucks. It was fun. I was trying to upload all of this stuff from our drunk podcast that next day in the airport. I'll just watch it and be like, Oh, the anxiety of that podcast. Thank you. With the second half, the second half's in the tomb forever. NFT. Until, until one day. Yeah. We're going to sell it to Martin Screlly for $6 million. $6 million. Yeah. Yeah. No, that, that airport hangover. Oh, like, like, honestly, I like almost have a panic attack. Yeah. I carry Xanax for it. Cause, cause you're, it's so like, your gut is related to your anxiety and all that shit. And when you're in that state, you're walking, you're like, you might have to take a shit. You don't know. Yeah. And then that's shit at any moment. Yeah. It's hard. You could. No, I mean, physically, I could walk into a bathroom and take a shit while hung over at any, if someone said take a shit right now, I go, no problem. Oh, you mean like on command? Yes. Oh, that's great. One's chambered at all times. Yeah. All right. Yes, sir. That'll help me. Yes, Danny. Yes, Danny. Yeah. That's just so good. I'm like, I'm like a hundred. You can't handle a clear gay joke. I'm 103 degrees. My face is, I have like 103 degree fever. And then I just woke up and I did the opposite. I pounded coffee to like power through. So nothing like heart palpitation. It was terrible. Yeah. Heart palpitation. It was terrible. It's fucking nuts. Then, you know, the B-dubs at the airport's just right there going. It is. Yeah. You're nothing without me, coward. When I did, when I did, I did, I did kill Tony when they did the HEB center down here. I did the panel and I was only supposed to do a set. And then I showed up and he was like, I need you to panel buddy. And I was like, all right. And I was so hung over. And I started the same thing, dude, dehydrated. I felt like sick. I felt like I had a cold. I started fucking pounding coffee to wake up. And then I was meeting it with booze to get like tuned up. Dude, I got on stage. My gut started turning. My hand to God, dude, I had a two minute panic attack on stage. I was sitting there. I was so, I was hitting me from all angles. And I was sitting there. The first bucket pull came out. The kid was talking to us. And my brain was like, it's a lot of fucking people out there, dude. It was all lit up. If you watch the video, you see me do this. You see, this is the desk. And I just go like this. I just put the mic down. I just stare. I'm going to freak out right now. I was like, I was literally looking like, where can I run off this fucking stage? That's tough. And then it just, it just stopped. And I was like, oh, that's hangover. That's like bad anxiety. I get that doing standup. Where like, I'll like forget the next thing I'm going to talk about. And it's like a 30 second thing in my head where it's like, this is it, dude. You're going to have to look at all these people and go, I can't do this. I'm sorry, guys. I don't know why I just walk off and you just power through and you're like, all right, thank God. no, I've been there, dude. Maria Bamford said she used to like, she said she would like take comfort in knowing that at any second she, she had the option of running out of the club and never returned. She was like, that's the only way I can get through it. Like sometimes. Yeah. It's like, fuck. It is nice. When you get on stage and you go, oh yeah, I can do standup. Yeah. After the first like minute you go, oh fuck you. Yeah. Nice. Cause for the last hour and a half, I've been back there going, fuck. I can't do this. Oh fuck. Yeah. Yeah. I've done the coffee, pre-show coffee to where I'm on stage and my heart's like, and I'm like, all right, I'm going to fucking, this, this might be it. And then I've done it where I'm like, maybe I have a heart attack. And I really leaned into it and powered through. And I was like, I was so proud of myself. I was so proud of myself. I had horrible pain in my chest. I was headlining. It was like two years ago. It might've been two or three years ago. You might've had a heart attack. Bro. It hurt. It hurt so bad that I, I was like, I have to get off stage. Yeah. And then I was like, well, this is my last joke. Just fucking. And I just did my last joke, got off stage. I was like, I'm pretty sure I just had a heart attack up there. Yeah. And you never got a check or anything? Nah. People have little ones. That's something. I don't, I don't think it was an actual heart attack. I think. People go in the doctor like, dude, you've had like three heart attacks. You're like, what? I was 34. Dude, I know someone who got one at like 24 years old. I mean, they were, they were taking heavy subs and then other recreationals, but. Yeah. I was on zero recreationals. Yeah. If you can have them without knowing, I've definitely had them. If that's an option, there's no way I haven't had heart attacks. There's no way. Well, if I ever had one, that was it. Yeah. I mean, that sounds like hard. I've never had something that hurt. Like my fucking wall. I'll be like, ah, it's like, oh, I'll tell you. I'll tell you. Fuck. I'll tell you a perfect formula for, I'm going to have a heart attack on stage. This has happened to me several times. You'll be at mothership. You'll be in the green room. You look up and realize the guy on stage in the main room only has 30 seconds left. And you go, oh fuck. And you run all the way. Dude, you get on stage. I've done that. I can't catch my breath on stage. Dude, I'll do this on the stool. I'll lean like this. And I swear to God the whole time, I'm like, I think I'm going to have a heart attack right now. That is a fucking labyrinth back there. Yeah. You got to go up and down five flights of steps. I felt bad last night because we're all backstage. And I, people are backstage. Like you were backstage and you had, you probably had like four minutes. I'll say something. It was eight. I was like, I always go bro. But I feel like a dick because I'm like, Hey, DeRosa, you're up next, right? He's like, yeah, I'm going down. I'm like, I feel like an asshole. Like I'm like, dude, you better get down there. No, I do it. I do it. I do it on shows. I'm not even on. I get nervous. I'll be like, yo, I think I was fucking. Yeah, dude, I get nervous on other people's behalf. You never know when someone's going to fucking just go. That's it. I know. It was GD and he have GD and he dug his heel. Obviously, luckily he's a big stage hug. Doug his heels in. Yeah. Yeah. You actually probably were like, Oh, GD is always going to get along. I was nervous when it's like eight minutes in, I see the clock and I'm going like, dude, it's a while to get down there. Did you ever go on stage there and you realize you forget the dude you're bringing on his last name for sure? Yeah. And you're like, I forgot the headliners. Joe Rogan. Fucking Joe. This podcast is an experience. It's got an experience. It's the. Dude. The other McDonald clip fucked me up. Did you ever see her go down? Yeah. I think about that. Yeah. I watch it. I go. Cause I, you know, I've obviously laughed about it publicly. So it's like, I'm like, that's going to happen to me now. It's going to happen. Dude. There's, there's a, there's a trilogy. There's a perfect trilogy. Uh, Heather McDonald. Yeah. Wendy Williams. uh, Gallagher. Oh, and you're forgetting the goat, Pablo Francisco. He went down. Did he collapse on stage? No, but he says that that's a wild meltdown. Yeah. Yeah. That's a wild. That's the, that's the number one for me. He broke. Well, well, we've had, you've heard me say it a million times. You don't think I can get out of this? Oh, okay. So, Oh no, you're in good. You're in safe hands. Get down. Get to the chopper. You don't think I can get out of this folks? There's some of the videos that cuts and then it cuts them being, that's the one that made me. Yeah. Yeah. Just straight to the airport. Stretch a gun. You don't think I can get out of this? Oh no. Oh no. He got locked in a bit. He got locked in the bit. Dude, he's in like a K hole with a bit. No. Yeah. Like, he can't get out of this bit. And he's gone. I can, I can, I can, but like, wait, hold on. Oh, this is, this is fun. He's at the hospital. Like, it's not funny. Let it go. It's like, no, it's funny. I can get to the end of the bit. Just let me finish the fucking bit. Let's keep interrupting. Top three. So that's, that's stage meltdowns. That's a different category though. That's, but that's right. That's the number one of meltdowns. Two, two might go to Swartzen. Did you just say Swartzen? Swartzen was awesome. He's just like, so, all right. He's so high. He can't even like make sentences. And the lady just comes out and pulls him off stage. Dude, that's, dude, that's in the background of my head the entire time. Oh, you're about to, here it comes, dude. You're about to start rambling incoherently. Oh my God. I thought the O'Conn man was going to have one. He, when we did the Chicago theater, he went out with Santino during the day. Oh, Jesus Christ. I went out, I met him. I had like one beer and I was like, we got Chicago theater tonight. Yeah. Yeah. I left. They show up. They didn't, they didn't leave. He never went back to the hotel. They went from the bars straight to the show. O'Conn man walks in the green room. Like, so I was like, Holy shit, dude, you're blacked out. And I was like, fine, dude, get the fuck out there. Go out there. Yeah. He killed. That's awesome. God damn. That's pretty impressive. That's awesome. Oh, dude, he's from a fucking another dimension, man. He is. O'Connor should be in the next mortal combat. He really does. He might be the drunken master. That's insane. Wait, third, but wait, they got a number three best meltdown. The Lampanelli one is wild. Do you remember that one? it happened. Where people are walking out and then people are helping her. People are going like, she's yelling at somebody and then people are being like, it's okay, lace. And she's like, shut the fuck up. I don't need any fucking help from you. And she's like turning on people supporting her and shit. Like, it's a, I'm not throwing any shade. Yeah. Yeah. Yeah. This could happen to any of us. Yeah. We're just, it's just funny. Like I've, I've, I have, I've been banned from clubs. I've freaked on stage. Yeah. You're a psycho. Yeah. Yeah. You're a wild dog. Yeah. I got banned from the laugh factory in New York. Did you really? Yeah. Cause I told the audience, I said, I hope you all get fucking AIDS and die in a car accident on your way home tonight. You're a bunch of fucking animals. I got banned. It's probably during like a decent set. I was just at the end. They were, it was so rowdy, dude. It was crazy how rowdy it was. Yeah. And then I went back to the club, like, and I was like, I don't understand why you won't book me anymore. And the booker was like, because you told the audience, I hope you get AIDS and die in a fucking car. Do you, do you think that's okay? I was like, well, they weren't, they were shit. I don't know. What was I supposed to do? Yeah. I've freaked. Have you guys ever freaked? I've, I've lost my shit. I've spazzed. I've never spazzed. The only one that's Fort Wayne was, I was just like, all right, that's good. It's the end of the show. I haven't done it in 15 years. Like I learned. I did it now. Bakersfield. That was a tough one. Spazz. They were, they were wild. I spazzed on one guy in Phoenix, Arizona. I like kind of just started traveling headlining and the weekend wasn't going well. Ticket sales weren't great. And then there was like in this, the, one of the rooms is a copper blues. There was a, they have like multiple ones. I think there's one of those rooms. Where there's like, you know, like seating, but then they have booths to like the right of the stage. Yeah. So it was just a guy in a fucking like leather jacket talking. So fucking loud. the, what was it called? It's not the, it's around there. It's. Oh, yeah, yeah, yeah. They have multiple, but this guy was talking and it was just like, you know, I was like, whatever, like shut up. But then at one point, Brittany went up to him. She was there. It was like, he'd be quiet. And he said something to her. And I like, just stopped mid joke. It was like, shut the fuck up pussy. And like spaz. It was like a fight. Fuck yeah. It was bad. And I was like, anyway, I was just fucking around guys. Yeah. Pure, pure red face spaz had him. Cause like eventually I think I had him come up on stage and he just called me gay without a microphone. I'm like, it just backfired on me. And I was like, look up and get up here. And he's like, you're just a fucking gay pussy. And I'm like, damn, nice jacket, bitch. Get off the stage. This isn't working. It's just go straight. Gay guy. Well, your jacket is discussing. Fuck you. He told me at an Uber driver, you have an Uber driver jacket, dude, get the fuck out of here. But it was just, they're always right around. He was getting louder though. He was winning the debate. I'm like, get the fuck out of here. He's like, you're fucking gay. That was, that was, it wasn't really a spaz, but in that Tempe improv, uh, that was where that gremlin from high school got me. Oh, you remember that? This kid from high school showed up and he was like, after the first show, he's sitting in the green room. He's like, I would give that like a C, C minus. Oh, and then he spent an hour in between shows talking about how I sucked at football in his class. And then stayed. It was crazy. I mean, I don't know how you didn't choke him. Other people were looking like, yeah, what the, what the fuck's going on? I don't know how you didn't choke him. And then he, uh, stayed for the second show and I killed. And every time I had a good joke, I just looked directly at him. Just gone. Yeah. Yeah. C minus. You little fucker. Every single joke for an hour. I was just, every time I'm going, what do you think of that? What do you think of that? You fucking cock. He was like that. Nothing to him. He was like, that was good. Oh, that was, now that was good. I love how people like that. Flip it. Now that was good. See, go fuck yourself. I'm like your coach. Yeah. That's weird. a spaz is always right around the corner. I've, I've without question in recent year, when I, I, I'm speaking way too, uh, uh, liberally when I say I learned my lesson, because I, I'll still yell at an audience, but I figured out somehow to sometimes make it kind of funny to like beat them in to get, but like, I, I could easily see having a full, having a full freak at any, you know, it's, it's, it's, it won't take much, dude. It doesn't take much. It's a couple of annoying people. Let's start getting to your shows, you know? Yeah. What's that? Let's start hanging around the back of your shows. I mean, I just want to, I fucking sucks. The ultimate, I just want to be clear that I stand with Pablo, Lisa. Oh, for sure. For sure. Yeah. I'm not, I'm not, I'm not making fun of it. It's funny to see though. I'm con, I'm convinced it will happen. I'm like, it's, I'm going to join the pantheon of dudes who freak out one day and just completely break and be like, I don't know why I do this. I'm sorry guys. Please refund everything. I'm fighting it the entire time. I do anything. The, but wait, you never saw Gallagher having the heart attack on stage. Yeah. It's during the fucking watermelon. No. He walks over, picks. It's just so fucked up to laugh at him. It's fucking hilarious. Yeah. No, he goes over to the water. He picks up the hammer and he goes, Oh, fuck. No. He goes down. Oh, he goes down. He goes down. He has a fucking heart attack. He has a real one. Yeah, dude. Oh, that's what I was saying. There was two categories. There's collapse on stage versus meltdown. I mean, a prop. Yeah. Cause Heather McDonald's was pretty fucking elite. Hers was crazy. Cause she was like, I got all the vaccine. What? Oh, sorry. Good prop guy going down. Oh, it's crazy. With a hammer, a mallet in your hand over his head. Like the watermelon finally won. The watermelon was like, he's literally doing a thing that would give any human a heart attack. He's doing it on stage. It's closer. Yeah, dude. Exactly. Time was finally like, that's enough, dude. Yeah. But wait, did Heather McDonald ever explain what happened to her? I haven't seen the explanation. No. I'm sure she talked about it somewhere, but I never, I've never saw it addressed at all. She just fainted. Yeah. But it was like, she just happened to be talking about how boosted she was. That was the worst part. I just jinxed it. Yeah. True. Wait, what was she talking about? She was talking, she was bragging about how many. Her last lines were like how many boosters and how many times she's gotten the vaccine. Then her last line's like, so yeah, Jesus loves me. Yeah. And the worst part was the crowd thought it was a bit and they were like, yeah, it's timed perfectly. Yeah. It was fucked up. Yeah. That's a great bit. That's true. But yeah, I think she really got hurt. She fucking, I think she hit her head. Dude, she got fucked up. Yeah. She had a skull fracture. Yeah. God. Yeah. She got fucked up and it was just like these idiots who didn't get the vaccine. Ha ha. I've gotten all of them. Ha ha. God loves me. I've never even gotten. Ha ha. And fucking. Literally got killed. God was just like, yeah, yeah, enough of that. Holy shit. Jesus Christ. Yeah. The Wendy Williams one happened on TV. Yeah. I saw that. Yeah. By the way, she was sick. Wendy Williams rules. She does. I didn't know Wendy Williams ruled. I don't know. I don't know much about her. Watch clips. She's fucking hilarious. Yeah. She is funny. She's doing, she's doing a show at comics in New York. Were you around when comics was there? Oh my God. I'm going to pee my fucking pants. Yeah. I'm going to pee my pants too. We take a break. I can't move, dude. We'll see you later. Are we in an hour? Yeah. Oh, dude, let's slide to the page. Yeah. I've been fighting it for like 10 minutes. I could have been page right there. We'll see. Yeah, true. It was a lot of standup talk. Okay. We'll see. All right. Yeah. Yeah. Yeah. Thank you.
+
+--- Segmentation & Diarization ---
+[  0.00 -   1.46] SPEAKER_A:  The  Wild  Wild  West.
+[  1.80 -   2.92] SPEAKER_B:  Two  hours.  We're  doing  two.
+[  3.30 -   4.18] SPEAKER_C:  Whatever  you  want  to  do.
+[  4.32 -   7.84] SPEAKER_A:  Yeah,  just  know  the  pace.  We're  going  to  talk  to  the  page.  Oh,  I  like  that,  man.  I  like  that  approach.
+[  8.42 -  11.92] SPEAKER_C:  Can  you  guys  not  release  this  till  October?  Oh,  wow.  I'm  joking.
+[ 12.22 -  13.84] SPEAKER_B:  I  was  going  to  say,  I  thought  they're  special.
+[ 13.98 -  14.92] SPEAKER_C:  Yeah,  totally.
+[ 15.16 -  16.92] SPEAKER_B:  Also,  I  was  waiting  to  share  it  for  this  episode.
+[ 17.08 -  17.36] SPEAKER_C:  Thank  you.
+[ 17.72 -  20.54] SPEAKER_B:  I  was  in  a  tomb  on  Monday.  Dude,
+[ 21.50 -  26.72] SPEAKER_C:  trust  me.  When  you  hit  me  back,  I  was  like,  he  just  did  it.  He's  in  the
+[ 26.72 -  27.94] SPEAKER_A:  tomb.  He's  in  the  tomb.
+[ 29.70 -  34.66] SPEAKER_B:  I...  Sorry,  because  discussing  the  tomb  I  was  just  in  is...  The  tomb
+[ 34.66 -  35.78] SPEAKER_A:  was...  Sacrophagus?
+[ 36.26 -  40.54] SPEAKER_B:  I  was  in...  I've  risen.  I'm  Lazarus  right  now.  This  is  the  third  day.  I'm  actually...
+[ 40.54 -  43.66] SPEAKER_A:  What's  the  tomb?  Like,  is  the  tomb  the  bed  or  the  couch?
+[ 43.82 -  49.92] SPEAKER_B:  The  tomb  is...  I  just  played...  There's  a  new  game  called  Ready  or  Not.  Nice.  And  I  played  it  for  two  days.
+[ 50.30 -  50.84] SPEAKER_A:  That's  awesome.
+[ 51.10 -  53.42] SPEAKER_B:  I  played  the  entire...  I  played  every  mission.
+[ 54.08 -  58.26] SPEAKER_A:  Meanwhile...  That's  so  long.  Psychologically,  what's  the  thought...  Is  the  thought  process  all  on  the
+[ 58.26 -  76.78] SPEAKER_B:  mission?  It's...  Usually,  it's  100 %  on  the  mission,  which  is...  All  right.  So,  that's  one...  It  might  be  a  bad  way  to  deal  with  stress.  Mm -hmm.  Because  I'm  just  focused  on  that.  And  then  you  go,  oh,  shit.  I  forgot  about  all  the  problems.  Ugh.  You  know  what  I  mean?  Every  time...  You're  not  trying  to  work  out  any  problems.  You're  going,  we  got  to  fucking  clear  this  room,  fellas.
+[ 76.98 -  81.30] SPEAKER_A:  Breach.  Breach.  But  then  while  you  respawn,  you  have  15  seconds.  Fuck.
+[ 81.30 -  92.66] SPEAKER_B:  You  get  killed  on  some  bullshit  way,  and  then  you  go,  yeah,  fucking  bullshit  game.  Fucking  this  game  sucks.  Fuck.  Oh,  shit.  I  forgot  my  life  sucked,  too.  Fuck.  Fuck.  The  game's  awesome.  I  suck.
+[ 93.60 -  94.60] SPEAKER_C:  Is  it  a  war  game?
+[ 95.02 - 103.52] SPEAKER_B:  Yeah.  It's  just...  You're  a  SWAT  team.  Ooh.  That's  awesome.  You're  going  to  love  it.  And  the  video  games  are  back,  dude.  Ooh.  These  guys  made  a  wild -ass  game.
+[103.84 - 104.98] SPEAKER_C:  Oh,  man.  I  want  to  get  that.
+[105.02 - 112.02] SPEAKER_B:  You're  breaking  into,  like,  child  porn  fucking  facilities.  You're  breaking...  Yeah.  Wow.  Yeah,  yeah.  It's  really  a  dark,  fucked -up  game.
+[112.24 - 113.46] SPEAKER_C:  I'm  getting  that  today.
+[113.86 - 116.00] SPEAKER_B:  Yeah,  well,  get  ready  to  enter  the  tomb.
+[116.38 - 120.76] SPEAKER_A:  How  good's  it  feel  to  clear  the  child  porn  sanctuary?  Feels  good.  Yeah,  that's  nice.
+[121.00 - 121.66] SPEAKER_B:  It  feels  really  good.
+[121.94 - 126.80] SPEAKER_A:  Yeah,  it's  awesome.  Yeah.  And  it's  like...  So  there's  just  a  blast...  I  was  about  to  say,  you  blast  everyone  in  there.  Yep.
+[127.34 - 129.26] SPEAKER_B:  You  go,  what  the  fuck  are  you  guys  doing,
+[129.40 - 133.44] SPEAKER_A:  dude?  That's  totally  fair.  If  you're  in,  like,  an  industrial  child  porn  place...  There's  school  shooting  out,
+[133.48 - 135.82] SPEAKER_B:  too.  What?  Yeah,  you  clear  out,  like,  a  school  shooting.
+[136.34 - 137.20] SPEAKER_A:  Can  you  run  away?
+[137.94 - 140.10] SPEAKER_B:  You  can  hide  for  a  while.  I  would  run  away.
+[141.34 - 143.98] SPEAKER_C:  Fucking  A.  This  game  sounds  fucking  awesome.
+[144.10 - 148.40] SPEAKER_A:  It  sounds  like  every  dude's  fantasy  is  wrapped  up  into  one.  It  is.  It's  like,  obviously,  stopping  a  school  shooting.
+[148.48 - 149.58] SPEAKER_B:  Obviously,  wearing  SWAT  gear.
+[150.30 - 151.36] SPEAKER_A:  Just  that  alone.  Everyone
+[151.36 - 158.94] SPEAKER_B:  wants  to  wear  SWAT  tactical  gear.  Although,  ever  since  I  saw  the  picture  of  Big  Chungus  at  the  protest  during  BLM,  I  realized  I  could  never  rock  the  SWAT  gear.
+[159.26 - 159.50] SPEAKER_A:  What?
+[159.74 - 160.90] SPEAKER_B:  Too  big  to  wear  SWAT  gear.
+[161.76 - 162.36] SPEAKER_A:  How  so?
+[163.46 - 170.26] SPEAKER_B:  When  you're  a  big  guy  in  SWAT  gear,  it  looks  fucking  hilarious.  Have  you  ever  seen  it?  Have  you  ever  seen  a  big,  fat  guy  in  SWAT  gear?
+[170.30 - 171.18] SPEAKER_A:  Never  thought  about  it.  I  don't  know.
+[171.26 - 172.52] SPEAKER_B:  I'll  show  you  Big  Chungus.
+[172.52 - 174.08] SPEAKER_A:  I  feel  like  you  would  look  like  a  juggernaut.
+[175.12 - 183.02] SPEAKER_B:  There  is  that.  Yeah.  There  is  that.  I  could  wear  the  Hurt  Locker  fucking...  And  just  be  juggernaut.  But  juggernaut  sucks.  You  get  shot  fucking  nine  million  times.
+[184.16 - 185.28] SPEAKER_C:  You  play  games,  man?
+[186.06 - 189.88] SPEAKER_A:  No,  I  can't  have  it,  man.  I  won't  stop  playing  it.  It's  like  a  complete  time  suck.
+[190.02 - 195.36] SPEAKER_C:  You  got  a  full  family,  too.  Yeah.  I'd  imagine  there's  not  a  ton  of...  But  wait,  do  you  play  with  the  kids,  though?
+[195.82 - 199.92] SPEAKER_A:  Not  yet.  It's  getting  there,  though.  There  could  be  some  aerial  cart  with  a  five -year -old  soon.
+[200.96 - 207.80] SPEAKER_B:  Yo.  He  can't  be  the  chungus.  That's  insane.  He  can't  be  the  big  chungus.
+[207.80 - 209.64] SPEAKER_A:  He  didn't  have  the  right  gear.  His  gear  is  too  small.
+[210.26 - 210.94] SPEAKER_B:  Yeah,  it's
+[210.94 - 213.26] SPEAKER_A:  a  tough  one.  Getting  too  fat  for  your  tactical  gear  would  be  tough.
+[213.60 - 214.00] SPEAKER_C:  Yeah.
+[214.16 - 218.98] SPEAKER_A:  Because  then  it's  literally  life  or  death.  You  have  viscera  exposed.  Yeah,  that
+[218.98 - 233.36] SPEAKER_C:  looks  like  when  they  brought  back  Boba  Fett,  but  he  was  fat  now.  And  they  didn't  adjust  the  costume.  It  was  like  up  here.  Some  Australian  dude  has  just  been  drinking  for  10  years.  And  they're  like,  you  want  to  do  the  role  again?  He's  like,  yeah.  Yeah.
+[234.34 - 236.04] SPEAKER_B:  I've  been  waiting  on  this  call.  Fuck.
+[236.88 - 239.28] SPEAKER_A:  His  helmet's  like  a  yarmulke  on  his  head.  I
+[239.28 - 242.26] SPEAKER_B:  don't  know.  Boba  Fett  was  an  Australian  man?  Or  he
+[242.26 - 243.68] SPEAKER_C:  might  be  from...
+[243.68 - 246.12] SPEAKER_B:  Because  if  that's  the  case,  he  lives  actually  on  Tatooine.
+[246.38 - 247.16] SPEAKER_C:  I  think  he's  New  Zealand.  Oh,
+[247.28 - 247.40] SPEAKER_B:  okay.
+[247.76 - 252.54] SPEAKER_C:  Yeah.  That  guy,  he  was  in  that  movie  When  We  Were  Kings,  which  I  feel  like  is...
+[252.54 - 254.18] SPEAKER_B:  I  don't  even  think  I've  heard  of  that  movie.
+[255.00 - 262.64] SPEAKER_C:  As  I  was  saying  it,  I  was  like,  I  feel  like  Shane,  this  is  a  movie  Shane  would  love,  but  I'm  basing  that  only  on  the  title,  When  We  Were  Kings.  It's  just  a  movie  you  would  love.
+[262.68 - 269.00] SPEAKER_B:  It's  just  a  drunk  guy.  Fucking  every  night.  We  Were  Kings.  Yeah,  what's  the  movie  about?  We  were  the  fucking  best.
+[272.78 - 278.24] SPEAKER_A:  What's  it  about?  The  movie  takes  place  at  a  bus  stop.  It  takes  place  at  a  bus  stop  in  West  Philadelphia.  Yeah.  We
+[278.24 - 286.62] SPEAKER_C:  Was  Kings.  We  Was  Kings.  I  think  it's  about  like...  I  think  it's  kind  of  like  Slumdog  Millionaire,  except  in  New  Zealand,  or  one  of  those  kind  of  movies.
+[286.98 - 287.22] SPEAKER_B:  Okay.
+[287.40 - 289.66] SPEAKER_C:  I  think,  or  like  City  of  God,  maybe  it's  like  that.
+[289.78 - 290.60] SPEAKER_A:  City  of  God's  awesome.
+[290.90 - 293.16] SPEAKER_C:  I've  never  seen  either  movie.  I  heard  they're  both  great.
+[293.44 - 294.26] SPEAKER_B:  City  of  God's  awesome.
+[294.78 - 294.94] SPEAKER_A:  Yeah.
+[295.32 - 296.10] SPEAKER_C:  It's  a  great  title.
+[296.18 - 297.04] SPEAKER_B:  I  like  subtitles,  man.
+[298.18 - 299.68] SPEAKER_A:  I'm  a  big  subtitle  movie  guy.
+[299.80 - 302.54] SPEAKER_B:  I  like  that.  Let's  talk  movies.  What?
+[302.80 - 305.94] SPEAKER_C:  Let's  talk  movies  we've  never  seen.  Let's  talk  movies.  City  of  God.
+[306.14 - 307.70] SPEAKER_B:  City  of  God  rules.  You'd  like  it.
+[308.48 - 313.58] SPEAKER_C:  Wait.  I  want  to  look  up  when  we  were...  I'm  going  to  look  it  up  at  one  point.  When  We  Were  Kings  is  actually...  What  would
+[313.58 - 317.80] SPEAKER_A:  be  the  best  movie  analysis  ever?  I  don't  know  what  it's  about.  It's  like  two  movies  I've  never  seen
+[317.80 - 320.26] SPEAKER_B:  before.  I  think  it's  a  guy  from  New  Zealand.
+[320.26 - 323.24] SPEAKER_C:  I  just  saw  one  of  the  shittiest  movies  I've  ever  fucking  seen.
+[323.46 - 323.48] SPEAKER_A:  What?
+[325.46 - 329.42] SPEAKER_C:  Opus.  The  new  John  Malkovich  movie.  Never  seen  it.
+[329.42 - 329.56] SPEAKER_A:  Where?
+[330.54 - 343.98] SPEAKER_C:  All  right.  Let  me  just  shoot  the  premise  at  you.  Yeah.  And  you'll  immediately  know  we're  off  to  a  bad  start.  John  Malkovich  plays  a  once  famous  R &B  pop  singer.  What?
+[348.00 - 349.42] SPEAKER_A:  How  does  he  do  that?
+[349.50 - 358.08] SPEAKER_C:  Who  disappears.  He  was  big  in  the  80s.  And  then  he  disappears  and  comes  back  30  years  later  for  his  opus.  He's  putting  out  another  album  after  30  years  of  absence.
+[358.26 - 358.86] SPEAKER_B:  That  always  works.
+[359.26 - 361.22] SPEAKER_C:  Yeah.  And  it's  John  Malkovich.
+[362.56 - 367.44] SPEAKER_A:  Damn.  It'd  be  nice  if  it  was  like  late  Kells.  Like,  yo  pussy  is  a  buffet.  I  love  your  pussy.
+[368.30 - 372.16] SPEAKER_C:  I  thought  they  were  going  to  make  him  like  a,  you  know,  like  a  fucking  Pink  Floyd -y  dude.
+[372.34 - 372.50] SPEAKER_A:  Yeah.
+[372.58 - 395.32] SPEAKER_C:  When  I  heard  the  premise.  And  I'm  like,  oh  no,  he's  like  a  dance  singer.  Like  a  fucking  like,  like,  like,  it's  so.  And  then  they,  so  all  these  people  get  invited  to  his  big  compound  to  listen  to  the  record.  And  then  everybody  starts  dying.  And  it's,  it's,  it's  Get  Out.  It's  like  the  57th  time  they've  remade  Get  Out  since  fucking  Get  Out  came  out.  What?  Sucks  dick.  It  is  a  terrible  fucking  movie.
+[395.54 - 397.04] SPEAKER_A:  Who's  the  villain?  Who's,  who's  the.
+[397.40 - 400.42] SPEAKER_B:  He  is.  You're  describing  a  pretty  sick  fucking  movie.
+[400.60 - 404.24] SPEAKER_C:  You'd  think.  You'd  think.  It  fucking  sucks.  It
+[404.24 - 408.54] SPEAKER_B:  also  sounds  like  an  event  that  me  and  my  squad  should  probably  breach  and.
+[409.42 - 410.30] SPEAKER_C:  Yes.  Yeah.
+[410.88 - 415.90] SPEAKER_B:  Tie  up  the  civilians.  Make  sure  everybody's  taken  care  of.  You  could  have  stopped  it.  I  could  have  stopped
+[415.90 - 416.98] SPEAKER_A:  it.  You  could  have  stopped  the  onslaught.
+[417.06 - 419.92] SPEAKER_B:  There's  going  to  be  some  people.  This  game's  a  hit,  dude.
+[420.12 - 420.28] SPEAKER_A:  Yeah.
+[420.38 - 422.48] SPEAKER_B:  There's  going  to  be  some  people  breaching  some  houses.
+[422.64 - 423.34] SPEAKER_A:  You  think  so?  I
+[423.34 - 426.68] SPEAKER_B:  think  so.  Because  it  does.  It  gives  you  that.
+[427.20 - 427.56] SPEAKER_C:  Yeah.
+[427.86 - 431.38] SPEAKER_A:  Desire.  Yeah.  Your  ex -wife's  got  a  new  boyfriend.  That  would  be.
+[431.58 - 433.66] SPEAKER_B:  You  get  four  of  your  boys.  You  go.  All  right.  Stack  the  door.
+[434.02 - 436.30] SPEAKER_A:  Yeah.  They  should  be  doing  school
+[436.30 - 438.94] SPEAKER_B:  drop  off.  Fucking  shock  on  the  lock.  Fraggit.
+[439.32 - 441.88] SPEAKER_A:  745.  They  haven't  left  yet.  They  should  be  doing  drop  off  right  now.  We're  going  in.
+[442.52 - 454.86] SPEAKER_C:  I  think  they.  I  don't  think  I'm  making  this  up.  Didn't  they  use  Forza  to  actually  train  race  drivers?  Didn't  they  actually  play  fucking  Forza  as  like  a  simulation  before  they  got  on  the  actual
+[454.86 - 456.86] SPEAKER_B:  road?  I'm  not  sure.  Probably.  Gran  Turismo.  Yeah.
+[457.02 - 458.42] SPEAKER_C:  Oh,  Gran  Turismo.  That's  what  it  was.
+[458.54 - 459.06] SPEAKER_B:  Yeah.  That  makes  sense.
+[459.10 - 471.32] SPEAKER_C:  That's  insane,  though,  that  games  are  getting  like.  I  actually  think  what  you're  saying  is  I  think  like  these  games  actually  could  be  like  tactical  training  before  you're  in  the  field.  I  mean.  You  know?  Yeah.
+[471.48 - 474.86] SPEAKER_B:  Nate's  all.  I  would  have  failed.  Fucking  civilian  came  running  around  the  corner.
+[475.00 - 475.44] SPEAKER_C:  I  was  like,  oh.
+[477.30 - 479.56] SPEAKER_B:  He  was  running  right  at  me.  Everybody  saw  that.
+[479.62 - 480.58] SPEAKER_A:  Scared  the  shit  out  of  me.
+[480.90 - 481.96] SPEAKER_B:  They  do  scare  you.
+[482.14 - 483.10] SPEAKER_A:  How  do  you  distinguish?
+[483.36 - 506.32] SPEAKER_B:  There's  a.  Oh,  the  worst  one.  There's  like  a  for  real.  There's  like  a  pulse  nightclub.  What?  And  the  thing  that  they  did  in  the  game  that  always  fucked  me  up  from  the  actual  shooting  that  people  described  it  was  everyone's  phones  going  off.  That  was  dead.  Whoa.  Like  when  the  cops  went  in  to  clear  it  out,  you  could  just  hear  every  phone  in  the  building  buzzing,  which  is  so  sad.
+[506.54 - 507.64] SPEAKER_A:  Yeah.  I  didn't  think  about  that.
+[507.78 - 511.10] SPEAKER_B:  And  they  kept  that  in  the  game.  That's  in  the  game.  Oh,  it's  like  a  fucked  up  game.
+[511.38 - 526.40] SPEAKER_C:  Yeah,  man.  Shit.  Yeah.  That  used  to  be.  They  used  that  used  to  get  a  lot  of  backlash.  Remember,  there  was  a  modern  warfare  where  you  had  to  take  down  the  airport  shooter.  There  was  like  people  were  like,  this  is  fucked  up.  This  is  too  far.  And  then  other  people  were  like,  no,  this  is  important.
+[527.04 - 530.80] SPEAKER_B:  Well,  it's  definitely  not  important.  It's  fucking  crazy.
+[531.08 - 531.96] SPEAKER_C:  That  mission  was  awesome.
+[532.12 - 533.08] SPEAKER_B:  That  mission  was  crazy.
+[533.32 - 533.92] SPEAKER_C:  I  don't  know.  I
+[533.92 - 540.80] SPEAKER_A:  feel  like  it  is  important.  If  you  just  sit  there  and  do  that  for  hours  and  hours  and  hours,  I  do  feel  like  if  the  real  thing  happened,  you  might  on  some  level  be  more  prepared.
+[540.80 - 548.34] SPEAKER_B:  Well,  that's  exactly  the  problem  because  in  this  mission,  you  are  the  shooters.  Oh,  no.  First  half,  you  walk  around  with  a  machine  gun  in  a  fucking  airport.
+[548.82 - 550.02] SPEAKER_A:  You're  an  airport  shooter?
+[550.28 - 550.66] SPEAKER_B:  Yes.
+[551.60 - 552.48] SPEAKER_A:  It's  a  tough  one.  And  the  mission  is.
+[552.48 - 555.16] SPEAKER_C:  Wait,  I  don't  remember  that  part.  The  first  part,  you  were  the  shooter?
+[556.38 - 560.08] SPEAKER_B:  No,  you're  not.  You're  literally  just  going  through  killing  every  civilian.
+[560.70 - 561.50] SPEAKER_C:  Oh,  my  God.
+[561.80 - 563.20] SPEAKER_B:  Yeah,  yeah,  yeah.  It's  really  bad.
+[563.34 - 565.50] SPEAKER_A:  All  right.  I  forgot  about  that.  That  might  be  too  far.
+[566.68 - 567.34] SPEAKER_B:  It's  nuts.
+[568.30 - 569.54] SPEAKER_A:  Yeah,  that's  not  good.  That's
+[569.54 - 576.16] SPEAKER_B:  why  Call  of  Duty  hit  the  old  switcheroo.  Zombies.  It's  like,  I'm  a  purple  woman  sliding.
+[576.80 - 577.14] SPEAKER_C:  Yeah.
+[577.40 - 578.48] SPEAKER_B:  All  right.  I  see  it.
+[578.70 - 584.72] SPEAKER_A:  They  hit  the  peak.  They're  like,  we  made  the  top  of  the  mountain.  Although  in  Grand  Theft  Auto,  you're  essentially  doing  that  anyway.
+[585.58 - 615.18] SPEAKER_B:  Grand  Theft  Auto,  there's  rumors  that  there  is  a  pride  parade  in  the  city.  No.  Fellas,  don't.  Don't.  Don't  let  me  catch  you.  Don't,  dude.  Those  videos  are  going  to  be  fucking  chaos.  Oh,  no.  Every  single  person  that  downloads  the  game.  Straight  to  the  parade.  I  do  feel  like,  to  be  fair.  No  way.  No  way.  And  there  you  go.  What  would  happen?
+[616.06 - 619.40] SPEAKER_A:  To  be  fair,  it's  time  the  hookers  in  GTA  get  a  break.
+[619.82 - 620.80] SPEAKER_B:  Yeah.  True.  The
+[620.80 - 624.64] SPEAKER_A:  hookers  are  going  to  be  watching  and  be  like,  thank  fucking  God.  Finally,  we  can  relax.
+[625.20 - 625.88] SPEAKER_B:  They're  next.
+[626.46 - 626.90] SPEAKER_C:  Once
+[626.90 - 641.44] SPEAKER_B:  you  get  five  stars  from  the  fucking  parade,  you're  headed  straight  to  the  fucking  strip  club.  They're  really  doing  that.  You  think  I  forgot  about  you?  That's  so  funny.  Yeah,  they're  doing  that.  That's,  uh...  I  wonder  if  they'll  make  it  off  limits.
+[641.68 - 644.08] SPEAKER_C:  I  think  they're  going  to  reel  this  game  back.  Grand  Theft  Auto
+[644.08 - 647.32] SPEAKER_A:  makes  more.  It'll  get  hacked.  That  game  gets  hacked,  too.  I
+[647.32 - 655.50] SPEAKER_C:  think  they're  going  to  reel  this  one  back.  I  was  friends  with  this  guy,  Laszlo,  that  was  one  of  the  top  developed  guys.  He  was  the  guy  that  put  us  all  into  the  games  and  shit.  And  he  left.
+[655.78 - 656.66] SPEAKER_B:  I  forgot  you  were  in  Grand  Theft  Auto.
+[656.92 - 657.46] SPEAKER_C:  Yeah,  five.
+[657.72 - 658.30] SPEAKER_B:  That's  fucking  awesome.
+[658.42 - 658.70] SPEAKER_C:  It's  wild.
+[658.92 - 659.34] SPEAKER_A:  That  is  awesome.
+[659.46 - 662.26] SPEAKER_C:  Faces  in  it.  The  mocap  was  insane.
+[662.80 - 664.68] SPEAKER_B:  Damn.  That  mocap's  a  nightmare.
+[664.98 - 665.98] SPEAKER_C:  It  would  suck.  How
+[665.98 - 670.96] SPEAKER_B:  much  did  you  feel  like  it?  You  must  have  looked  nuts  in  a  mocap.  By  the  way,  it
+[670.96 - 682.08] SPEAKER_C:  was  old  school  mocap.  It  wasn't  this  fucking  Harrison  Ford  shit  where  they  put  blue  dots  on  your  face.  I  had  a  helmet  on  with  a  camera  in  my  face.  It  was  crazy.  You  had  to  wear  a  frog  suit,  like  Green  Man.  What  was  your
+[682.08 - 683.04] SPEAKER_A:  role?  What  did  you  play?
+[684.00 - 708.88] SPEAKER_C:  There's...  When  you  go  into  the  safe  house  or  the  safe  house,  whatever  it's  called,  there's  a  TV  and  there's  shows  you  can  watch.  And  there's  a  show  with  the...  Whoever  the  action  star  is  in  that  series  that's  like  the  Stallone  type.  Yeah.  It's  a  reality  show  about  him.  And  I  play  his  new  agent.  And  I'm  like  this  coke  head.  And  it's  me  and  him.  We  did  like...  We  shot  like  30  minutes.  We  shot  a  full  episode  of  this  thing.
+[709.04 - 709.20] SPEAKER_A:  Whoa.
+[709.46 - 718.68] SPEAKER_C:  And  it's  in  the  game.  And  then  we  went  back  and  did  additional  content  later  that  never  got  released.  That  I  just  had  to  sign  crazy  NDAs  about.  I'm  not  allowed  to  talk  about  it.
+[718.74 - 719.44] SPEAKER_A:  Whoa,  that's  awesome.
+[719.66 - 721.20] SPEAKER_C:  But  anyway,  it  was  awesome.  It  was
+[721.20 - 723.12] SPEAKER_A:  fucking...  He  just  fucks  you  in  this.  Yeah.
+[724.10 - 725.20] SPEAKER_C:  Yeah.  Yeah.
+[725.20 - 725.32] SPEAKER_B:  Yeah.
+[726.56 - 728.76] SPEAKER_A:  This  episode  is  brought  to  you  by  Viore.
+[729.42 - 738.10] SPEAKER_B:  So  there's  a  lot  of  sports  out  there.  Obviously,  you've  got  basketball,  baseball,  and  football.  But  then  there's  running,  tennis,  MMA,  climbing,  yoga,  pickleball.
+[738.44 - 741.76] SPEAKER_A:  And  that's  before  you  get  into  all  the  different  ways  you  can  train  and  work  out.
+[742.06 - 751.98] SPEAKER_B:  Right.  But  the  good  news  is  that  you  only  need  one  pair  of  shorts  for  all  of  it.  The  core  short  from  Viore.  That's  right.  Wear  one  pair  of  shorts  all  the  time.
+[751.98 - 754.92] SPEAKER_A:  That's  all  you  need.  The  workout.  The  core  short.  That's  all  I  do.
+[754.94 - 756.16] SPEAKER_B:  No  one's  going  to  think  you  stink.
+[756.40 - 773.96] SPEAKER_A:  No,  not  at  all.  You  can  get  two  pairs.  You  can  switch  them  every  day.  Or  just  do  morning  and  afternoon.  The  core  short  is  the  short  that  started  it  all  for  Viore.  Mm -hmm.  Fitness  versatility.  One  short  every  sport.  Mm -hmm.  Guys,  they're  ideal  for  fitness  running  and  training,  but  also  stylish  and  comfortable.  That's  important.
+[774.22 - 775.64] SPEAKER_B:  That  is  important.  I  want  to  be  stylish.
+[775.90 - 777.34] SPEAKER_A:  I  want  to  be  stylish  and  comfortable.
+[778.78 - 779.72] SPEAKER_B:  Matt,  are  they  soft?
+[781.34 - 785.24] SPEAKER_A:  They're  soft.  They're  pretty  soft.  A  lot  of  Viore  stuff.  How  much  do  they  weigh?
+[785.44 - 785.58] SPEAKER_B:  Yeah.
+[785.88 - 786.30] SPEAKER_A:  Pretty  lightweight.
+[786.90 - 790.28] SPEAKER_B:  The  core  shorts.  Is  it  only  three -way  performance  or  how  many?
+[790.78 - 793.72] SPEAKER_A:  I'd  say  it's  pretty  multiplex.
+[794.52 - 795.76] SPEAKER_B:  Is  it  a  four -way  performance  stretch?
+[796.10 - 808.98] SPEAKER_A:  Yeah.  Oh,  yeah.  Yeah,  definitely  the  fourth  dimension.  I  can  stretch  backwards  in  them  for  sure.  Also,  the  core  is  a  little  tougher.  Some  of  their  stuff  is  like  borderline  erotic.  If  you  feel  my  shorts  right  here,  I'm  actually  wearing  them  right  now.
+[809.10 - 809.32] SPEAKER_B:  Don't  make  me.
+[809.46 - 811.14] SPEAKER_A:  I'm  actually  wearing  them  right  now,  dude.  Please  do  not.
+[811.60 - 820.74] SPEAKER_B:  Matt,  Viore  is  an  investment  in  happiness.  And  right  now,  you  can  get  20 %  off  your  first  order  and  free  shipping  on  any  U .S.  order  of  $75  and  free  returns.  So
+[820.74 - 833.04] SPEAKER_A:  get  your  core  shorts  now  at  viore .com  slash  secret.  That's  V -U -O -R -I  dot  com  slash  secret.  Exclusions  apply.  Visit  the  website  for  full  terms  and  conditions.
+[833.28 - 835.74] SPEAKER_C:  But  that  guy,  this  guy  Laszlo  was  like,
+[835.82 - 836.56] SPEAKER_B:  he
+[836.56 - 837.16] SPEAKER_A:  put
+[837.16 - 839.22] SPEAKER_C:  Burr  and  Bobby  Kelly,  everybody  in.
+[839.36 - 842.58] SPEAKER_B:  Yeah,  that's  awesome.  They  had  stand -up  in,  was  it  four  or  five?
+[842.80 - 845.68] SPEAKER_C:  Yeah,  I  think  Burr,  no,  Gervais  is  doing  stand -up.  I  think
+[845.68 - 850.90] SPEAKER_B:  Cat  Williams.  Yeah,  Cat  Williams.  I'm  just  going  to  go  watch  stand -up  than  it  actually  as  a  comedian  in.  That's  pretty  crazy.
+[851.02 - 852.56] SPEAKER_C:  Yeah,  but  he's...  You  can  bring  your  gun
+[852.56 - 854.46] SPEAKER_B:  in  there  and  you  can  shoot  Cat  Williams.
+[855.80 - 857.22] SPEAKER_A:  Bro,  stand -up  special,
+[857.46 - 858.60] SPEAKER_B:  GTA  animated.
+[858.88 - 867.02] SPEAKER_A:  That'd  be  awesome.  A  special  where  you're  just  in  a  mo -cap  suit,  you  perform  live  in  a  mo -cap  suit,  and  they  recreate  it  in  GTA  V,  and  people  can  just  shoot  people.  Really?
+[867.32 - 868.00] SPEAKER_B:  That's  what  I'm  saying.
+[868.14 - 868.52] SPEAKER_A:  That's  fucking
+[868.52 - 869.48] SPEAKER_B:  sick.  It  literally  did  that.
+[869.62 - 870.08] SPEAKER_A:  That's  awesome.  You
+[870.08 - 872.38] SPEAKER_B:  can  walk  in.  There's  a  comedy  club.  It's  Ricky  Gervais.
+[872.54 - 873.04] SPEAKER_A:  That's  awesome.
+[873.20 - 873.54] SPEAKER_B:  Yeah.  Yeah.
+[873.78 - 878.52] SPEAKER_C:  It  was  nuts  when  we  did  it  because  it  was  like  early  days  of  that.  Not  early,  but  early  days.
+[878.52 - 883.42] SPEAKER_B:  Yeah,  you  should  do  that  now  again.  Yeah.  And  just  put  it  out  as  a  game.  Yeah,  true.  Just  be  like,  this  is  my  special.
+[883.64 - 884.80] SPEAKER_A:  You'd  shoot  me.  It's  live.
+[884.96 - 888.36] SPEAKER_B:  Yeah,  you  guys  get...  Nobody  hears  the  first  joke  ever.
+[889.60 - 904.22] SPEAKER_C:  They  had  this  fucking...  We  were  in  this  green  room,  and  they  had  all  these  plastic  structures,  and  they'd  be  like,  that's  your  car,  so  open  the  door  and  sit  in  it,  whatever.  And  you  would  do  it,  and  then  they'd  be  like,  okay,  come  over  here  and  look  at  this.  It  was  rendering  in  real  time.
+[904.42 - 904.56] SPEAKER_A:  Whoa.
+[904.88 - 915.48] SPEAKER_C:  So  you'd  walk  over,  and  it  didn't  look  like  it  did  in  the  game,  but  it  was  like  you  getting  into  a  fucking  car  in  a  video  game  immediately.  It  was  crazy.  It  was  fucking  crazy.
+[915.66 - 916.04] SPEAKER_A:  Yeah,  that's  awesome.  Dude,
+[916.16 - 917.30] SPEAKER_C:  this  is  like  2009.
+[917.82 - 919.58] SPEAKER_A:  This  is  a  while  ago.  That's  crazy,  yeah.
+[920.10 - 945.02] SPEAKER_C:  But  anyway,  yeah,  the  game  made  $5  billion.  I  got  paid  three  grand.  And  I  remember  calling  Lazlo  and  going,  I  want  a  copy  of  Max  Payne  3.  And  he  goes,  you  fucking  comics,  man.  Always  looking  for  free  shit.  I  go,  your  game  just  made  a  billion  dollars.  You  paid  me  three  grand.  Send  me  fucking  Max  Payne  3  right  now.  And  he's  like,  all  right,  that's  fair,  dude.  Okay,  I'll  send  you  one.  Yeah,  yeah,  yeah.
+[946.18 - 947.10] SPEAKER_A:  When  you  put  it  that  way.
+[949.54 - 968.30] SPEAKER_C:  But  I  think  it's  the  point  I'm  ultimately  getting  at  is  I  have  a  feeling  with  his  absence,  I  feel  like  they're  going  to  reel  back  in  this  one.  I  just  don't  think  it's  like  Eminem  saying  like,  look,  man,  time's  changed.  Nobody  wants  this  anymore.  I'm  just  not  doing  it  anymore.  I  feel  like  they're  going  to  pull
+[968.30 - 970.74] SPEAKER_B:  back.  Ready  or  not,  it's  kind  of  proven  everyone  wants  it.
+[971.68 - 973.06] SPEAKER_C:  Yeah,  that's  a  good  point.
+[973.36 - 987.04] SPEAKER_A:  Yeah.  That's  a  good  point.  It  should  be  like  in  Mortal  Kombat.  Then  you  have  to  put  in  a  setting  for  like,  you  should  have  settings.  If  you  want  to  play  kind  of  like,  you  know,  reeled  back  GTA,  you  can  just  hit  a  setting.  If  you  want  to  go  nuts,  you  should  just  be,  you  get  to  be  Hunter  Biden.
+[987.34 - 989.36] SPEAKER_C:  Yeah,  there  was  the  blood  code.
+[989.60 - 990.98] SPEAKER_B:  Hunter  Biden's  rocking  right  now.
+[991.00 - 992.30] SPEAKER_A:  He's  rocking  right  now.  That  would
+[992.30 - 992.94] SPEAKER_B:  fire  me  up.
+[993.10 - 993.72] SPEAKER_A:  He  might  be,  dude,
+[993.76 - 1001.56] SPEAKER_B:  he  might  put  his  hat  around.  He's  literally  the  O 'Connor  man.  He  is.  Did  you  hear  the  way  he  was  speaking?  I've  had  that  conversation  with  O 'Connor  10  million  times.
+[1001.56 - 1002.38] SPEAKER_A:  I  saw  the  clip.
+[1002.58 - 1014.50] SPEAKER_B:  He's  like,  that  motherfucker  wants  to  fucking  talk  shit.  I'm  like,  damn,  this  is  the  O 'Connor  man.  I  just  fought  him  at  Lala's  for  fucking  10  hours  with  this  exact  conversation.  O 'Connor,  dude,  is  a  psycho.  You're  a  fucking
+[1014.50 - 1015.04] SPEAKER_A:  idiot.
+[1015.76 - 1026.98] SPEAKER_C:  O 'Connor  is  a  fucking  psycho.  He's  a  bad.  I've  seen  him  get  angrier.  And  I'm  an  angry  dude.  O 'Connor  gets  hot,  man.  O
+[1026.98 - 1027.26] SPEAKER_B: 'Connor,
+[1027.34 - 1027.98] SPEAKER_C:  yeah.  And
+[1027.98 - 1032.38] SPEAKER_B:  I  know  exactly  how  to  do  it.  And  it's  so  funny.  Dude,  you're  fucking,
+[1032.66 - 1048.14] SPEAKER_C:  you're  Batman,  dude.  Remember  Batman  in  the  Justice  League  comics?  He  had  a  way  to  kill  every  member  of  the  Justice  League  just  in  case  it  went  sideways.  That's  Shane  with  every  one  of  his  friends.  I  know  exactly  how  to  piss  you  off,  dude.  And  I'm  going  to  do  it  right  now.  No,  I'm  going  to  be  a  comment.
+[1048.54 - 1052.34] SPEAKER_B:  The  O 'Connor  man's  just  the,  I  don't  ever  do  that  really  to  you  guys.
+[1054.30 - 1055.32] SPEAKER_A:  You  do  get  the  O
+[1055.32 - 1055.58] SPEAKER_B: 'Connor,
+[1055.66 - 1067.54] SPEAKER_A:  you  get  the  comment.  Oh,  comments.  It's  really  funny.  He  also,  he  knows  too,  though.  He'll  feel  it.  You'll  start  hitting  the  buttons  and  he'll  go,  I'm  not  doing  this  with  you.  And  then,  eventually.  You  can't,
+[1067.60 - 1073.48] SPEAKER_B:  you  can't.  He  always,  he's  like,  Shane,  I'm  not  doing  that  right  now.  And  they  go,  yeah,  you  are.
+[1074.26 - 1081.74] SPEAKER_C:  This  is  a  classic  O 'Connor  rule,  right?  When  he  starts  getting  hot,  he  goes  like  this.  Dude,  what  the  fuck  are  you  talking  about?
+[1082.70 - 1089.20] SPEAKER_A:  You've  reached  his  wall.  Yeah,  you've  climbed  his  wall  at  that  point.  You're  fully  inside  the  Citadel.
+[1090.28 - 1091.50] SPEAKER_C:  Dude,  we  were  arguing.
+[1091.72 - 1097.00] SPEAKER_B:  He  took  the  Trojan  horse.  He  fell  asleep.  You're  cutting  everybody's  heads  off.  It's  over.
+[1097.48 - 1104.72] SPEAKER_C:  Shane  and  I  were  arguing  about  Prince.  I  was  pro  Prince.  Shane  was  anti  Prince.  It  was  our  argument.  O 'Connor  jumped  in.  O 'Connor  got  so
+[1104.72 - 1106.64] SPEAKER_B:  hot.  O 'Connor  lost  his  fucking  mind.
+[1107.14 - 1108.64] SPEAKER_C:  But,  hold  on.  Hold  on.
+[1109.22 - 1111.76] SPEAKER_B:  That  was,  you  want  to  talk  about  great,  great  drunks?
+[1112.08 - 1112.24] SPEAKER_A:  Yeah.
+[1112.40 - 1128.22] SPEAKER_B:  This  was  one  of  the  all -time  drunks.  This  was  coming  back  from  London,  back  to,  back  to  the  United  States.  And  we  had,  like,  a  private  room.  Mm -hmm.  We  were  flying.  It  wasn't  private.  It  wasn't  a  private  jet.  But  they  have  this  thing.  They're  cheap  as  fuck.
+[1128.54 - 1128.68] SPEAKER_C:  Yeah.
+[1128.82 - 1133.74] SPEAKER_B:  Everybody  should  be  doing  this.  There's,  like,  a  VIP  thing  at  big  airports.  Mm -hmm.  For,  like,  $1 ,000.
+[1134.28 - 1134.56] SPEAKER_A:  Yeah.
+[1134.92 - 1164.62] SPEAKER_B:  Where  they  just,  that  you  have  your  own  security.  You  have  your  own  thing.  And  then  they  just  put  you  in  a  room.  What?  With  free  alcohol.  And  then  they're  like,  guys,  the  flight  got  delayed  by  two  hours.  And  everyone  in  the  room  was  just,  like,  oh,  shit.  And  we  got,  we  drank  vodka  for  three  hours  and  argued  about  Prince  for  three  straight  hours.  And  Okaman  was  my  staunchest  ally.  Okaman  went
+[1164.62 - 1170.68] SPEAKER_A:  nuts.  Oh,  he  went  nuts  anti -Prince.  He  was  like,  play  one  fucking  song.  Play  one  fucking  song.
+[1171.28 - 1177.56] SPEAKER_C:  And  Shane  was  being  like,  appreciate  your  support,  Chris.  You  got  to  back  it  off.  Like,  you're  going  crazy  right  now,  man.
+[1177.92 - 1183.08] SPEAKER_A:  They  should  have  reached  out  to  air  traffic  control.  Like,  we  got  to  get  this  plane  up.  But  this  is  a  disaster.  We  have  a  disaster  on  the  ground.
+[1183.20 - 1184.56] SPEAKER_C:  I  think  they  let  me  smoke  in  the  fucking  room.
+[1184.80 - 1186.42] SPEAKER_B:  Yeah,  we  were  smoking  in  the  room.  It  was.
+[1186.74 - 1187.94] SPEAKER_A:  I  didn't  know  this  existed.
+[1188.26 - 1197.94] SPEAKER_B:  Yeah.  Either  did  I.  I  did  it  once.  This  is  the  second  time  I've  done  it.  I  did  it  once  at  JFK.  And  it  was  the  biggest  waste  of  money  of  all  time.  Really?  Just  a  woman  met  me  at  baggage.
+[1198.42 - 1198.74] SPEAKER_A:  Yeah.
+[1198.92 - 1206.20] SPEAKER_B:  And  walked  me  through  and  then  took  me  to  an  airport  lounge.  And  they  were  like.  And  then  she  left.  And  then  they  were  like,  you  can't  come  in  here.  I  was  like,
+[1206.32 - 1209.14] SPEAKER_A:  oh,  shit.  Oh,  that  sucks.  That  sucks,  yeah.  The  closest  I  got  to  that.
+[1209.20 - 1210.90] SPEAKER_B:  It  was  just  a  regular  lounge.  Did  you  ever
+[1210.90 - 1215.32] SPEAKER_A:  do  someone  in  a  wheelchair  at  the  airport?  That's  fucking  VIP  status.
+[1215.56 - 1215.76] SPEAKER_C:  Yeah.
+[1216.00 - 1219.62] SPEAKER_A:  My  wife  was  super  pregnant.  She  got  the  wheelchair.  And  you  just  go  through,  like,  a  weird  corridor.
+[1219.62 - 1220.62] SPEAKER_B:  It's  awesome.  Yeah.
+[1220.82 - 1221.14] SPEAKER_C:  That
+[1221.14 - 1224.68] SPEAKER_A:  would  be  a  flex,  dude.  If  you  got  hit  the  regular  airport,  hit  the  chair.
+[1224.68 - 1225.90] SPEAKER_B:  I  should  start  hitting  the  chair  anyway.
+[1225.90 - 1228.44] SPEAKER_A:  Blank  it.  Blank  it.  Blank  it  over  my  fucking  head.
+[1230.04 - 1233.04] SPEAKER_B:  Get  it  like  a  blackjack  dealer  poker  player  visor.
+[1233.04 - 1234.60] SPEAKER_A:  Just  get  pushed  through  the  airport.
+[1235.06 - 1241.76] SPEAKER_B:  Float  through  the  airport.  It's  the  fucking  move,  dude.  Just  black  out.  Yeah.  Just  get  blacked  out.  Start  screaming  about  Prince  from  a  wheelchair.
+[1242.38 - 1247.42] SPEAKER_A:  Just  get  the  Stephen  Hawking  set  up  for  when  you're  blacked  out.  Just  blink.  Like,  do  you  want  another?  Do  you  want  some  more  peanuts?  Just  go.
+[1248.14 - 1250.66] SPEAKER_B:  Yeah.  Start  blinking.  Yes,  yes,  yes.  Tony,
+[1250.86 - 1251.56] SPEAKER_A:  you  should  get  towed.
+[1251.56 - 1254.38] SPEAKER_B:  Just  get  an  application.  I'd  be  like,  all  right,  I'll  have  one  more
+[1254.38 - 1265.86] SPEAKER_A:  beer.  Just  walking  up.  Get  towed  by  the  cart.  Have  the  guy,  have  the  Egyptian  guy  scream,  get  out  of  the  way.  And  you  just  get  towed  behind  the  chair.  That  would  be  nice.
+[1266.04 - 1267.14] SPEAKER_B:  Yeah.  Or  squat  up.
+[1267.34 - 1268.52] SPEAKER_A:  Just  have  like  six  or  four.
+[1268.70 - 1269.06] SPEAKER_B:  Five  or  six.
+[1269.22 - 1270.88] SPEAKER_A:  Get  biker  vests.  Six  or
+[1270.88 - 1275.96] SPEAKER_B:  five.  Hit  the  Mario  cart.  You're  saying,  turn  the  JFK  into  Toad's  turn  bike.
+[1277.76 - 1285.08] SPEAKER_C:  Isn't  that  insane?  Isn't  that  insane,  though,  that  somebody  could  get  so  fat  that  you  just  get  VIP?  Oh,  true.  It's  crazy.
+[1285.44 - 1285.48] SPEAKER_A:  It's  insane.
+[1286.00 - 1287.60] SPEAKER_C:  It's  crazy,  dude.  It's
+[1287.60 - 1290.60] SPEAKER_A:  like  ancient  times.  If  someone  was  super  fat  back  in  the  day,
+[1290.74 - 1297.48] SPEAKER_B:  like,  me  must  be  a  fucking  ruler.  Yeah,  I  think  if  people  found  like  just  vague  records  of  our  civilization,  they'd  be  like,  they  worshipped  fat  people.
+[1297.86 - 1298.22] SPEAKER_C:  Yeah.
+[1298.62 - 1301.28] SPEAKER_B:  They  did  everything  for  the  fats.  Dude,  when
+[1301.28 - 1315.28] SPEAKER_A:  I  was  reading  about  the  Aztecs,  there  was  one  of  the  guys  that  Cortez  linked  up  with  who  was  like  a  rival  against  Montezuma.  He  was  a  fat  king  and  he  had  servants  literally  hold  his  belly  up  for  him.  So  he  would  come  talking  like,  yo,  we  got  to  fuck  up  Montezuma.  And  then  he  had  two  guys  the  whole  time  just
+[1315.28 - 1316.22] SPEAKER_B:  holding
+[1316.22 - 1317.32] SPEAKER_A:  his  belly  while  he  talked.
+[1317.46 - 1332.90] SPEAKER_B:  That's  what  used  to  be  like  doing  YKWD.  He'd  get  in  there,  there'd  be  five  dudes  just,  yes,  Bobby,  yes.  Like,  dude,  you're  a  fucking  punk.  It's  crazy.  Yes,  Bobby,  get  him.
+[1334.10 - 1335.80] SPEAKER_A:  Shut  the  fuck  up,  dude.  Yeah,
+[1336.10 - 1337.96] SPEAKER_C:  fuck  you,  dude.  Don't  fucking  talk  to  me  like  that,  dude.
+[1338.34 - 1340.02] SPEAKER_B:  I  listen  to  the  regs.  You  ever  listen  to  the  regs?
+[1340.40 - 1341.16] SPEAKER_C:  Yeah,  it's  funny.
+[1341.28 - 1341.68] SPEAKER_B:  The  regs
+[1341.68 - 1342.02] SPEAKER_A:  is  great.
+[1342.02 - 1342.44] SPEAKER_B:  It's  great.
+[1342.60 - 1343.20] SPEAKER_C:  It's  funny.
+[1343.42 - 1344.58] SPEAKER_A:  The  regs  clips  come  up  for  me.
+[1344.68 - 1345.64] SPEAKER_B:  It  is  so  funny.
+[1345.88 - 1346.64] SPEAKER_A:  It's  the  best.
+[1347.74 - 1351.92] SPEAKER_C:  Wait,  wait.  Speaking  of  dudes,  it'll  throw  down  the  drama.  Soty's  another  one.
+[1352.14 - 1354.70] SPEAKER_A:  Soty  will  get  fired  up.  Soty  will  get  amped.
+[1355.48 - 1357.06] SPEAKER_C:  They  were  playing  college  football.
+[1357.30 - 1362.56] SPEAKER_B:  No,  I've  told  this  story  a  thousand  times.  I  think  Danny  might  hate  it.  I'm  sorry.  No,  it's  okay.
+[1362.80 - 1363.44] SPEAKER_C:  Dan,  I  love  you,  dude.
+[1363.52 - 1364.22] SPEAKER_B:  It's  funny,  though.
+[1364.48 - 1364.92] SPEAKER_A:  He  spas.
+[1365.24 - 1370.14] SPEAKER_B:  I've  never  seen  a  hard  ever.  Obviously,  I've  seen  you  hit  some  hard  spas.  I'm  a
+[1370.14 - 1371.38] SPEAKER_A:  bad  video  game  spas.  You
+[1371.38 - 1374.54] SPEAKER_B:  hit  more.  Girl.
+[1374.68 - 1375.30] SPEAKER_A:  It's  girl  spas.
+[1375.88 - 1377.38] SPEAKER_B:  I  run  away.  I'm  running  up  the  steps.
+[1377.54 - 1381.00] SPEAKER_A:  Yeah.  I'm  like,  fuck  this.  This  game  sucks.  I  hate  you.  You  guys
+[1381.00 - 1391.88] SPEAKER_B:  are  wasting  all  your  time  anyway,  dude.  Fuck  this.  Running  up  the  steps.  To  an  air  mattress.  You  guys  are  the  fucking  losers.
+[1393.22 - 1403.30] SPEAKER_A:  Going  up  stairs.  I  don't  see  why  you  waste  your  time.  I  literally  played  all  day  by  myself.  Like,  I'm  going  to  be  chained  in  a  video  game.  Got  my  ass  handed  to  me.  It  was  like,  you  guys  are  fucking  losers.  Wasting  time  with  this  shit  and  ran  up  the  stairs.
+[1403.48 - 1405.50] SPEAKER_C:  I  get  so  mad.  I  get  so  mad.  Just
+[1405.50 - 1407.80] SPEAKER_A:  dick  down  on  an  air  mattress.  I  fucking  hate  these  guys.
+[1408.26 - 1421.64] SPEAKER_C:  I  get  so...  Oh,  dude.  I  play  by  myself  and  scream  at  the  TV.  Dude.  I  was  playing  Last  of  Us,  and  I  couldn't  figure  out  how  to  get  through  this  place.  I  was  trying  to  get  a  ladder  down  to  climb  out  of  this  room,  and  it  wouldn't  let  me  take  the  ladder  down.  There's  nothing
+[1421.64 - 1425.58] SPEAKER_B:  worse.  And  then  you  walk  over  to  it,  and  it's  like,  press  A.  You're  like,  how  the  fuck
+[1425.58 - 1454.02] SPEAKER_C:  did  I  miss  that?  It  wasn't  letting  me.  And  the  zombies  kept  attacking  me,  and  I  was  dying  instantly.  And  I  was  literally  alone  in  my  house  in  Pennsylvania,  and  I  was  going,  well,  it's  fucking  stupid  if  one  fucking  bite  kills  you.  What's  the  fucking  point?  Dude,  my  neighbors  must  have  been  like,  what  the  fuck  is  going  on  in  there?  I  lose  my  shit,  dude.  I  used  to  bite  the  fucking  cable  on  the  NES  controller.
+[1454.60 - 1455.40] SPEAKER_B:  Oh,  no.  That's  nuts.
+[1455.64 - 1459.64] SPEAKER_C:  Yeah,  when  I  was  a  kid,  I  would  get  so  mad.  I'd  go,  I'd  go,
+[1464.28 - 1465.74] SPEAKER_A:  I've  never  heard  the  cable  bite.
+[1465.92 - 1467.12] SPEAKER_B:  The  cable  bite's  intense.
+[1467.28 - 1473.30] SPEAKER_A:  I  would  lose  my  shit.  My  friend  used  to  cable  whip  his  little  brother  with  the  PS2.  That's  a  move.  He  would  pull  out  the  PS2  controller  and  go,  whoosh,
+[1473.36 - 1474.46] SPEAKER_B:  and  start.  Cable  whip's  just  scary.
+[1474.46 - 1476.00] SPEAKER_A:  Cable  whip  is  crazy.  Did  you
+[1476.00 - 1476.70] SPEAKER_B:  ever  see  what  he  did  you?
+[1476.86 - 1477.28] SPEAKER_C:  Oh,  sorry.
+[1477.48 - 1485.98] SPEAKER_B:  I'll  still  get,  like  when  we,  those  Oklahoma  kids  were  playing  me  in  UFC,  if  it's  a  big  game,  the  heart  rate  goes  up.
+[1486.06 - 1486.44] SPEAKER_A:  Oh,  dude.
+[1486.72 - 1494.18] SPEAKER_B:  Like  that  time  you  and  me  were  playing,  that  might  have  been  the  most  stressful  video  game  of  all  time.  That  was.  Just  playing  UFC  in  front  of,  I  don't  know.
+[1494.28 - 1494.64] SPEAKER_A:  Honks.
+[1494.80 - 1495.18] SPEAKER_B:  Honks.
+[1495.28 - 1496.22] SPEAKER_A:  It  was  like  Zac  Efron.
+[1496.36 - 1502.14] SPEAKER_B:  Zac  Efron,  Robert  Pattinson,  and  Christian  McCaffrey.  It  was  literally  a  dream  threesome.
+[1502.52 - 1503.36] SPEAKER_C:  It's  hilarious.
+[1504.42 - 1505.08] SPEAKER_B:  It's  fucking  hilarious.
+[1505.46 - 1505.72] SPEAKER_A:  For  real.
+[1505.82 - 1510.94] SPEAKER_B:  And  Matt  pulled  the  ups.  I  choked  under  pressure.  He's  beaten  me  like  four  times  ever.  That  was  one  of  them.
+[1510.98 - 1511.14] SPEAKER_A:  Yeah.
+[1511.20 - 1512.04] SPEAKER_C:  Wow.  I
+[1512.04 - 1512.86] SPEAKER_B:  just  choked.
+[1513.04 - 1516.34] SPEAKER_A:  You  didn't  go  to  the  ground.  You  could  have  went  to  the  ground.  That  was  honorable.
+[1516.64 - 1517.00] SPEAKER_B:  I  had  to  get,
+[1517.12 - 1517.84] SPEAKER_A:  I  mean,  it  was
+[1517.84 - 1518.80] SPEAKER_B:  too  good  of  a  fight,  dude.
+[1518.92 - 1519.66] SPEAKER_A:  It  was  such  a  good  battle.
+[1520.04 - 1525.44] SPEAKER_B:  Every  kick  that  landed,  people  in  the  room  were  like,  oh.  Oh,  he  didn't  get  me.  He  didn't  get  me.
+[1527.32 - 1533.26] SPEAKER_C:  Oh,  dude,  that's  fucking  good.  Did  you  ever  have,  did  you  ever  have  somebody,  like,  I've  had  friends,  like,  literally  punch  me.
+[1533.76 - 1535.68] SPEAKER_A:  Probably,  if  I  had  ever,  probably  there's
+[1535.68 - 1549.42] SPEAKER_C:  been  fights.  Well,  we  were  younger,  but  it's  like,  like  when  we  were  16  in  Street  Fighter  2  on  Super  Nintendo  was  huge,  whatever.  Yeah,  I  remember  I  was,  I  would  play  with  my  friend  Kevin,  and  if  you  beat  him,  he  would  literally  punch  you.  That's  so  funny.  And  he  would  go,
+[1549.50 - 1552.82] SPEAKER_B:  I  could  beat  the  fucking  shit  out  of  you  in  real  life.  Big  Jay's  one,  that's  a  scary  one.
+[1553.02 - 1553.34] SPEAKER_C:  Really?
+[1553.58 - 1559.02] SPEAKER_B:  He  doesn't  get  violent,  but  that,  like,  it  changes  the  day.  If  you  beat  him  in  a  game,  it  changes.
+[1559.70 - 1561.24] SPEAKER_C:  Like  he  gets  a  pouty?  The  rest  of  the  day.
+[1561.94 - 1571.20] SPEAKER_B:  A  little.  Like  sad?  Yeah,  he'll  get  you  there.  He'll  start  getting  you.  He'll  go,  what  the  fuck  are  you  being  mean  to  me  for?  Oh,  yeah,  I  forgot  I  beat  you  in  Xbox  last  week.
+[1573.56 - 1578.70] SPEAKER_A:  I'm  also,  I'm  a  sore,  I'm  a  sore  winner  too.  I'm  better  with  it  now.  When  I  was  younger,  I  was,  I  was  always  bad  at  video
+[1578.70 - 1579.70] SPEAKER_B:  games.  You  are  a  sore  winner.  So
+[1579.70 - 1590.90] SPEAKER_A:  when  I  win,  I  would  do  a  thing  where  I  would  like  just  sit  there,  I  grab  what  I,  I  have  a  drink  next  to  me  and  just  go,  and  just  do  shit  like  that.  And  like,  dude,  for  real,  stop  doing  that.  I'm  like,  this  is  just  water,  I'm  thirsty.
+[1591.04 - 1591.80] SPEAKER_B:  I'm  just  drinking.
+[1592.36 - 1600.66] SPEAKER_A:  Maybe  you're,  maybe  you're  upset.  And  then  start  being  like,  yeah,  you  know,  it's  just  what  I  do.  I  kind  of  go  low  and  you  kind  of  go  high  to  me  and  it's  just,  shut  the  fuck  up,  dude.
+[1601.58 - 1614.14] SPEAKER_C:  The,  I,  I  never,  I  think  the  only  time  I've  ever  beaten  you  in  a  video  game  was  when  we  played  Mortal  Kombat.  Every  other  game  we've  ever  played  each  other  against,  you've  beaten  me.
+[1614.24 - 1615.54] SPEAKER_B:  You  guys  are  out  doing  activities.
+[1615.82 - 1617.30] SPEAKER_A:  MK  is  the  Achilles  heel  for  sure.
+[1617.86 - 1618.70] SPEAKER_B:  I'm  working  on
+[1618.70 - 1619.56] SPEAKER_A:  it.  You've  got  better  than  MK.
+[1619.72 - 1622.18] SPEAKER_B:  No.  I'm  working  on  it.  No.  Bring  it,  dude.  It's  coming.
+[1622.62 - 1625.74] SPEAKER_C:  Bring  it.  I'm  fucking  swinging  swords  with  Conan  right  now.
+[1625.84 - 1629.60] SPEAKER_B:  It's  coming.  Oh  yeah,  you  downloaded  the  fucking  game  and  started  playing  it.  Yeah,  fuck.
+[1629.94 - 1632.48] SPEAKER_C:  You  actually  said  to  me,  this  is,
+[1633.02 - 1633.78] SPEAKER_B:  that's  bullshit.
+[1634.04 - 1645.68] SPEAKER_C:  This  was  an  insane  thing  to  say  to  me.  No,  that's  bullshit.  I  downloaded  the  game  and  you  go,  no,  I  downloaded  the  game  and  you  go,  don't  get  good  at  it  because  I'm  not  going  to  play  it.  And  I'm  like,  oh,  I  can't  have  fun  because  you're  not  going  to  play
+[1645.68 - 1646.28] SPEAKER_B:  it.  no,  no.
+[1646.66 - 1648.56] SPEAKER_C:  It  was  crazy.  Hold  on.
+[1648.72 - 1662.30] SPEAKER_B:  This  is  game  stealing.  This  is  almost  worse  than  French  stealing.  Coming  over,  going,  oh,  the  new  Mortal  Kombat's  good  because  we  were  playing  it  together  and  having  a  nice  time  because  we  were  just  as  good.  Yeah.  Go  home  and  download  it  and  practice.
+[1662.64 - 1664.28] SPEAKER_C:  No,  I  want  to  play  it.  That's  game  stealing.
+[1664.28 - 1669.12] SPEAKER_B:  That's  coward  shit.  That  game  sucks.  The  game  sucks  by  yourself.
+[1669.60 - 1682.92] SPEAKER_C:  No,  it  doesn't,  dude.  You  have  not  played  with  Conan,  man.  It's  fucking  righteous,  dude.  It's  righteous.  That  game.  When  you  win  a  match,  he  goes  like  this  and  they  recreate  the  poster  from  Conan  the  Barbarian.  It's
+[1682.92 - 1684.30] SPEAKER_B:  fucking  awesome.  How  many  times  do  you  get  to  see  that?
+[1684.88 - 1696.90] SPEAKER_C:  I've  never  been  told.  Seven  dozen.  You  never  get  sold.  No,  it  never  gets  sold,  dude.  It  never  gets  sold  and  the  guy  doing  his  voice  is  good.  T -1000's  awesome.  Yeah.
+[1697.20 - 1699.30] SPEAKER_A:  Quest  mode  sucks  in  Mortal  Kombat.
+[1699.44 - 1699.82] SPEAKER_B:  Yeah.  One
+[1699.82 - 1700.64] SPEAKER_A:  player  blows.
+[1701.06 - 1701.60] SPEAKER_B:  One  player  sucks.
+[1701.92 - 1709.34] SPEAKER_A:  Yeah.  One  player,  I've  tried  it.  It  fucking  sucks  but  training,  just  being  in  the  dojo,  training  and  just  being  like,  yeah,  let's  pop  it  on.
+[1709.34 - 1710.42] SPEAKER_B:  What  are  you  guys  playing?
+[1710.56 - 1712.78] SPEAKER_A:  17  hit  combo.  You're  like,  what  the  hell  the  fuck  did  I  do  that?
+[1713.92 - 1714.82] SPEAKER_B:  Combos  are  nuts.
+[1715.40 - 1717.18] SPEAKER_C:  The  trailer  for  the  new  movie  looks  all  right.
+[1717.92 - 1719.14] SPEAKER_A:  Yeah,  I  like  the  more.
+[1719.14 - 1720.52] SPEAKER_B:  Really?  I  disagree.
+[1721.26 - 1725.28] SPEAKER_C:  I  like  that  at  the  end  when  Scorpion  flew  in  and  they  did  the  get  over  here.
+[1725.30 - 1726.20] SPEAKER_B:  I  didn't  make  it  to  the  end.
+[1726.38 - 1726.92] SPEAKER_C:  Oh,  really?
+[1727.18 - 1730.32] SPEAKER_B:  I  turned  it  off  with  like  30  seconds  or  like  20  seconds.
+[1730.46 - 1738.28] SPEAKER_C:  I  don't  think  he's  a  good  Johnny  Cage.  I  think  it's  miscast.  He's  playing.  I  think  so  too.  Carl  Urban  from,  what's  he  on?  The  Boys?
+[1738.48 - 1739.10] SPEAKER_B:  The  Boys,  the  Boys,  yeah.
+[1740.16 - 1744.66] SPEAKER_C:  He  doesn't  look  like  Johnny  Cage.  Like  Johnny  Cage  was  kind  of  modeled  after  Jean -Claude  Van  Damme.
+[1744.72 - 1744.88] SPEAKER_A:  Yeah.
+[1745.76 - 1754.50] SPEAKER_C:  And  like,  Johnny  Cage,  he  should  be  prettier.  Like  he's  not,  Carl  Urban's  not  pretty  enough.  The  whole  cool  thing  about  Johnny  Cage  is  that  he's  like  a  pretty  boy.  He's  a  pretty  boy.  But  he's  a  badass.
+[1754.94 - 1755.86] SPEAKER_A:  Punches  you  in  the  dick.  Yeah.
+[1756.16 - 1759.08] SPEAKER_C:  It  literally  should  be  like  Ryan  Felipe.  You  know  what  I  mean?
+[1759.46 - 1759.54] SPEAKER_A:  Yeah.
+[1759.72 - 1761.38] SPEAKER_C:  Wait,  not  Ryan  Felipe.  Ryan  Gosling.
+[1761.84 - 1763.48] SPEAKER_B:  I've  never  heard  him  called  Ryan  Felipe.
+[1764.38 - 1765.62] SPEAKER_C:  No,  Ryan  Felipe's  a  dude.
+[1765.80 - 1767.58] SPEAKER_B:  No,  I  know,  but  I  always  thought  it  was  Felipe.
+[1768.86 - 1769.82] SPEAKER_C:  No,  I  think  it's  Felipe.
+[1770.26 - 1775.52] SPEAKER_A:  I  thought  it  was  Felipe  too.  Really?  They  should  have,  they  should  have  Kevin  Spacey  as  Johnny  Cage.
+[1775.96 - 1783.08] SPEAKER_B:  Hold  on  a  second.  By  the  way,  shout  out  to  Felipe.  We  were  just  chilling  with  him.  He's  a  listener  to  the  podcast.  Felipe's  gonna  hear  that.
+[1783.34 - 1789.32] SPEAKER_C:  Oh,  really?  Yeah.  Yeah.  I'm  a  big  fan  of  Felipe.  The  way,  the  way  of  the  gun.  Yeah.  Yeah.  He's  the  fucking
+[1789.32 - 1789.70] SPEAKER_B:  cool.  are  we?
+[1789.80 - 1801.76] SPEAKER_C:  Oh,  you  know  what?  Actually,  Ryan,  if  you  are  listening,  I  know  that,  I  know  that  you  were  friends  with  Sean  Price  and  Sean  Price  is  to  me  one  of  the  greatest  rappers  that  ever  lived.  Friend
+[1801.76 - 1802.74] SPEAKER_B:  steal.  What  else  you  got?
+[1804.30 - 1805.12] SPEAKER_A:  There  it  is.
+[1805.94 - 1810.62] SPEAKER_C:  Shout  out  to  Sean  Price.  Sean  Price.  Shout  out  to  Ryan  Felipe.  Yeah.  But  yeah,  Sean  Price  rips.
+[1810.84 - 1814.00] SPEAKER_B:  Hold  on.  How  am  I  first?  You  guys  never  heard  of  his?  It's  Felipe.
+[1814.08 - 1816.86] SPEAKER_A:  I've  always  heard  Felipe.  Yeah,  that's  how  I  always  pronounce  it.
+[1817.14 - 1818.22] SPEAKER_B:  This  is  nuts.  My
+[1818.22 - 1829.74] SPEAKER_A:  actor  database  is  horrible.  It's  like  embarrassing.  People  are  like,  well,  I'm  like,  I've  never,  no.  It's  gotta  be.  It's  Will  Smith,  Robert  Williams.  I'm  like  A  plus  actors.  It  has  to  be,  you  gotta  be  A  plus.
+[1830.06 - 1843.20] SPEAKER_B:  How  do  you  pronounce  it?  Guys,  produce  the  show.  She's  crying.  There's  four  dudes.  This  guy's  just  staring  at  us.  Look  at  LeMaire.  He's  cashing  a  check  right  now.  He's  doing
+[1843.20 - 1848.12] SPEAKER_C:  mobile.  Oh  my  God.  LeMaire,  you  can't  see  it  at  home.  LeMaire's  feet  aren't  touching  the  ground.
+[1848.56 - 1850.10] SPEAKER_B:  He's  on  a  stool.  Fully
+[1850.10 - 1855.48] SPEAKER_C:  just.  You  guys  got  me  fully  charged  to  talk  about  Mortal  Kombat.  Nice.
+[1855.48 - 1857.14] SPEAKER_B:  We  can  get  some  MK  going.
+[1857.34 - 1858.80] SPEAKER_C:  I  hate  Mortal  Kombat  now.
+[1858.96 - 1859.34] SPEAKER_B:  Why?
+[1859.56 - 1861.42] SPEAKER_C:  Why?  It  used  to  be,  it  sucks.  The  lore's  bad.
+[1861.96 - 1864.24] SPEAKER_B:  I  knew  it  was  Philippe.  It  is?  Yes.
+[1864.64 - 1867.90] SPEAKER_C:  Wait,  who  said,  no,  you  can't  go  by  the  way  the  Google  voice  thing.
+[1868.16 - 1869.06] SPEAKER_A:  They  probably  actually.
+[1869.98 - 1870.70] SPEAKER_C:  Oh,  really?
+[1871.16 - 1872.82] SPEAKER_B:  Everybody's  always,  it's  Ryan  Philippe.
+[1873.10 - 1874.86] SPEAKER_A:  Whoa,  I've  been  calling  him  Felipe  forever.
+[1875.28 - 1876.06] SPEAKER_C:  Holy  shit.
+[1876.12 - 1877.12] SPEAKER_B:  Felipe  is  crazy.
+[1877.66 - 1878.06] SPEAKER_A:  Philippe.
+[1878.16 - 1881.24] SPEAKER_C:  I  think  it's  got  a  beautiful  ring  to  it.  Felipe.
+[1881.72 - 1884.08] SPEAKER_B:  I  knew  I  wasn't  wrong,  dude.  I  knew  me  and  Ryan  were  boys.
+[1884.38 - 1884.74] SPEAKER_A:  Dang.
+[1885.18 - 1885.46] SPEAKER_C:  Damn.
+[1885.72 - 1887.82] SPEAKER_B:  Damn.  You  tried  to  friend  steal  and  mispronounce  his  name?
+[1888.12 - 1889.74] SPEAKER_A:  he's  probably  furious  right  now.  That's  crazy.
+[1890.16 - 1892.00] SPEAKER_C:  Dude,  I'm  going  to  play  fucking  Mortal  Kombat  with
+[1892.00 - 1896.34] SPEAKER_B:  Ryan.  I'm  going  to  let  my  bros  ride  on  you,  dude.
+[1896.48 - 1896.98] SPEAKER_C:  You  know  what  I'm  going  to?
+[1897.08 - 1898.62] SPEAKER_B:  I'm  going  to  let  my,  my,
+[1898.62 - 1899.42] SPEAKER_C:  my,  wild,
+[1899.56 - 1901.00] SPEAKER_A:  wild,  wild,  wild,
+[1913.12 - 1917.10] SPEAKER_B:  wild.  This  episode  of  Matt  and  Shane's  secret  podcast  is  brought  to  you  by  dude  wipes.
+[1918.98 - 1922.32] SPEAKER_A:  Have  you  left  poop  streaks  in  someone  else's  toilet?  Yeah.  Every  time.
+[1922.66 - 1923.16] SPEAKER_B:  Every  single  time.
+[1923.30 - 1924.52] SPEAKER_A:  Yeah.  I  did  it  all  week.  Fucking
+[1924.52 - 1925.14] SPEAKER_B:  disaster.  I
+[1925.14 - 1929.20] SPEAKER_A:  left  a,  I  mean,  I  literally  painted  my  bowl  this  morning.  Yeah.  It  was  crazy.
+[1929.48 - 1930.36] SPEAKER_B:  There's  nothing  wrong  with  that.
+[1930.54 - 1931.76] SPEAKER_A:  No,  it  was  a  little  paint  job.
+[1932.60 - 1937.16] SPEAKER_B:  Uh,  do  you  ever  pack  extra  underwear  when  you  travel?  How  much  extra  do  you  ever  need  it?
+[1937.76 - 1939.00] SPEAKER_A:  Pretty  much  an  extra  pair  per  day.
+[1939.28 - 1940.34] SPEAKER_B:  I  always  bring  extra  underwear.
+[1940.54 - 1941.36] SPEAKER_A:  Yeah.  Yeah.  Cause
+[1941.36 - 1943.58] SPEAKER_B:  I'm  fucking  shitting  my  pants  constantly.
+[1943.68 - 1945.26] SPEAKER_A:  Yeah.  I  just  used  to  really  work.  Fuck
+[1945.26 - 1954.24] SPEAKER_B:  you  guys  getting  at  here.  Do  you  wipe  standing  or  sitting  down?  Does  it  make  a  difference?  What  is  going  on?  Dude?  How  horny  are  these  people?  What  did  they  want  to  know?
+[1954.82 - 1962.20] SPEAKER_A:  There's  gotta  be  something  about  standing  up  though.  Like  I,  I'm  a  standup  wiper,  honestly  sitting  down.  I  just  smears.  I  don't  know.  I  can't  do  it.  Uh,
+[1962.40 - 1993.12] SPEAKER_B:  well,  Matt,  whichever  way  you  wipe,  it's  time  to  show  your  B  holes,  some  respect  and  upgrade  to  dude  wipes.  Dude  wipes  tackle  the  mess  without  any  fuss.  And  the  flushable  design  makes  cleanup  a  breeze.  They  leave  no  room  for  dingleberries  or  stray  butt  crumbs  that  TP  might  miss.  Plus  they're  extra  large  and  designed  for  adults.  So  no,  uh,  so  no  more  endless  roles  or  settling  for  a  less  than  perfect  wipe.  Dude  wipes,  best  clean  pants  down  available.  These  guys  are  really  funny.  Amazon.  Uh,  it's  available  on  Amazon  and  at  major  retailers  nationwide.  Hey
+[1993.12 - 2012.14] SPEAKER_A:  guys,  just  a  quick  heads  up.  I'll  be  at  the  Ovation  Hall  in  the  ocean  casino  in  Atlantic  city,  New  Jersey,  Saturday,  August  16th,  the  year  2025.  Please  come.  You  can  go  to  mattmccusker .com  for  tickets.  There's  also  a  link  in  the  show  description.  Please  come.  It's  going  to  be  a  lot  of  fun.
+[2012.26 - 2013.02] SPEAKER_B:  It's  going  to  be  a  hoot.
+[2013.16 - 2015.56] SPEAKER_A:  It's  going  to  be  a  good  time.  And  I'm  going  to  do  the  new  materials  coming
+[2015.56 - 2016.38] SPEAKER_B:  new  materials.
+[2016.50 - 2021.10] SPEAKER_A:  The  new  material  is  coming.  So  I  will  have  a  whole  slew  of  new  stuff.  If  you  see  me  in  Philadelphia,
+[2021.86 - 2024.10] SPEAKER_B:  check  the  fuck  out.  What  are  you  waiting?
+[2024.22 - 2027.80] SPEAKER_A:  I  mean,  it's  going  to  be,  it's  ocean  is  a,  it's  a  sick  venue.  Actually.  Like  I  opened  that  for  you.
+[2027.84 - 2028.14] SPEAKER_B:  It's
+[2028.14 - 2028.52] SPEAKER_A:  awesome.
+[2028.70 - 2029.32] SPEAKER_C:  Yeah.  So,
+[2029.80 - 2038.78] SPEAKER_B:  uh,  Matt,  August  8th  and  9th,  I'll  be  in  Louisville,  Kentucky  in  St.  Louis,  Missouri,  August  8th  and  9th,  Louisville,  Kentucky,  St.  Louis,  Missouri,
+[2039.02 - 2039.26] SPEAKER_A:  huge.
+[2039.62 - 2042.76] SPEAKER_B:  Then,  uh,  August  15th,  Detroit  16th,  Grand  Rapids.
+[2042.98 - 2043.34] SPEAKER_A:  Nice.
+[2043.50 - 2044.12] SPEAKER_B:  Come  on  y 'all.
+[2045.08 - 2046.12] SPEAKER_A:  Come  on  gang.  Just  come  out.
+[2046.12 - 2050.98] SPEAKER_B:  Get  in  there.  Meese.  You  get  in  there.  Meese.  Oh,  turn  him  around.
+[2052.26 - 2061.92] SPEAKER_C:  Yeah.  Hey  everybody.  August  5th  is  Optimal  Noctis.  And  then  also  at  the  end  of  the  month,  like  the  26th  to  the  30th.
+[2061.98 - 2063.78] SPEAKER_B:  Get  the  dates  right  before  you  come  in  here.
+[2064.18 - 2067.38] SPEAKER_C:  August  26th  to  August  30th.  I'll  be  in  the  East  coast.  So  please  come
+[2067.38 - 2068.64] SPEAKER_B:  check  out.  Just  on  the  East  coast.
+[2069.30 - 2080.58] SPEAKER_C:  I'll  be  in  the  Phillip.  No,  I'll  be  in  Baltimore.  I'll  be  in  New  Jersey,  the  dojo  of  comedy.  And  then  I'm  various  other  bars.  So  please  check  out  all  that  information.  A  little  merely  dot  fun.
+[2081.22 - 2081.86] SPEAKER_B:  There  you  go.
+[2083.56 - 2083.92] SPEAKER_A:  Nice.
+[2084.24 - 2088.86] SPEAKER_B:  Oh,  yes,  yes,  yes.
+[2089.38 - 2091.82] SPEAKER_A:  There  you  have  it,  man.  That's  huge.  I  didn't  know  that.
+[2092.24 - 2093.40] SPEAKER_B:  Yeah,  it's  big.  Dude.  I
+[2093.40 - 2100.72] SPEAKER_A:  have  actually,  I've  had  a  huge  development.  So,  you  know,  I  suffer  from  body  acne.  You  know,  I  suffer  in  silence.  My  stomach  breaks  out,  especially  with  the  sweat  and  the  heat  down  here.
+[2100.84 - 2101.28] SPEAKER_C:  I'm  sorry.
+[2101.66 - 2110.30] SPEAKER_A:  Yeah.  Thank  you,  man.  It's  fucking  dude.  I  found,  you  know,  I  went  to  a  dermatologist  and  like,  dude,  those  guys,  I,  I,  I  don't,  they  don't  do  anything.  Everything.  I'm  like,  whenever  I  eat  this,
+[2110.58 - 2113.00] SPEAKER_B:  why  don't  you  shower?  True.  All  right.  Thanks.
+[2113.44 - 2122.94] SPEAKER_A:  No,  they're  like,  well,  there's  no,  you  know,  like  whatever  you  eat,  whatever.  I'm  like,  no,  dude,  if  I  dairy,  my  whole  stomach  breaks  out.  They're  like,  there's  no  real  science  behind  that.  I'm  like,  dude,  it  literally  has  lived  it.
+[2123.06 - 2124.00] SPEAKER_B:  It's  a  lit.  It  happens  to  me.
+[2124.14 - 2138.38] SPEAKER_A:  Yeah.  It  happens  every  time.  Dude,  recently  I,  it's  been  for  real,  like  groundbreaking.  Cause  whenever  you  go  to  the  ocean,  you  know,  your  skin  clears  up.
+[2138.50 - 2138.66] SPEAKER_B:  Yeah.
+[2139.14 - 2151.46] SPEAKER_A:  So  I  was  like,  how  could  I  recreate  that?  I  got  a  bucket  of  dead  sea  salt  and  I  just  go  in  the  shower.  Now  I  wet  myself  and  I  just  cover  myself  in  salt  head  to  toe  and  just  let  it  sit.  Let  it  sit  on  me  for  like  five  minutes.  Completely  cleared  my  skin  up.
+[2151.56 - 2151.78] SPEAKER_B:  Yeah.
+[2152.04 - 2152.72] SPEAKER_A:  My  wife  hates  it.
+[2152.84 - 2154.26] SPEAKER_B:  I'm  going  to  have  to  grub  you,  dude.
+[2154.48 - 2155.18] SPEAKER_A:  Grub  me  up.
+[2155.32 - 2156.04] SPEAKER_B:  You  better  stop.
+[2156.38 - 2157.42] SPEAKER_A:  I'm  like,  wag  you.
+[2157.50 - 2159.30] SPEAKER_B:  I'm  like,  you're  grubbing  yourself.
+[2161.02 - 2165.84] SPEAKER_A:  Dude,  it  cleared  it  up.  It's  the  only  thing  that's  ever  worked.  And  it's  salt.  It's  fun.  You  get  a  big  bucket  of  it  for  30  bucks.
+[2166.02 - 2180.62] SPEAKER_C:  Yeah.  Sun  and  salt  water  are  the  two.  I  had,  I  don't  know  why  I  forget  what  happened,  but  I  had  like  an  act,  like  a  full  on  acne  outbreak  a  year  ago.  Really?  And,  uh,  or  a  year  and  a  half  ago.  And  it  was  in  the  winter  and  I  think  it  was,  yeah,  it  was  gross.
+[2181.84 - 2186.76] SPEAKER_B:  It  sucks.  It  sucks.  Being  our  age  and  getting  acne.  It's  the  worst.  What  the  fuck  is  happening?  But
+[2186.76 - 2204.80] SPEAKER_C:  it  was  because  I  was,  I  was  still  living  in  New  York  and  it  was  like,  it  was  raining  every  day  and  it  was  dark.  And  like,  I  just,  it  was,  it  was  definitely  related  to  weather.  And  I  went  and  I  did  the  Joker's  cruise  and  it  cleared  up  on  the  cruise.  Yeah.  Like  it  just  cleared  up  immediately  as  soon  as  I  got  in  the  sun  and  there  was  like  a  saltwater
+[2204.80 - 2209.72] SPEAKER_B:  pool.  Bro,  I  had,  I  had  a  insane,  like  a  rare  skin  disease  when  I  was  younger.
+[2209.84 - 2210.76] SPEAKER_C:  That  sucks.  I  get,
+[2210.84 - 2223.60] SPEAKER_B:  yeah,  just  out  of  nowhere.  I've  told  you  that's  peter  Isis.  Out  of  nowhere.  I've  never  seen  anything  like  it.  It  was  just  patches  of  red  all  over  me  and  didn't  itch.  Didn't  burn.  It  was  nothing.
+[2223.78 - 2225.64] SPEAKER_C:  Does  it  look  like  a  red  spot?  Like  sunburn?
+[2225.88 - 2226.40] SPEAKER_B:  The  first  one  does.
+[2227.60 - 2227.96] SPEAKER_C:  There's
+[2227.96 - 2232.68] SPEAKER_B:  a  Harold  patch  that  comes  first.  I  was  just  looking  at  the  mirror  and  I  just  had  a  big  red  mark  here.
+[2232.92 - 2233.06] SPEAKER_C:  Okay.
+[2233.40 - 2244.78] SPEAKER_B:  And  I  was  like,  all  right,  whatever.  I  don't  give  a  fuck.  And  then  started  multiplying.  It  was  just  all  over  me.  Oh.  But  it  was  only  where  sun  doesn't  get  you.  So  it's  from  your  knees  to  your  elbows.  Like  it  was  just  where  you  wear  clothes.
+[2245.02 - 2245.14] SPEAKER_A:  Yeah.
+[2245.48 - 2247.04] SPEAKER_B:  And  then  my  family  and  I  went  to  the  beach.
+[2247.50 - 2248.02] SPEAKER_A:  Clear  it  up.
+[2248.16 - 2248.48] SPEAKER_B:  Clear  it  up.
+[2248.68 - 2249.32] SPEAKER_C:  Did  it  ever.
+[2249.42 - 2252.74] SPEAKER_B:  But  I  had  to  lay  in  public  with  a  giant  red  skin  rash.
+[2253.02 - 2253.16] SPEAKER_A:  Yeah.
+[2253.72 - 2256.94] SPEAKER_C:  Did  it  ever  get  like  rashy  and  raised  or  was  it  always  just  like  your  skin?  It
+[2256.94 - 2260.60] SPEAKER_B:  was  a  little  rashy  and  raised,  but  it  still  didn't  itch  or.  Yeah.  Yeah.  I  got  you.
+[2260.84 - 2263.50] SPEAKER_A:  Skin's  fucking  weird.  Cause  it  is  an  organ.  It's  an  organ  on  your  body.
+[2263.70 - 2274.04] SPEAKER_C:  You're  right  about  dermatologists  though.  Like  a  dermatologist  is  a  little  bit  like,  yep,  that's  pretty  gross.  You  know,  here's  some  cream,  you  know,  like  in  the  cream,  the  reason  you  can't  do  it  for  more  than  two  weeks  is  because  a  lot  of  it's,  it  will,  it  thins  your  skin.
+[2274.20 - 2275.36] SPEAKER_A:  Yeah.  And  you
+[2275.36 - 2275.92] SPEAKER_C:  buy  what
+[2275.92 - 2277.42] SPEAKER_A:  I've  had  with  the  creams.  Use  a  lot.
+[2277.82 - 2283.26] SPEAKER_C:  I  have,  I  get  a  thing  called  sensitive.  I  get  a  thing  called.
+[2286.24 - 2292.62] SPEAKER_A:  Also,  I've  had  it  washed  down  to  my  balls  and  you  know,  and  it  like  my  ball  skin  is  would  go  crazy  from  whatever  they  were  giving  me.
+[2292.72 - 2293.74] SPEAKER_B:  Ball  skin  goes  the  craziest.
+[2294.06 - 2298.02] SPEAKER_A:  Oh,  ball  skin.  When  it  goes,  the  absolute,  when  that  stuff  goes  down,  you  get  dried  out
+[2298.02 - 2300.00] SPEAKER_B:  ball  sack,  bro,  that's  three  years.
+[2300.18 - 2301.06] SPEAKER_A:  It's  the  exact,  that's
+[2301.06 - 2302.54] SPEAKER_B:  not  going  away  for  three  fucking  years.
+[2302.66 - 2304.38] SPEAKER_A:  It's  the  worst.  Yeah.  It  sucks.
+[2304.54 - 2308.12] SPEAKER_B:  I  actually  dealt  with  an  armpit  rash  for  an  entire  year  last  year.
+[2308.24 - 2309.92] SPEAKER_A:  What  were  you  using?  A  new  deodorant  with  alcohol?
+[2310.16 - 2313.72] SPEAKER_B:  it  was  the  same  old  deodorants.  I  just,  uh,  it  was  almost  like  I  got  jock  itch.
+[2313.84 - 2314.90] SPEAKER_A:  Yes.  I've  gotten  that  before.
+[2315.04 - 2316.60] SPEAKER_B:  And  it  just  lingered.
+[2316.78 - 2324.40] SPEAKER_C:  I  think  there's  nothing  worse  than  an  armpit  rash.  Cause  you  have  to  put  deodorant  on  it  and  it  burns  and  it  itches  so  bad.  And  you,  you,
+[2324.56 - 2337.10] SPEAKER_B:  I  was  plowing  through  it.  I  was  just  putting  fucking,  uh,  antifungal  cream  on  it.  Filming  tires.  It  was  while  we  were  filming.  It  went  from  the  summer  into  when  we  were  filming  time.  It  was  a
+[2337.10 - 2337.48] SPEAKER_C:  nightmare.
+[2338.04 - 2342.44] SPEAKER_A:  I  don't  wear  it.  I  don't  wear  deodorant.  I'll  put  it  on  like  once  every  now  and  again.
+[2342.56 - 2343.38] SPEAKER_C:  Do  you  not  sweat  though?
+[2343.64 - 2356.18] SPEAKER_A:  I  do.  And  I'll  smell  a  little  bit,  but  it's  like,  dude,  my  armpits  get  dry  from  deodorant.  It's  like,  I  fucking  hate.  I  remember  brute.  Yeah.  Dude,  that  stuff  was  flammable.  I  used  to  run  it  across  the  carpet  and  light  it  on  fire  and  it  would  just  go,  make  like  a  line.
+[2356.18 - 2357.26] SPEAKER_C:  Jesus  Christ.
+[2357.62 - 2370.50] SPEAKER_A:  Sick.  It  was  the  carpet.  I  fucked  up  a  beach  rental  when  I  was  a  little  kid  one  time.  Cause  I  would  make  designs  in  the  carpet  and  like,  you  would  light  for  two  seconds.  Just  like  little  fight.  Well,  I  didn't  do  the,  I  didn't  do  the,  yeah.  I  didn't  do  the  swat.
+[2370.58 - 2372.84] SPEAKER_B:  You  didn't  do  the  coolest  design  possible  to  set  on  fire.
+[2374.70 - 2379.04] SPEAKER_A:  I  would  do  a  little  like  loop  de  loop  tracks.  The  one  time  it  did  get  out  of  control.  And  I  was  like,  fuck,  fuck,  fuck.  How
+[2379.04 - 2381.78] SPEAKER_C:  did  your  parents  not  know  you  were  lighting  the  carpet  on  fire?
+[2381.82 - 2382.18] SPEAKER_B:  I  don't  know.
+[2382.30 - 2383.34] SPEAKER_A:  I  would  just  do  it.  It  was  a  beach
+[2383.34 - 2384.44] SPEAKER_B:  trip.  They  were  probably  fucking
+[2384.44 - 2387.30] SPEAKER_A:  shit  face.  But  at  one  time  I,  yeah,  they  were.  It  was  a  beach  trip.
+[2387.96 - 2390.34] SPEAKER_B:  It  was  11  a .m.  They  were  blacked  out  at  the  beach.
+[2390.52 - 2397.24] SPEAKER_C:  Yeah.  Yeah.  My  parents  never  drank  growing  up.  So  they,  they  knew  everything  I  was  doing.  I  wish  I  had  parents  that  fucking  just  got  rocked.
+[2397.62 - 2400.52] SPEAKER_B:  Sorry,  I  was  a  joke  about  it,  but  it  is,  it  is  the  best.
+[2400.82 - 2401.02] SPEAKER_C:  Yeah.
+[2401.26 - 2405.06] SPEAKER_B:  I  mean,  you  have  a  parent  come  home  drunk.  You  go,  Oh,  for  sure.  This  is  a  fun  day.
+[2405.36 - 2430.64] SPEAKER_A:  Yeah.  Yeah.  I  missed  out.  Drunk  dad  is  awesome.  Your  dad  gets  drunk  when  you're  little.  Although  the  first  time  I  did  get  scared  because  I  read  a  book  in  the  library  saying  like,  it  was  all  about  like,  drunk  and  hitting  your  mom.  So  it  was  like,  the  book  was  called  like,  why  does  dad  hit  mom  when  he  drinks?  It  was  something  like  that.  First  time  I  saw  my  dad  drunk,  I  was  just  like,  he's  beating  the  fuck  out  of  my  mom  right  now.  And  I  was  just  a  little  coward.  I  just  sat  in  my  room.  Like,  I  hope  he  doesn't  go  too  hard  on  her.  Yeah.  He  didn't  at  all.  He  was  so  friendly.
+[2431.56 - 2432.94] SPEAKER_B:  He  sat  on  the  steps  and  cried.
+[2433.14 - 2443.66] SPEAKER_A:  Yeah.  I  should  go  in  there.  He  was  just  literally  like,  he  would  come  in  and  be  like,  dad.  I'd  be  like,  well,  dad,  don't  look  at  beat  mom.
+[2444.40 - 2449.18] SPEAKER_C:  Oh,  that's  great.  Drunk  dad.  That's  super  friendly.
+[2449.80 - 2450.92] SPEAKER_B:  Phil  is  still  that.
+[2451.18 - 2451.48] SPEAKER_A:  He  gets,
+[2451.96 - 2465.68] SPEAKER_B:  he  comes  home.  He  goes,  fuck  yeah.  Then  you  see  him  in  the  morning.  He's  like,  how  are  you?  You're  a  fucking  punk.  Oh,  you're  hungover.  You're  being,  I'm  not  hungover.  He's  never  been  hungover  once.
+[2465.82 - 2471.76] SPEAKER_A:  Hitting  a  girl  with  hungover  is  very  funny.  I've  done  it  before.  I'd  be  like,  you're  just  hungover  and  being  fucking  great.  I'm  not  even  hungover  at  all.
+[2471.90 - 2475.26] SPEAKER_B:  It's  like,  yeah,  you're  a  little  edgy.  Everybody  loves  denying  a  hangover.
+[2475.50 - 2476.16] SPEAKER_A:  Hey,  it's  crazy.
+[2476.46 - 2481.26] SPEAKER_B:  Everybody's  favorite  thing  to  do  is  go.  I'm  not,  you  know,  what's  crazy.  I  feel  pretty  good.  There  you  go.
+[2481.84 - 2485.42] SPEAKER_C:  I'll  tell  you  guys  right  now,  I'm  fucking  hungover  as  shit.  Really?
+[2485.64 - 2486.04] SPEAKER_A:  Oh  yeah.  You  put
+[2486.04 - 2487.74] SPEAKER_B:  it  on.  That's  why  you  asked  how  long  this  podcast  was.
+[2487.82 - 2492.30] SPEAKER_C:  No,  no.  I  was  just,  I  was  literally  just  curious.  Stop  riding  me,  dude.
+[2494.30 - 2496.66] SPEAKER_B:  That's  too  much  lotion.  That's  thin  skin.
+[2497.98 - 2508.76] SPEAKER_C:  We  were,  we  were  in  London  in  the  van  and  you  were  fucking  with  me.  I  was  like,  back  off,  dude.  You  just  kept  going,  I'm  on  your  bumper,  boy.  I'm  on  your  fucking  bumper.
+[2509.04 - 2514.42] SPEAKER_B:  You're  trapped.  You  got  three  days  in  the  UK.  You're  not  going  anywhere.
+[2515.76 - 2518.70] SPEAKER_A:  You  were  on  his  ass  in  the  UK.  I  was.  It's  so  funny.
+[2518.92 - 2523.62] SPEAKER_B:  Till  we  got  off  the  flight.  Till  we  landed  back  there.  I  mean,  we  were  screaming  in  the  fucking  airport.
+[2526.32 - 2527.12] SPEAKER_A:  Holy  shit,
+[2527.24 - 2532.40] SPEAKER_C:  dude.  We  got  prime.  I  mean,  you  guys  might  have  talked  about  it  already,  but  we  got  prime  O 'Connor  video  over  there.
+[2532.64 - 2533.74] SPEAKER_B:  Yeah.  We  got  some  classics.
+[2533.90 - 2535.16] SPEAKER_C:  Him  at  the  height  of  his  powers.
+[2535.48 - 2537.58] SPEAKER_B:  Yeah.  I  saw  him  running  through  the  streets  of  London.
+[2538.02 - 2538.82] SPEAKER_A:  I'm  from  London.
+[2541.06 - 2555.38] SPEAKER_B:  Like  throwing  shit.  Yeah.  He  was  a,  he's  a  real  problem.  That's  what  I  like  about  him  though.  He  turns  up  that  hard  and  then  you  won't  see  him  for  two  weeks.  He's  got,  he's  got  to  mend  himself.  He  goes  home  and  he  lays  there.  He  enters  the  tent.
+[2555.52 - 2556.72] SPEAKER_C:  Oh,  I  saw  him  last  night.
+[2556.90 - 2560.50] SPEAKER_B:  I  got  to  read.  I  got  to  fucking  cook.  I  got  to  become  a  good  person.  And  then  you  go,  why  don't  you  come  out?
+[2561.18 - 2561.54] SPEAKER_A:  Yeah.
+[2562.00 - 2562.18] SPEAKER_C:  Yeah.
+[2562.32 - 2563.74] SPEAKER_A:  There's  bounce  backs  are  crazy.
+[2564.22 - 2565.04] SPEAKER_B:  It's  pretty  impressive.
+[2565.36 - 2579.12] SPEAKER_C:  I  saw  him  last  night.  We  were  in  the  green  room.  We  had  two  drinks  and  I  was  like,  what  are  you  doing,  dude?  He's  like,  I  don't  know.  I  might  go  see  Sadie,  whatever.  And  he  fucking  snuck  out.  I  was  like,  he's  dodging  it.  Yeah.  He's  trying  to  be  good.
+[2579.12 - 2580.14] SPEAKER_B:  You  got  to  respect  the  dog.
+[2580.54 - 2587.80] SPEAKER_C:  Yeah.  I  get  it.  I  get  it,  man.  I  get  it.  I'm  fucking  terrible  at  it.  I  let  everybody  talk  me  into  fucking  hanging  out.  I  am  the  worst.
+[2588.18 - 2592.20] SPEAKER_B:  Yeah,  but  you  do  it.  You  do  it  just  as  much.  You're  one  of  the  worst  perpetrators  of  it.
+[2592.38 - 2592.92] SPEAKER_C:  Yeah.  Yeah.
+[2593.24 - 2602.36] SPEAKER_B:  Come  on,  dude,  take  a  shot.  My  birthday's  next  week.  Yeah.  I'm  taking  a  thousand  shots  with  you.  And  every  time  you  go,  you  never  take  shots.
+[2602.70 - 2606.14] SPEAKER_C:  It's,  it's  been  literally  years.  Literally.
+[2606.14 - 2612.22] SPEAKER_B:  We've,  we've  taken  shots  together.  We  took  shots  together  last  week  at  Mitzi's.
+[2613.36 - 2615.20] SPEAKER_C:  I  did  not  take  any  shots  with  you  at  Mitzi's.
+[2615.96 - 2617.44] SPEAKER_B:  Yeah,  we  did.  We  did.
+[2617.60 - 2617.80] SPEAKER_C:  Yeah.
+[2617.86 - 2618.26] SPEAKER_B:  At  the  corner.
+[2618.64 - 2620.14] SPEAKER_C:  Yeah.  Shit.  Well,  you  got  me  there.
+[2620.24 - 2623.92] SPEAKER_B:  And  you  said  it.  I  remember  it.  You  go,  you'd  never  take  shots.  My  boy.  We  took
+[2623.92 - 2626.06] SPEAKER_C:  shots  for  the  last  week.  My  dude.
+[2626.36 - 2627.24] SPEAKER_A:  It's  every  week.
+[2628.58 - 2629.52] SPEAKER_C:  It's  so  funny.  It
+[2629.52 - 2631.50] SPEAKER_B:  is  usually  late.  Yeah.  If  I'm  taking  a  shot.
+[2631.74 - 2648.08] SPEAKER_C:  I  was  talking  to  Carrie  at  mothership  last  night  about,  she's  like,  what  are  you  doing  tomorrow,  baby?  I  was  like,  I'm  doing  Matt  and  Shane.  And,  uh,  I  was  just  taught,  telling  her  about  when  you  just  start  pressuring  to  drink.  And  I  was  like,  I'm  going  to  be  sitting  on  that  couch.  He's  going  to  be  like,  come  on,
+[2648.54 - 2649.52] SPEAKER_B:  come  on,  let's  get  one.
+[2649.64 - 2653.58] SPEAKER_C:  Come  on.  Let's  go.  I  was  like,  she's  like,  wow.  And  I  was  like,  I  can't  say  no  to  the  man.
+[2653.76 - 2654.56] SPEAKER_B:  No,  we  got  to,
+[2654.68 - 2656.70] SPEAKER_C:  no,  I  can't  today.  I  can't  today.
+[2657.54 - 2658.14] SPEAKER_A:  Stop,  dude.
+[2658.32 - 2660.60] SPEAKER_C:  No,  stop,  dude.  No,  I  got  spots  tonight.  No,
+[2660.68 - 2661.20] SPEAKER_B:  I  can't.  Yeah.
+[2661.32 - 2661.54] SPEAKER_C:  All  right.
+[2661.68 - 2663.56] SPEAKER_B:  I  can't,  I've  got  to  remain  in  the  tomb,  dude.
+[2663.74 - 2664.46] SPEAKER_A:  I  put
+[2664.46 - 2665.58] SPEAKER_B:  together  a  run.  I  got  to.
+[2665.74 - 2666.00] SPEAKER_A:  True.
+[2666.26 - 2666.88] SPEAKER_C:  But  I  was  just,
+[2667.00 - 2668.94] SPEAKER_A:  I  was  like,  Friday.  True.
+[2669.24 - 2670.48] SPEAKER_B:  I'll  make  it  to  Friday.
+[2670.66 - 2671.80] SPEAKER_C:  I  don't  fly  out  till  Saturday.
+[2672.80 - 2673.40] SPEAKER_B:  Where  are  you  headed?
+[2674.02 - 2681.98] SPEAKER_C:  Uh,  back  up  to  PA.  Cause  I  got  to  do  some  pods  in  New  York  and  then  Rhode  Island  gigs  and,  and  then  some  other  stuff.
+[2682.20 - 2683.74] SPEAKER_B:  We  haven't  even  talked  about  your  special.
+[2683.92 - 2685.78] SPEAKER_C:  Yeah.  Oh,  I'd  love  to  talk  about  it.
+[2685.82 - 2686.38] SPEAKER_B:  Yeah.  It  was  great.
+[2686.58 - 2687.04] SPEAKER_C:  Thank  you,  man.
+[2687.18 - 2689.12] SPEAKER_B:  I  liked  the  intro.  I  liked  how  spooky  it  was.
+[2689.22 - 2691.86] SPEAKER_C:  Thanks,  man.  Yeah.  Thanks  a  lot.  Thank  you.  I  appreciate  it.
+[2692.00 - 2696.22] SPEAKER_B:  And  at  first  I  didn't  like  the  blurry  shots  and  then  I  came  around.
+[2696.44 - 2721.52] SPEAKER_C:  All  right.  Thank  you.  I  was  a  little  on  the  fence  about  them  too  at  first,  but  then  the  closer  we  got  to,  cause  I  was,  I  directed  it  too.  So  I  was  very  involved  from  start  to  finish  with  everything.  And,  um,  I  was  a  little  on  the  fence  about  it  too,  but  then  ultimately  I  was  like,  Oh  no,  it  works.  It's,  it's,  I  don't  know.  It's,  it  was,  you  know,  it  was  a  nice  device  I  thought  or  whatever,  but,  but  yeah,  man,  I  appreciate  you.
+[2721.52 - 2725.16] SPEAKER_B:  I  missed  the  actual  taping.  I  was  at  the  after  party.
+[2725.42 - 2728.84] SPEAKER_C:  you  showed  up  right  as  the  party  was  starting.  Yeah.  Yeah.  Yeah.  I  was  bummed.
+[2728.86 - 2730.14] SPEAKER_B:  I  missed  that.  It  was,  it  was  a  good,
+[2730.76 - 2737.90] SPEAKER_C:  it  was,  I  was  thrilled.  You,  you  came  down,  you  rolled  in  with  six,  right?  Yeah.  Yeah.  Yeah.  Yeah.  Yeah.  Yeah.  It's,  I  was  thrilled  you  came  down.
+[2738.18 - 2739.88] SPEAKER_B:  Definitely  got  bullied  into  taking  a  shot.
+[2740.76 - 2741.26] SPEAKER_C:  Well,  it's
+[2741.26 - 2742.96] SPEAKER_B:  always  a  special.  Yeah.
+[2743.20 - 2755.74] SPEAKER_C:  Yeah.  It's  always  a  special.  Um,  but,  uh,  yeah,  it's  called,  I  never  promised  you  a  rose  garden.  It's  on  my  YouTube  at  Joe,  at  Joe,  the  Rosa.  So  youtube .com  slash  at  Joe,  the  Rosa  comedy.  Uh,  but  anyway,  I  hope  people  enjoy  it.
+[2755.84 - 2756.22] SPEAKER_B:  Yeah,  it's  good.
+[2756.38 - 2757.78] SPEAKER_C:  But,  uh,  I  was,  that's  the  hardest.
+[2757.92 - 2758.68] SPEAKER_B:  It's  a  really  good  special.
+[2758.86 - 2765.12] SPEAKER_C:  Thank  you,  dude.  It  means  a  lot  to  me  to  hear  you  say  that  because,  and  Matt,  feel  free  to  jump  in  with  the  compliment.  I,
+[2765.12 - 2767.40] SPEAKER_A:  I,  I  haven't  seen  it  yet.  So  I  always  feel  bad.
+[2767.50 - 2768.74] SPEAKER_B:  I  don't  see  it.  And
+[2768.74 - 2768.92] SPEAKER_C:  I  usually,  and  I
+[2768.92 - 2775.58] SPEAKER_B:  usually,  uh,  fuck,  fuck,  fuck.  Don't  watch.  I  watched  yours  a  lot.  I  haven't  finished  it  yet,  but  I've  watched  a  lot  of  it.  I'm
+[2775.58 - 2792.34] SPEAKER_C:  not  blowing  smoke  up  your  ass.  I  did  the  same  thing  with  you.  Like,  I  was  like,  you're  one  of,  no,  no,  no,  no.  I'm  saying  though,  like,  I  don't,  I  hear  you.  It's  like,  it's,  it's  kind  of  hard  sometimes  when  you  do  comedy  and  you're  around  it  all  the  time  to  jump  into  a  special.  But  you're  one  of  the  guys  where  it's  like,  I'm  like,  I  was  like  excited.  And
+[2792.34 - 2794.30] SPEAKER_B:  we've  done  enough  shows  where  I  know  the  material.
+[2794.52 - 2796.34] SPEAKER_C:  Yeah.  Yeah.  Yeah.  It  was,
+[2796.38 - 2798.16] SPEAKER_A:  it  was  stoked.  Ask  Ardini.  He  told  me  his  special.
+[2798.30 - 2799.26] SPEAKER_B:  I'm  like,  that's  going  to  be  awesome.
+[2799.50 - 2800.14] SPEAKER_A:  I  can't  wait  to  see  that.
+[2800.32 - 2800.96] SPEAKER_C:  Thanks  guys.
+[2801.18 - 2803.16] SPEAKER_B:  They  were  actually  singing  your  praises  before  you  got  in.
+[2803.36 - 2803.96] SPEAKER_C:  Thanks  guys.
+[2804.10 - 2805.56] SPEAKER_B:  I  really  appreciate  it.  How  much  they  liked  the,
+[2805.70 - 2810.66] SPEAKER_A:  I  heard  the  way  it  started  out  and  I  was  like,  awesome.  The  starting,  the  starting  bit  of  material.  I  was  like,  that's,
+[2810.76 - 2812.54] SPEAKER_B:  let's  not,  let's  not  get  any  spoilers,
+[2812.64 - 2813.38] SPEAKER_A:  but  I
+[2813.38 - 2814.82] SPEAKER_B:  can't  wait  for  the  start  of  your  special.
+[2814.94 - 2815.10] SPEAKER_C:  Yeah.
+[2816.10 - 2817.70] SPEAKER_B:  Can't  wait.  No  spoilers.
+[2817.94 - 2820.90] SPEAKER_A:  No  spoilers.  But  yeah,  I  heard,  I  was  here  and  I  was  like,  that's
+[2820.90 - 2823.40] SPEAKER_C:  thanks  brother.  Perfect.  Thanks  dude.  It's  the,
+[2823.52 - 2824.14] SPEAKER_B:  it's,  it's
+[2824.14 - 2842.30] SPEAKER_C:  literally  the  hardest  I  ever  worked  on  anything  in  my  whole  life.  That's  like  those  three  years  of,  uh,  of  touring  and  I  was  going  to  shoot  it  at  one  point.  And  Ari  Shafir  was  like,  it's  not  ready.  It's  not  ready  yet.  It's  not  ready.  You  know?  And  then  like  when  I  finally  did  do  it,  like  him  being  like,  it's  like  I  did  it  to,  I  was  like,  all  right.  That's  awesome.
+[2842.58 - 2849.02] SPEAKER_B:  Good  for  him  for,  cause  that's  hard  to  tell  someone.  But  boy,  if  somebody  told  me  it's  not  ready  when  I  thought  it  was  ready.
+[2850.50 - 2882.74] SPEAKER_C:  We  argued.  I  mean,  me  and  Ari  did  argue.  I  wasn't  just  like,  okay.  Yeah.  I  was  like,  it's  ready,  dude.  I  don't  need  to  do  it  for  three  years.  And  he  goes,  he  goes,  oh  yeah,  cause  you're  the  one.  And  I  was  like,  God  damn.  All  right.  But,  but  yeah,  like  you,  but  I  don't  know.  It's  like,  it's  nice  having  friends.  Like  again,  I'm  not  blowing  smoke,  but  it's  nice  having  friends  who  also  do  comedy  that  when  they  put  something  out,  like  when  you  put  out  your  last  one,  you're  excited  to  watch  it.  Cause  it's  like,  yeah,  it's  easy  to  get.
+[2883.24 - 2884.54] SPEAKER_B:  I  have  a  friend  who  sucked.
+[2885.52 - 2885.88] SPEAKER_C:  Yes.
+[2886.08 - 2887.44] SPEAKER_B:  Like  check  out  this  special.  Yeah.
+[2888.46 - 2890.06] SPEAKER_C:  Yeah.  I'm  excited  for  yours,  dude.
+[2890.24 - 2890.60] SPEAKER_A:  Thank  you,  man.
+[2890.72 - 2892.70] SPEAKER_C:  Yeah.  You  were  talking  a  little  bit  about  it  last  night.  I'm  pumped.
+[2893.04 - 2897.40] SPEAKER_A:  I  was  getting  a  dude.  Brittany's  been  getting  a  lot  of  like  people  see  her  and  they  go,  four  times.
+[2897.66 - 2898.02] SPEAKER_B:  Yeah.
+[2898.42 - 2909.82] SPEAKER_A:  WMDA  star.  And  last  night  I  was  doing  standup  and  people  brought  it  up.  They're  like,  talk  about  your  four  time  WMDA  star  wife.  And  I  was  just,  I  thought  it  was  great.  And  now  she's  getting  so  much  attention.  I've  just  been  like,  she  was  fucking  hacked.
+[2913.92 - 2914.94] SPEAKER_B:  She  was  a  fucking.  I
+[2914.94 - 2916.96] SPEAKER_A:  mean,  come  on.
+[2918.50 - 2919.18] SPEAKER_C:  Turn  on  her.
+[2919.40 - 2923.12] SPEAKER_A:  I  just  got  it.  Yeah.  I  just  got  to  take  her  down.  Just  be  like,  she  doesn't  even  look  like  an  athlete.
+[2923.28 - 2925.30] SPEAKER_B:  I  don't  know.  I  don't  know  what  the  fuck  the  joke  is.
+[2926.52 - 2932.50] SPEAKER_A:  I  kept  saying  last  night,  I  was  like,  he  should  have  dressed  me  up,  man.  He  should  have  dressed  me  up.  I  could  have  done  that.  I  was  like,  I  could  have  done  that.
+[2932.66 - 2935.88] SPEAKER_B:  I  know  the  joke  easily  could  have  been  NHL.
+[2935.88 - 2937.04] SPEAKER_C:  I  know.  No,  no.
+[2937.12 - 2939.80] SPEAKER_B:  Or  NASCAR.  Or  golf.  you  mean  fucking.
+[2942.46 - 2943.90] SPEAKER_A:  Let  me  put  that  shit  on,  dude.
+[2944.16 - 2955.46] SPEAKER_B:  Well,  then  we  wouldn't  be  talking  right  now,  but  we  would  be  considered  the  greatest  of  all  time.  We  wouldn't  still  be  talking.
+[2956.40 - 2959.74] SPEAKER_A:  I  just  showed  up  fully  prepared  for  the  role.  What  the  fuck  are  you  doing?
+[2959.90 - 2960.48] SPEAKER_B:  We  can  save  it.
+[2960.72 - 2960.94] SPEAKER_C:  Oh,
+[2961.14 - 2961.82] SPEAKER_A:  I  thought  she  was  like,
+[2962.08 - 2967.98] SPEAKER_B:  what  the  joke's  about?  Oh  shit.  I  got  to  take  this  off.  Fuck.  It's  not  coming  off.
+[2968.22 - 2970.46] SPEAKER_A:  It  was,  it  was  fun  for  me  to  watch  it  again.
+[2970.72 - 2971.94] SPEAKER_B:  I'm  sitting  next  to  Jalen  Carter.
+[2972.40 - 2984.98] SPEAKER_A:  Fuck.  I'm  just  like  a  black  lady.  Dude,  I  saw  the  rewatching  it  and  seeing  the  people  behind  us,  like  clapping  in  earnest.  And  then  it's  revealed  and  they  go,  that  was  very,  very  fun  to  see.
+[2985.58 - 2992.12] SPEAKER_B:  The,  uh,  fucking  asshole.  We  can  save  that  one  though.  Huh?  Maybe  I'll  get  another  hosting  job  sometime.
+[2992.26 - 2996.70] SPEAKER_A:  I'm  not  going  to  dress  up  as  a,  yeah.  Just  funny.  Put  it  in  to
+[2996.70 - 2997.82] SPEAKER_B:  things.  Save  it  for  the  Oscars.
+[2997.82 - 3000.38] SPEAKER_C:  Yeah.  Yeah.
+[3001.08 - 3003.56] SPEAKER_A:  I'll  be  Ryan  Felipe.  Yeah.
+[3005.50 - 3008.08] SPEAKER_C:  Yeah.  You  got  that  in  the,  you  got  that  bullet  in  the  chamber.  We
+[3008.08 - 3009.44] SPEAKER_B:  got  that  one  locked  and  loaded.
+[3011.78 - 3013.12] SPEAKER_C:  When  it's  time,  it's  time.
+[3013.54 - 3015.84] SPEAKER_B:  Yeah.  It's  time  to  hang  it  up.  You  go,
+[3016.04 - 3016.56] SPEAKER_C:  you  know  what?  I
+[3016.56 - 3017.14] SPEAKER_B:  got  one  more.
+[3017.46 - 3019.38] SPEAKER_C:  Yeah.  Oh  yeah.
+[3019.68 - 3022.88] SPEAKER_A:  Yes.  You're,  you're  in  the  tomb  on  the  come  down  of  setting  the  internet  ablaze.
+[3023.66 - 3026.92] SPEAKER_B:  Yes.  Yeah.  It's  all  types  of  things.  And  also  drank  for  a  week.
+[3027.20 - 3027.44] SPEAKER_C:  Yeah.
+[3027.82 - 3028.48] SPEAKER_B:  That's  enough  to,
+[3028.68 - 3029.22] SPEAKER_A:  so
+[3029.22 - 3033.46] SPEAKER_B:  like  after  the  ESPYs,  I  had  to  go  do  Kansas  city  and  Oklahoma  city.
+[3033.88 - 3034.10] SPEAKER_A:  Yeah.
+[3034.30 - 3038.80] SPEAKER_B:  And  those,  you  know,  you're  doing  a  show  like  that.  That's,  that's  a  lot  of  fucking  stress.
+[3039.02 - 3046.32] SPEAKER_A:  I  don't  know  how  you  also,  I  flew  home  on  Friday  and  I  for  real  thought  I  was  going  to  fall  down.
+[3046.74 - 3050.48] SPEAKER_B:  Friday  sucked  ass.  Oh  fuck.  Yeah.  I  had  a  later  flight.
+[3050.86 - 3051.24] SPEAKER_C:  Yeah.
+[3051.34 - 3058.64] SPEAKER_A:  But  like  not  that  much  later.  I  texted  these  guys  like  we're  already  there.  I  was  walking  through  the  airport.  Like  I  felt  like  I  was  like  not  getting  enough  oxygen.
+[3059.10 - 3059.92] SPEAKER_B:  That's  how  it  feels.
+[3060.26 - 3061.70] SPEAKER_C:  Because  you  were  just  so  hung  over  to  me.
+[3061.82 - 3066.12] SPEAKER_A:  I  didn't  have  like  the  headache  or  anything,  but  I  was  just,  I  had  like  three  hours,
+[3066.20 - 3067.52] SPEAKER_B:  two  hours  of  liquor  fast.
+[3067.88 - 3074.92] SPEAKER_A:  Yes.  I  had  like  two  hours  of  sleep  and  just  walking  through  the  airport  with  like  my  bag.  Just  like  I  for  real  might  go  down.  I  was  like  lightheaded.  Bro.
+[3075.36 - 3081.62] SPEAKER_B:  It's  so  bad.  So  that  day  I  woke  up  in  the  hotel  going,  yes,  I  have  nothing  to  do  today.
+[3081.92 - 3082.32] SPEAKER_C:  Perfect.
+[3082.46 - 3092.50] SPEAKER_B:  And  then  I  was  like,  oh  shit,  I  got  to  fly  to  Oklahoma  and  do  a  show.  Then  the  next  morning  I  woke  up  like  finally  I  can  fucking  go  home.  Fuck.  I  got  to  go  to  Kansas  fucking  city.
+[3092.70 - 3093.74] SPEAKER_A:  God  damn  it.
+[3095.08 - 3099.00] SPEAKER_B:  Yeah.  I  don't  know  what's  going  on.  I  guess  this  is  what  being  burnt  out  is,  but
+[3099.00 - 3099.30] SPEAKER_A:  yeah.
+[3100.08 - 3101.58] SPEAKER_B:  Anxious  like  dreams.
+[3102.04 - 3102.36] SPEAKER_A:  Yeah.
+[3102.70 - 3107.16] SPEAKER_B:  And  then  I  wake  up  going,  I  don't  have  anything  to  do.  Nice.  Fuck.
+[3108.66 - 3113.74] SPEAKER_C:  Dude,  you  just  did  a  thing  that  six  people  have  done.
+[3113.80 - 3119.14] SPEAKER_B:  It  was  the  movie.  Yeah.  The  movie  filming  a  movie  for  a  month  and  a  half  was,
+[3119.40 - 3119.78] SPEAKER_C:  yeah,
+[3120.22 - 3121.30] SPEAKER_B:  I've  never  done  anything  like  that.
+[3121.44 - 3121.74] SPEAKER_C:  Yeah.
+[3121.84 - 3125.50] SPEAKER_B:  And  then  shows.  And  then  the,  yeah,  you're  running
+[3125.50 - 3127.88] SPEAKER_C:  through  a  very  unique.  It's  time  to,
+[3127.88 - 3128.98] SPEAKER_B:  it's  time  to  lay  down.
+[3129.24 - 3129.40] SPEAKER_C:  Yeah.
+[3129.56 - 3129.66] SPEAKER_A:  Yeah.
+[3130.16 - 3137.28] SPEAKER_B:  And  oh  yeah.  And  we  filmed  commercials  that  I'm  seeing  the  edits  to  those.  I  don't  fucking  love  them.  I  go,  oh  great.
+[3138.04 - 3141.94] SPEAKER_A:  Yeah.  There's  nothing  worse  than  watching  yourself  in  a  way  where  you're  like,  I  don't  like  that.
+[3142.04 - 3146.66] SPEAKER_B:  While  you're  anxious  and  hung  over  and  you  see  a  video  of  yourself,  you  go,  it  sucks.
+[3147.12 - 3154.92] SPEAKER_A:  It  was  fun.  I  was  trying  to  upload  all  of  this  stuff  from  our  drunk  podcast  that  next  day  in  the  airport.  I'll  just  watch  it  and  be  like,  Oh,
+[3156.18 - 3163.44] SPEAKER_B:  the  anxiety  of  that  podcast.  Thank  you.  With  the  second  half,  the  second  half's  in  the  tomb  forever.
+[3163.70 - 3163.94] SPEAKER_A:  NFT.
+[3164.48 - 3169.92] SPEAKER_B:  Until,  until  one  day.  Yeah.  We're  going  to  sell  it  to  Martin  Screlly  for  $6  million.  $6  million.
+[3174.96 - 3181.16] SPEAKER_C:  Yeah.  Yeah.  No,  that,  that  airport  hangover.  Oh,  like,  like,  honestly,  I  like  almost  have  a  panic  attack.
+[3181.28 - 3181.62] SPEAKER_A:  Yeah.  I
+[3181.62 - 3193.16] SPEAKER_C:  carry  Xanax  for  it.  Cause,  cause  you're,  it's  so  like,  your  gut  is  related  to  your  anxiety  and  all  that  shit.  And  when  you're  in  that  state,  you're  walking,  you're  like,  you  might  have  to  take  a  shit.  You  don't  know.  Yeah.
+[3193.44 - 3194.84] SPEAKER_B:  And  then  that's  shit  at  any  moment.
+[3195.16 - 3196.08] SPEAKER_C:  Yeah.  It's  hard.
+[3196.30 - 3203.34] SPEAKER_B:  You  could.  No,  I  mean,  physically,  I  could  walk  into  a  bathroom  and  take  a  shit  while  hung  over  at  any,  if  someone  said  take  a  shit  right  now,  I  go,  no  problem.
+[3203.50 - 3204.38] SPEAKER_C:  Oh,  you  mean  like  on  command?
+[3204.70 - 3204.80] SPEAKER_B:  Yes.
+[3205.24 - 3206.28] SPEAKER_C:  Oh,  that's  great.
+[3206.48 - 3207.52] SPEAKER_B:  One's  chambered  at  all  times.
+[3207.80 - 3207.96] SPEAKER_C:  Yeah.
+[3208.10 - 3209.90] SPEAKER_B:  All  right.  Yes,  sir.  That'll
+[3209.90 - 3210.90] SPEAKER_C:  help  me.  Yes,  Danny.
+[3211.62 - 3213.14] SPEAKER_A:  Yes,  Danny.  Yeah.
+[3213.30 - 3216.60] SPEAKER_B:  That's  just  so  good.  I'm  like,  I'm  like  a  hundred.  You  can't  handle  a  clear  gay  joke.
+[3218.68 - 3229.60] SPEAKER_A:  I'm  103  degrees.  My  face  is,  I  have  like  103  degree  fever.  And  then  I  just  woke  up  and  I  did  the  opposite.  I  pounded  coffee  to  like  power  through.  So  nothing  like  heart  palpitation.  It  was  terrible.
+[3230.00 - 3231.48] SPEAKER_B:  Yeah.  Heart  palpitation.  It
+[3231.48 - 3232.14] SPEAKER_A:  was  terrible.
+[3232.44 - 3237.06] SPEAKER_B:  It's  fucking  nuts.  Then,  you  know,  the  B -dubs  at  the  airport's  just  right  there  going.
+[3238.76 - 3239.50] SPEAKER_C:  It  is.
+[3239.64 - 3241.38] SPEAKER_B:  Yeah.  You're  nothing  without  me,  coward.
+[3242.34 - 3306.28] SPEAKER_C:  When  I  did,  when  I  did,  I  did,  I  did  kill  Tony  when  they  did  the  HEB  center  down  here.  I  did  the  panel  and  I  was  only  supposed  to  do  a  set.  And  then  I  showed  up  and  he  was  like,  I  need  you  to  panel  buddy.  And  I  was  like,  all  right.  And  I  was  so  hung  over.  And  I  started  the  same  thing,  dude,  dehydrated.  I  felt  like  sick.  I  felt  like  I  had  a  cold.  I  started  fucking  pounding  coffee  to  wake  up.  And  then  I  was  meeting  it  with  booze  to  get  like  tuned  up.  Dude,  I  got  on  stage.  My  gut  started  turning.  My  hand  to  God,  dude,  I  had  a  two  minute  panic  attack  on  stage.  I  was  sitting  there.  I  was  so,  I  was  hitting  me  from  all  angles.  And  I  was  sitting  there.  The  first  bucket  pull  came  out.  The  kid  was  talking  to  us.  And  my  brain  was  like,  it's  a  lot  of  fucking  people  out  there,  dude.  It  was  all  lit  up.  If  you  watch  the  video,  you  see  me  do  this.  You  see,  this  is  the  desk.  And  I  just  go  like  this.  I  just  put  the  mic  down.  I  just  stare.  I'm  going  to  freak  out  right  now.  I  was  like,  I  was  literally  looking  like,  where  can  I  run  off  this  fucking  stage?
+[3308.52 - 3309.20] SPEAKER_B:  That's  tough.
+[3309.44 - 3314.52] SPEAKER_C:  And  then  it  just,  it  just  stopped.  And  I  was  like,  oh,  that's  hangover.  That's  like  bad  anxiety.  I
+[3314.52 - 3329.02] SPEAKER_A:  get  that  doing  standup.  Where  like,  I'll  like  forget  the  next  thing  I'm  going  to  talk  about.  And  it's  like  a  30  second  thing  in  my  head  where  it's  like,  this  is  it,  dude.  You're  going  to  have  to  look  at  all  these  people  and  go,  I  can't  do  this.  I'm  sorry,  guys.  I  don't  know  why  I  just  walk  off  and  you  just  power  through  and  you're  like,  all  right,  thank  God.
+[3329.40 - 3346.54] SPEAKER_C:  no,  I've  been  there,  dude.  Maria  Bamford  said  she  used  to  like,  she  said  she  would  like  take  comfort  in  knowing  that  at  any  second  she,  she  had  the  option  of  running  out  of  the  club  and  never  returned.  She  was  like,  that's  the  only  way  I  can  get  through  it.  Like  sometimes.  Yeah.  It's  like,  fuck.  It  is
+[3346.54 - 3349.24] SPEAKER_B:  nice.  When  you  get  on  stage  and  you  go,  oh  yeah,  I  can  do  standup.
+[3349.42 - 3349.58] SPEAKER_A:  Yeah.
+[3350.08 - 3359.34] SPEAKER_B:  After  the  first  like  minute  you  go,  oh  fuck  you.  Yeah.  Nice.  Cause  for  the  last  hour  and  a  half,  I've  been  back  there  going,  fuck.  I  can't  do  this.  Oh  fuck.
+[3359.64 - 3376.80] SPEAKER_A:  Yeah.  Yeah.  I've  done  the  coffee,  pre -show  coffee  to  where  I'm  on  stage  and  my  heart's  like,  and  I'm  like,  all  right,  I'm  going  to  fucking,  this,  this  might  be  it.  And  then  I've  done  it  where  I'm  like,  maybe  I  have  a  heart  attack.  And  I  really  leaned  into  it  and  powered  through.  And  I  was  like,  I  was  so  proud  of  myself.  I  was  so  proud  of  myself.
+[3377.04 - 3393.40] SPEAKER_B:  I  had  horrible  pain  in  my  chest.  I  was  headlining.  It  was  like  two  years  ago.  It  might've  been  two  or  three  years  ago.  You  might've  had  a  heart  attack.  Bro.  It  hurt.  It  hurt  so  bad  that  I,  I  was  like,  I  have  to  get  off  stage.
+[3393.66 - 3393.86] SPEAKER_C:  Yeah.
+[3394.20 - 3403.30] SPEAKER_B:  And  then  I  was  like,  well,  this  is  my  last  joke.  Just  fucking.  And  I  just  did  my  last  joke,  got  off  stage.  I  was  like,  I'm  pretty  sure  I  just  had  a  heart  attack  up  there.  Yeah.  And
+[3403.30 - 3404.58] SPEAKER_C:  you  never  got  a  check  or  anything?
+[3405.24 - 3405.56] SPEAKER_B:  Nah.
+[3406.70 - 3409.34] SPEAKER_A:  People  have  little  ones.  That's  something.  I  don't,  I  don't  think
+[3409.34 - 3410.22] SPEAKER_B:  it  was  an  actual  heart  attack.
+[3410.38 - 3413.96] SPEAKER_A:  I  think.  People  go  in  the  doctor  like,  dude,  you've  had  like  three  heart  attacks.  You're  like,  what?
+[3413.96 - 3417.00] SPEAKER_B:  I  was  34.  Dude,
+[3417.06 - 3422.86] SPEAKER_A:  I  know  someone  who  got  one  at  like  24  years  old.  I  mean,  they  were,  they  were  taking  heavy  subs  and  then  other  recreationals,
+[3422.92 - 3426.68] SPEAKER_B:  but.  Yeah.  I  was  on  zero  recreationals.
+[3426.82 - 3435.32] SPEAKER_C:  Yeah.  If  you  can  have  them  without  knowing,  I've  definitely  had  them.  If  that's  an  option,  there's  no  way  I  haven't  had  heart  attacks.  There's  no  way.
+[3435.68 - 3437.46] SPEAKER_B:  Well,  if  I  ever  had  one,  that  was  it.
+[3437.72 - 3440.00] SPEAKER_C:  Yeah.  I  mean,  that  sounds  like  hard.  I've  never  had  something  that
+[3440.00 - 3442.56] SPEAKER_B:  hurt.  Like  my  fucking  wall.  I'll  be
+[3442.56 - 3443.04] SPEAKER_A:  like,  ah,
+[3443.36 - 3446.56] SPEAKER_C:  it's  like,  oh,  I'll  tell  you.
+[3447.16 - 3448.26] SPEAKER_B:  I'll  tell  you.  Fuck.
+[3449.24 - 3474.28] SPEAKER_C:  I'll  tell  you  a  perfect  formula  for,  I'm  going  to  have  a  heart  attack  on  stage.  This  has  happened  to  me  several  times.  You'll  be  at  mothership.  You'll  be  in  the  green  room.  You  look  up  and  realize  the  guy  on  stage  in  the  main  room  only  has  30  seconds  left.  And  you  go,  oh  fuck.  And  you  run  all  the  way.  Dude,  you  get  on  stage.  I've  done  that.  I  can't  catch  my  breath  on  stage.  Dude,  I'll  do  this  on  the  stool.  I'll  lean  like  this.  And  I  swear  to  God  the  whole  time,  I'm  like,  I  think  I'm  going  to  have  a  heart  attack  right  now.
+[3476.74 - 3479.14] SPEAKER_B:  That  is  a  fucking  labyrinth  back  there.
+[3479.48 - 3479.60] SPEAKER_A:  Yeah.
+[3479.96 - 3482.56] SPEAKER_B:  You  got  to  go  up  and  down  five  flights  of  steps.
+[3482.86 - 3489.46] SPEAKER_A:  I  felt  bad  last  night  because  we're  all  backstage.  And  I,  people  are  backstage.  Like  you  were  backstage  and  you  had,  you  probably  had  like  four  minutes.
+[3489.66 - 3491.54] SPEAKER_B:  I'll  say  something.  It  was  eight.  I  was  like,  I  always  go  bro.
+[3491.72 - 3499.10] SPEAKER_A:  But  I  feel  like  a  dick  because  I'm  like,  Hey,  DeRosa,  you're  up  next,  right?  He's  like,  yeah,  I'm  going  down.  I'm  like,  I  feel  like  an  asshole.  Like  I'm  like,  dude,  you  better  get  down  there.  No,  I  do
+[3499.10 - 3501.08] SPEAKER_B:  it.  I  do  it.  I  do  it  on  shows.  I'm  not  even  on.
+[3501.22 - 3501.48] SPEAKER_A:  I  get  nervous.
+[3501.74 - 3502.96] SPEAKER_B:  I'll  be  like,  yo,  I  think  I  was  fucking.
+[3503.18 - 3504.86] SPEAKER_A:  Yeah,  dude,  I  get  nervous  on  other  people's  behalf.  You
+[3504.86 - 3506.94] SPEAKER_B:  never  know  when  someone's  going  to  fucking  just  go.  That's  it.
+[3507.06 - 3512.80] SPEAKER_A:  I  know.  It  was  GD  and  he  have  GD  and  he  dug  his  heel.  Obviously,  luckily  he's  a  big  stage  hug.  Doug  his  heels  in.
+[3513.38 - 3513.70] SPEAKER_B:  Yeah.
+[3514.08 - 3514.56] SPEAKER_A:  Yeah.  You
+[3514.56 - 3516.98] SPEAKER_B:  actually  probably  were  like,  Oh,  GD  is  always  going  to  get  along.
+[3517.22 - 3522.76] SPEAKER_A:  I  was  nervous  when  it's  like  eight  minutes  in,  I  see  the  clock  and  I'm  going  like,  dude,  it's  a  while  to  get  down  there.
+[3522.84 - 3527.80] SPEAKER_C:  Did  you  ever  go  on  stage  there  and  you  realize  you  forget  the  dude  you're  bringing  on  his  last  name  for  sure?  Yeah.
+[3528.08 - 3530.92] SPEAKER_A:  And  you're  like,  I  forgot  the  headliners.
+[3531.42 - 3535.46] SPEAKER_B:  Joe  Rogan.  Fucking  Joe.
+[3535.94 - 3547.22] SPEAKER_A:  This  podcast  is  an  experience.  It's  got  an  experience.  It's  the.  Dude.  The  other  McDonald  clip  fucked  me  up.  Did  you  ever  see  her  go  down?
+[3547.40 - 3548.32] SPEAKER_B:  Yeah.  I  think  about  that.
+[3548.44 - 3549.12] SPEAKER_A:  Yeah.  I  watch  it.
+[3549.12 - 3549.34] SPEAKER_C:  I  go.
+[3549.46 - 3553.12] SPEAKER_A:  Cause  I,  you  know,  I've  obviously  laughed  about  it  publicly.  So  it's  like,  I'm  like,  that's  going  to  happen  to  me  now.
+[3553.40 - 3554.14] SPEAKER_B:  It's  going  to  happen.  Dude.
+[3554.26 - 3560.58] SPEAKER_C:  There's,  there's  a,  there's  a  trilogy.  There's  a  perfect  trilogy.  Uh,  Heather  McDonald.  Yeah.  Wendy  Williams.  uh,  Gallagher.
+[3560.84 - 3564.52] SPEAKER_B:  Oh,  and  you're  forgetting  the  goat,  Pablo  Francisco.
+[3564.88 - 3565.64] SPEAKER_A:  He  went  down.
+[3566.08 - 3573.10] SPEAKER_C:  Did  he  collapse  on  stage?  No,  but  he  says  that  that's  a  wild  meltdown.  Yeah.  Yeah.  That's  a  wild.
+[3573.58 - 3575.26] SPEAKER_B:  That's  the,  that's  the  number  one  for
+[3575.26 - 3575.62] SPEAKER_A:  me.  He  broke.
+[3575.92 - 3576.38] SPEAKER_C:  Well,  well,
+[3576.98 - 3580.18] SPEAKER_B:  we've  had,  you've  heard  me  say  it  a  million  times.  You  don't  think  I  can  get  out  of  this?
+[3581.30 - 3584.34] SPEAKER_A:  Oh,  okay.  So,  Oh  no,  you're  in
+[3584.34 - 3587.16] SPEAKER_B:  good.  You're  in  safe  hands.  Get  down.  Get  to  the  chopper.
+[3587.44 - 3588.52] SPEAKER_A:  You  don't  think  I  can  get  out  of  this
+[3588.52 - 3589.04] SPEAKER_B:  folks?
+[3591.58 - 3594.04] SPEAKER_C:  There's  some  of  the  videos  that  cuts  and  then  it  cuts  them  being,
+[3599.52 - 3604.96] SPEAKER_B:  that's  the  one  that  made  me.  Yeah.  Yeah.  Just  straight  to  the  airport.  Stretch  a  gun.  You  don't  think  I  can  get  out  of  this?
+[3605.14 - 3608.66] SPEAKER_A:  Oh  no.  Oh  no.  He  got  locked  in  a  bit.
+[3609.04 - 3610.34] SPEAKER_B:  He  got  locked  in  the  bit.  Dude,
+[3610.56 - 3612.24] SPEAKER_C:  he's  in  like  a  K  hole  with  a  bit.
+[3612.56 - 3612.70] SPEAKER_A:  No.
+[3612.94 - 3619.58] SPEAKER_C:  Yeah.  Like,  he  can't  get  out  of  this  bit.  And  he's  gone.  I  can,  I  can,  I  can,  but  like,  wait,  hold  on.  Oh,  this  is,  this  is
+[3619.58 - 3623.02] SPEAKER_A:  fun.  He's  at  the  hospital.  Like,  it's  not  funny.  Let  it  go.  It's  like,  no,  it's  funny.
+[3623.10 - 3626.52] SPEAKER_B:  I  can  get  to  the  end  of  the  bit.  Just  let  me  finish  the  fucking  bit.  Let's  keep  interrupting.
+[3626.86 - 3627.60] SPEAKER_C:  Top  three.
+[3627.96 - 3628.38] SPEAKER_A:  So  that's,
+[3628.38 - 3631.64] SPEAKER_C:  that's  stage  meltdowns.  That's  a  different  category  though.
+[3631.98 - 3632.16] SPEAKER_A:  That's,  but
+[3632.16 - 3637.90] SPEAKER_C:  that's  right.  That's  the  number  one  of  meltdowns.  Two,  two  might  go  to  Swartzen.  Did  you  just  say  Swartzen?  Swartzen  was
+[3637.90 - 3638.50] SPEAKER_B:  awesome.
+[3638.92 - 3648.54] SPEAKER_C:  He's  just  like,  so,  all  right.  He's  so  high.  He  can't  even  like  make  sentences.  And  the  lady  just  comes  out  and  pulls  him  off  stage.
+[3648.94 - 3649.78] SPEAKER_B:  Dude,  that's,
+[3650.80 - 3658.30] SPEAKER_A:  dude,  that's  in  the  background  of  my  head  the  entire  time.  Oh,  you're  about  to,  here  it  comes,  dude.  You're  about  to  start  rambling  incoherently.
+[3658.52 - 3658.82] SPEAKER_C:  Oh  my  God.
+[3659.14 - 3670.96] SPEAKER_B:  I  thought  the  O 'Conn  man  was  going  to  have  one.  He,  when  we  did  the  Chicago  theater,  he  went  out  with  Santino  during  the  day.  Oh,  Jesus  Christ.  I  went  out,  I  met  him.  I  had  like  one  beer  and  I  was  like,  we  got
+[3670.96 - 3671.74] SPEAKER_A:  Chicago
+[3671.74 - 3672.66] SPEAKER_B:  theater  tonight.
+[3672.84 - 3673.66] SPEAKER_A:  Yeah.  Yeah.  I
+[3673.66 - 3691.22] SPEAKER_B:  left.  They  show  up.  They  didn't,  they  didn't  leave.  He  never  went  back  to  the  hotel.  They  went  from  the  bars  straight  to  the  show.  O 'Conn  man  walks  in  the  green  room.  Like,  so  I  was  like,  Holy  shit,  dude,  you're  blacked  out.  And  I  was  like,  fine,  dude,  get  the  fuck  out  there.  Go  out  there.
+[3691.36 - 3691.54] SPEAKER_A:  Yeah.
+[3691.82 - 3692.26] SPEAKER_B:  He  killed.
+[3692.40 - 3693.06] SPEAKER_A:  That's  awesome.
+[3693.66 - 3695.36] SPEAKER_B:  God  damn.  That's  pretty  impressive.
+[3695.64 - 3696.14] SPEAKER_A:  That's  awesome.
+[3698.26 - 3705.12] SPEAKER_C:  Oh,  dude,  he's  from  a  fucking  another  dimension,  man.  He  is.  O 'Connor  should  be  in  the  next  mortal  combat.
+[3705.38 - 3706.14] SPEAKER_A:  He  really  does.
+[3706.96 - 3708.44] SPEAKER_B:  He  might  be  the  drunken  master.
+[3709.52 - 3710.32] SPEAKER_A:  That's  insane.
+[3710.52 - 3734.98] SPEAKER_C:  Wait,  third,  but  wait,  they  got  a  number  three  best  meltdown.  The  Lampanelli  one  is  wild.  Do  you  remember  that  one?  it  happened.  Where  people  are  walking  out  and  then  people  are  helping  her.  People  are  going  like,  she's  yelling  at  somebody  and  then  people  are  being  like,  it's  okay,  lace.  And  she's  like,  shut  the  fuck  up.  I  don't  need  any  fucking  help  from  you.  And  she's  like  turning  on  people  supporting  her  and  shit.  Like,  it's  a,  I'm  not  throwing  any  shade.  Yeah.
+[3734.98 - 3736.56] SPEAKER_B:  Yeah.  Yeah.  This  could  happen  to  any  of  us.
+[3736.70 - 3742.28] SPEAKER_C:  Yeah.  We're  just,  it's  just  funny.  Like  I've,  I've,  I  have,  I've  been  banned  from  clubs.  I've  freaked  on  stage.
+[3742.50 - 3747.62] SPEAKER_B:  Yeah.  You're  a  psycho.  Yeah.  Yeah.  You're  a  wild  dog.
+[3747.94 - 3749.70] SPEAKER_C:  Yeah.  I  got  banned  from  the  laugh  factory  in  New  York.
+[3749.90 - 3750.44] SPEAKER_A:  Did  you  really?
+[3750.66 - 3758.08] SPEAKER_C:  Yeah.  Cause  I  told  the  audience,  I  said,  I  hope  you  all  get  fucking  AIDS  and  die  in  a  car  accident  on  your  way  home  tonight.  You're  a  bunch  of  fucking  animals.  I  got  banned.
+[3759.74 - 3762.36] SPEAKER_B:  It's  probably  during  like  a  decent  set.  I
+[3762.36 - 3762.66] SPEAKER_C:  was  just
+[3762.66 - 3763.58] SPEAKER_B:  at  the  end.
+[3763.80 - 3767.18] SPEAKER_C:  They  were,  it  was  so  rowdy,  dude.  It  was  crazy  how  rowdy  it  was.
+[3767.34 - 3767.46] SPEAKER_A:  Yeah.
+[3768.20 - 3780.40] SPEAKER_C:  And  then  I  went  back  to  the  club,  like,  and  I  was  like,  I  don't  understand  why  you  won't  book  me  anymore.  And  the  booker  was  like,  because  you  told  the  audience,  I  hope  you  get  AIDS  and  die  in  a  fucking  car.  Do  you,  do  you  think  that's  okay?  I  was  like,  well,  they  weren't,  they  were  shit.  I  don't  know.
+[3781.16 - 3782.26] SPEAKER_A:  What  was  I  supposed  to  do?
+[3782.56 - 3786.40] SPEAKER_C:  Yeah.  I've  freaked.  Have  you  guys  ever  freaked?  I've,  I've  lost  my  shit.
+[3786.40 - 3787.36] SPEAKER_A:  I've  spazzed.
+[3787.38 - 3792.86] SPEAKER_B:  I've  never  spazzed.  The  only  one  that's  Fort  Wayne  was,  I  was  just  like,  all  right,  that's  good.  It's  the  end  of  the  show.
+[3793.02 - 3796.32] SPEAKER_C:  I  haven't  done  it  in  15  years.  Like  I  learned.
+[3797.00 - 3798.32] SPEAKER_A:  I  did  it  now.  Bakersfield.
+[3798.72 - 3799.70] SPEAKER_B:  That  was  a  tough  one.
+[3800.22 - 3800.58] SPEAKER_A:  Spazz.
+[3800.72 - 3801.52] SPEAKER_B:  They  were,  they  were  wild.
+[3801.78 - 3826.86] SPEAKER_A:  I  spazzed  on  one  guy  in  Phoenix,  Arizona.  I  like  kind  of  just  started  traveling  headlining  and  the  weekend  wasn't  going  well.  Ticket  sales  weren't  great.  And  then  there  was  like  in  this,  the,  one  of  the  rooms  is  a  copper  blues.  There  was  a,  they  have  like  multiple  ones.  I  think  there's  one  of  those  rooms.  Where  there's  like,  you  know,  like  seating,  but  then  they  have  booths  to  like  the  right  of  the  stage.  Yeah.  So  it  was  just  a  guy  in  a  fucking  like  leather  jacket  talking.  So  fucking  loud.  the,
+[3827.72 - 3828.40] SPEAKER_B:  what  was  it  called?
+[3828.52 - 3866.46] SPEAKER_A:  It's  not  the,  it's  around  there.  It's.  Oh,  yeah,  yeah,  yeah.  They  have  multiple,  but  this  guy  was  talking  and  it  was  just  like,  you  know,  I  was  like,  whatever,  like  shut  up.  But  then  at  one  point,  Brittany  went  up  to  him.  She  was  there.  It  was  like,  he'd  be  quiet.  And  he  said  something  to  her.  And  I  like,  just  stopped  mid  joke.  It  was  like,  shut  the  fuck  up  pussy.  And  like  spaz.  It  was  like  a  fight.  Fuck  yeah.  It  was  bad.  And  I  was  like,  anyway,  I  was  just  fucking  around  guys.  Yeah.  Pure,  pure  red  face  spaz  had  him.  Cause  like  eventually  I  think  I  had  him  come  up  on  stage  and  he  just  called  me  gay  without  a  microphone.  I'm  like,  it  just  backfired  on  me.  And  I  was  like,  look  up  and  get  up  here.  And  he's  like,  you're  just  a  fucking  gay  pussy.  And  I'm  like,  damn,  nice  jacket,  bitch.  Get  off  the  stage.  This  isn't  working.
+[3868.64 - 3869.08] SPEAKER_C:  It's  just
+[3869.08 - 3871.54] SPEAKER_B:  go  straight.  Gay  guy.  Well,  your  jacket  is  discussing.
+[3871.82 - 3876.62] SPEAKER_A:  Fuck  you.  He  told  me  at  an  Uber  driver,  you  have  an  Uber  driver  jacket,  dude,  get  the  fuck  out  of  here.  But  it  was  just,
+[3876.86 - 3877.60] SPEAKER_C:  they're  always  right  around.
+[3877.88 - 3881.46] SPEAKER_A:  He  was  getting  louder  though.  He  was  winning  the  debate.  I'm  like,  get  the  fuck  out  of  here.  He's  like,  you're  fucking  gay.
+[3881.62 - 3915.32] SPEAKER_B:  That  was,  that  was,  it  wasn't  really  a  spaz,  but  in  that  Tempe  improv,  uh,  that  was  where  that  gremlin  from  high  school  got  me.  Oh,  you  remember  that?  This  kid  from  high  school  showed  up  and  he  was  like,  after  the  first  show,  he's  sitting  in  the  green  room.  He's  like,  I  would  give  that  like  a  C,  C  minus.  Oh,  and  then  he  spent  an  hour  in  between  shows  talking  about  how  I  sucked  at  football  in  his  class.  And  then  stayed.  It  was  crazy.  I  mean,  I  don't  know  how  you  didn't  choke  him.  Other  people  were  looking  like,  yeah,  what  the,  what  the  fuck's  going  on?
+[3915.44 - 3916.54] SPEAKER_C:  I  don't  know  how  you  didn't  choke  him.
+[3917.00 - 3937.14] SPEAKER_B:  And  then  he,  uh,  stayed  for  the  second  show  and  I  killed.  And  every  time  I  had  a  good  joke,  I  just  looked  directly  at  him.  Just  gone.  Yeah.  Yeah.  C  minus.  You  little  fucker.  Every  single  joke  for  an  hour.  I  was  just,  every  time  I'm  going,  what  do  you  think  of  that?  What  do  you  think  of  that?  You  fucking  cock.  He  was  like  that.  Nothing  to  him.  He  was  like,  that  was  good.
+[3937.90 - 3943.46] SPEAKER_C:  Oh,  that  was,  now  that  was  good.  I  love  how  people  like  that.  Flip  it.  Now  that  was  good.  See,  go  fuck  yourself.
+[3944.18 - 3944.58] SPEAKER_A:  I'm
+[3944.58 - 3945.28] SPEAKER_B:  like  your  coach.
+[3946.24 - 3946.64] SPEAKER_A:  Yeah.
+[3946.84 - 3969.66] SPEAKER_C:  That's  weird.  a  spaz  is  always  right  around  the  corner.  I've,  I've  without  question  in  recent  year,  when  I,  I,  I'm  speaking  way  too,  uh,  uh,  liberally  when  I  say  I  learned  my  lesson,  because  I,  I'll  still  yell  at  an  audience,  but  I  figured  out  somehow  to  sometimes  make  it  kind  of  funny  to  like  beat  them  in  to  get,  but  like,  I,  I  could  easily  see  having  a  full,  having  a  full  freak  at  any,
+[3969.78 - 3970.30] SPEAKER_B:  you  know,
+[3970.40 - 3974.70] SPEAKER_C:  it's,  it's,  it's,  it  won't  take  much,  dude.  It  doesn't  take  much.  It's  a  couple  of  annoying  people.
+[3974.88 - 3976.30] SPEAKER_B:  Let's  start  getting  to  your  shows,  you  know?
+[3976.64 - 3977.28] SPEAKER_A:  Yeah.  What's  that?
+[3977.42 - 3979.16] SPEAKER_B:  Let's  start  hanging  around  the  back  of  your  shows.
+[3980.06 - 3981.98] SPEAKER_C:  I  mean,  I  just  want
+[3981.98 - 3982.96] SPEAKER_B:  to,  I  fucking  sucks.
+[3983.24 - 3983.76] SPEAKER_A:  The  ultimate,
+[3984.18 - 3985.96] SPEAKER_C:  I  just  want  to  be  clear  that  I  stand  with  Pablo,  Lisa.
+[3986.22 - 3987.32] SPEAKER_B:  Oh,  for  sure.  For  sure.  Yeah.
+[3987.50 - 3990.60] SPEAKER_C:  I'm  not,  I'm  not,  I'm  not  making  fun  of  it.  It's  funny  to  see  though.
+[3990.90 - 4005.74] SPEAKER_A:  I'm  con,  I'm  convinced  it  will  happen.  I'm  like,  it's,  I'm  going  to  join  the  pantheon  of  dudes  who  freak  out  one  day  and  just  completely  break  and  be  like,  I  don't  know  why  I  do  this.  I'm  sorry  guys.  Please  refund  everything.  I'm  fighting  it  the  entire  time.  I  do  anything.
+[4006.22 - 4024.66] SPEAKER_C:  The,  but  wait,  you  never  saw  Gallagher  having  the  heart  attack  on  stage.  Yeah.  It's  during  the  fucking  watermelon.  No.  He  walks  over,  picks.  It's  just  so  fucked  up  to  laugh  at  him.
+[4024.84 - 4026.54] SPEAKER_A:  It's  fucking  hilarious.  Yeah.
+[4026.88 - 4032.84] SPEAKER_C:  No,  he  goes  over  to  the  water.  He  picks  up  the  hammer  and  he  goes,  Oh,  fuck.  No.
+[4033.68 - 4034.68] SPEAKER_A:  He  goes  down.
+[4034.90 - 4035.66] SPEAKER_B:  Oh,  he  goes  down.
+[4035.86 - 4036.44] SPEAKER_A:  He  goes  down.
+[4036.60 - 4037.28] SPEAKER_C:  He  has  a  fucking  heart
+[4037.28 - 4037.82] SPEAKER_B:  attack.  He  has  a  real  one.
+[4038.00 - 4044.08] SPEAKER_C:  Yeah,  dude.  Oh,  that's  what  I  was  saying.  There  was  two  categories.  There's  collapse  on  stage  versus  meltdown.
+[4045.06 - 4049.36] SPEAKER_B:  I  mean,  a  prop.  Yeah.  Cause  Heather  McDonald's  was  pretty  fucking  elite.
+[4049.64 - 4052.12] SPEAKER_A:  Hers  was  crazy.  Cause  she  was  like,  I  got  all  the  vaccine.
+[4053.66 - 4054.06] SPEAKER_C:  What?
+[4054.78 - 4055.18] SPEAKER_B:  Oh,
+[4055.54 - 4056.64] SPEAKER_C:  sorry.  Good  prop
+[4056.64 - 4057.30] SPEAKER_B:  guy  going  down.
+[4057.38 - 4057.90] SPEAKER_A:  Oh,  it's  crazy.
+[4058.62 - 4060.66] SPEAKER_B:  With  a  hammer,  a  mallet  in  your  hand
+[4060.66 - 4062.14] SPEAKER_C:  over  his  head.
+[4064.60 - 4066.30] SPEAKER_B:  Like  the  watermelon  finally  won.
+[4066.46 - 4066.64] SPEAKER_C:  The
+[4066.64 - 4067.40] SPEAKER_B:  watermelon  was  like,
+[4070.48 - 4081.18] SPEAKER_C:  he's  literally  doing  a  thing  that  would  give  any  human  a  heart  attack.  He's  doing  it  on  stage.  It's  closer.  Yeah,  dude.  Exactly.  Time  was  finally  like,  that's  enough,  dude.
+[4081.32 - 4081.46] SPEAKER_B:  Yeah.
+[4083.56 - 4085.98] SPEAKER_C:  But  wait,  did  Heather  McDonald  ever  explain  what  happened  to  her?
+[4086.16 - 4092.16] SPEAKER_A:  I  haven't  seen  the  explanation.  No.  I'm  sure  she  talked  about  it  somewhere,  but  I  never,  I've  never  saw  it  addressed  at
+[4092.16 - 4092.82] SPEAKER_B:  all.  She  just  fainted.
+[4093.52 - 4095.48] SPEAKER_A:  Yeah.  But  it  was  like,  she  just
+[4095.48 - 4097.30] SPEAKER_B:  happened  to  be  talking  about  how  boosted  she  was.
+[4097.42 - 4098.30] SPEAKER_A:  That  was  the  worst  part.
+[4098.32 - 4099.20] SPEAKER_B:  I  just  jinxed  it.
+[4099.68 - 4100.14] SPEAKER_A:  Yeah.  True.
+[4100.48 - 4101.46] SPEAKER_C:  Wait,  what  was  she  talking  about?  She
+[4101.46 - 4102.46] SPEAKER_A:  was  talking,  she  was  bragging
+[4102.46 - 4108.70] SPEAKER_B:  about  how  many.  Her  last  lines  were  like  how  many  boosters  and  how  many  times  she's  gotten  the  vaccine.  Then  her  last  line's  like,  so  yeah,  Jesus  loves  me.
+[4109.44 - 4113.88] SPEAKER_A:  Yeah.  And  the  worst  part  was  the  crowd  thought  it  was  a  bit  and  they
+[4113.88 - 4116.00] SPEAKER_B:  were  like,  yeah,  it's  timed  perfectly.
+[4116.26 - 4117.44] SPEAKER_A:  Yeah.  It  was  fucked  up.
+[4117.44 - 4118.48] SPEAKER_C:  Yeah.  That's  a  great  bit.
+[4118.84 - 4119.42] SPEAKER_A:  That's  true.
+[4119.94 - 4121.54] SPEAKER_B:  But  yeah,  I  think  she  really  got  hurt.
+[4121.80 - 4124.02] SPEAKER_A:  She  fucking,  I  think  she  hit  her  head.  Dude,  she  got  fucked  up.
+[4124.14 - 4125.42] SPEAKER_C:  Yeah.  She  had  a  skull  fracture.
+[4125.74 - 4137.06] SPEAKER_A:  Yeah.  God.  Yeah.  She  got  fucked  up  and  it  was  just  like  these  idiots  who  didn't  get  the  vaccine.  Ha  ha.  I've  gotten  all  of  them.  Ha  ha.  God  loves  me.  I've  never  even  gotten.  Ha  ha.  And
+[4137.06 - 4141.80] SPEAKER_B:  fucking.  Literally  got  killed.  God  was  just  like,  yeah,  yeah,  enough  of  that.
+[4141.80 - 4143.74] SPEAKER_A:  Holy  shit.  Jesus  Christ.
+[4143.90 - 4145.72] SPEAKER_C:  Yeah.  The  Wendy  Williams  one  happened  on  TV.
+[4145.94 - 4146.66] SPEAKER_B:  Yeah.  I  saw  that.
+[4146.90 - 4147.08] SPEAKER_A:  Yeah.
+[4147.40 - 4148.24] SPEAKER_C:  By  the  way,  she  was  sick.
+[4148.48 - 4149.34] SPEAKER_B:  Wendy  Williams  rules.
+[4149.86 - 4150.38] SPEAKER_A:  She  does.
+[4150.58 - 4151.88] SPEAKER_B:  I  didn't  know  Wendy  Williams  ruled.
+[4152.06 - 4154.18] SPEAKER_C:  I  don't  know.  I  don't  know  much  about  her.  Watch  clips.
+[4154.42 - 4155.20] SPEAKER_B:  She's  fucking  hilarious.
+[4155.34 - 4163.32] SPEAKER_C:  Yeah.  She  is  funny.  She's  doing,  she's  doing  a  show  at  comics  in  New  York.  Were  you  around  when  comics  was  there?  Oh  my  God.  I'm  going  to  pee  my  fucking
+[4163.32 - 4164.70] SPEAKER_B:  pants.  Yeah.  I'm  going  to  pee  my  pants  too.
+[4164.94 - 4166.32] SPEAKER_A:  We  take  a  break.  I  can't  move,  dude.
+[4166.86 - 4167.60] SPEAKER_B:  We'll  see  you  later.
+[4167.78 - 4168.30] SPEAKER_A:  Are  we  in  an  hour?
+[4168.62 - 4168.82] SPEAKER_C:  Yeah.
+[4169.06 - 4172.16] SPEAKER_A:  Oh,  dude,  let's  slide  to  the  page.  Yeah.  I've  been  fighting  it  for  like  10
+[4172.16 - 4173.52] SPEAKER_B:  minutes.  I  could  have  been  page  right  there.  We'll  see.
+[4173.72 - 4174.02] SPEAKER_A:  Yeah,  true.
+[4174.10 - 4187.24] SPEAKER_B:  It  was  a  lot  of  standup  talk.  Okay.  We'll  see.  All  right.  Yeah.  Yeah.  Yeah.  Thank  you.

@@ -160,14 +160,23 @@ def make_handler_class(config: ServerConfig):
             """
             Split a diarization segment into multiple segments.
             
-            NEW SCHEMA FLOW:
-            1. Create a SegmentSplit record (split_time, split_by, split_at)
-            2. Link SegmentSplit to original segment via segmentSplitOriginalSegment
-            3. Mark original segment as is_invalidated=true (NOT delete - history preserved)
+            SIMPLIFIED API:
+            Required fields:
+              - segment_id: The diarization segment to split
+              - lines: Array of text strings (one per resulting segment)
+            
+            Optional:
+              - split_by: Who performed the split (default: "ground_truth_ui")
+            
+            Everything else (run_id, start_time, end_time, video_id) is looked up
+            from the segment itself.
+            
+            SCHEMA FLOW:
+            1. Fetch segment to get start_time, end_time, and parent run
+            2. Create SegmentSplit record (audit trail)
+            3. Mark original segment is_invalidated=true (NOT deleted - history preserved)
             4. Create N new DiarizationSegments with speaker_label="SPLIT_X"
-            5. Link new segments to SegmentSplit via segmentSplitResultingSegments
-            6. Link new segments to the diarization run
-            7. Optionally extract embeddings for new segments
+            5. Link everything together
             """
             try:
                 import uuid
@@ -179,16 +188,38 @@ def make_handler_class(config: ServerConfig):
                 
                 segment_id = data.get("segment_id")
                 lines = data.get("lines", [])
-                run_id = data.get("run_id")
-                start_time = data.get("start_time")
-                end_time = data.get("end_time")
                 split_by = data.get("split_by", "ground_truth_ui")
                 
-                if not segment_id or not run_id or start_time is None or end_time is None:
-                    raise ValueError("Missing required fields: segment_id, run_id, start_time, end_time")
+                if not segment_id:
+                    raise ValueError("Missing required field: segment_id")
                 
                 if len(lines) < 2:
                     raise ValueError("Need at least 2 lines to split a segment")
+                
+                # Fetch the segment to get its properties and parent run
+                q = {
+                    "diarizationSegments": {
+                        "$": {"where": {"id": segment_id}},
+                        "diarizationRun": {}
+                    }
+                }
+                result = repo._query(q)
+                segments = result.get("diarizationSegments", [])
+                
+                if not segments:
+                    raise ValueError(f"Segment not found: {segment_id}")
+                
+                segment = segments[0]
+                start_time = segment.get("start_time")
+                end_time = segment.get("end_time")
+                
+                # Get run_id from the linked diarizationRun
+                runs = segment.get("diarizationRun", [])
+                if not runs:
+                    raise ValueError(f"Segment has no parent diarization run")
+                run_id = runs[0].get("id")
+                
+                print(f"  Segment: {start_time:.2f}s - {end_time:.2f}s, Run: {run_id}")
                 
                 # Calculate proportional split times
                 total_chars = sum(len(line) for line in lines)

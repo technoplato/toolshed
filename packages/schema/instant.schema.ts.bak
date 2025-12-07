@@ -1,0 +1,194 @@
+/*
+  HOW:
+  To deploy this schema to InstantDB, use the Instant CLI:
+  
+  1. Push Schema (Apply changes):
+     `npx instant-cli@latest push schema`
+     
+  2. Pull Schema (Sync remote changes):
+     `npx instant-cli@latest pull schema`
+     
+  [Troubleshooting]
+  - "Schema mismatch": If you see errors about "Triple missing" or type errors after pushing, 
+    it means your local schema definitions (e.g. `indexed()` fields) conflict with existing data. 
+    You may need to wipe the DB or manually fix the data via the Dashboard.
+  - "Auth Error": Ensure `INSTANT_APP_ID` and `INSTANT_ADMIN_SECRET` are set in `.env`.
+ 
+  WHO:
+  Antigravity, User
+  (Context: Schema Definition)
+
+  WHAT:
+  InstantDB Schema for the Video Analysis Pipeline.
+  Entities: videos, transcriptionRuns, diarizationRuns, stableSegments, speakers, shazamMatches.
+*/
+
+import { i } from "@instantdb/core";
+
+const graph = i.graph(
+  {
+    // ---------------------------------------------------------
+    // Legacy / Core
+    // ---------------------------------------------------------
+    videos: i.entity({
+      title: i.string(),
+      url: i.string(), // "titleUrl"
+      filepath: i.string(),
+      duration: i.number(),
+
+      // Legacy Metadata
+      channel_id: i.string(),
+      upload_date: i.string(),
+      view_count: i.number(),
+      
+      created_at: i.string(),
+    }),
+
+    stableSegments: i.entity({
+      video_id: i.string().indexed(),
+      index: i.number().indexed(), // 0, 1, 2...
+      start_time: i.number(),
+      end_time: i.number(),
+      created_at: i.string(),
+    }),
+
+    correctedSegments: i.entity({
+      stable_segment_id: i.string().indexed(), 
+      video_id: i.string().indexed(),
+      text: i.string(),
+      speaker_id: i.string().indexed(),
+      created_at: i.string(),
+    }),
+
+    transcriptionConfigs: i.entity({
+      model: i.string().indexed(), // e.g. "whisper-large-v3"
+      language: i.string(),
+      threshold: i.number(), // segmentation_threshold
+      window: i.number(),
+      // Add other params as needed
+    }),
+
+    diarizationConfigs: i.entity({
+      embedding_model: i.string().indexed(),
+      clustering_method: i.string(),
+      cluster_threshold: i.number(),
+      identification_threshold: i.number(),
+      // Add other params as needed
+    }),
+
+    transcriptionRuns: i.entity({
+      video_id: i.string().indexed(),
+      config_id: i.string().indexed(), // Link to config
+      runner: i.string(), // e.g. "mlx", "hf"
+      git_commit_sha: i.string(),
+      pipeline_file: i.string(),
+      created_at: i.string(),
+    }),
+
+    transcriptionSegments: i.entity({
+      run_id: i.string().indexed(),
+      start_time: i.number().indexed(),
+      end_time: i.number(),
+      text: i.string(),
+      words: i.json(), // [{word, start, end, conf}, ...]
+    }),
+
+    diarizationRuns: i.entity({
+      video_id: i.string().indexed(),
+      transcription_run_id: i.string().indexed(),
+      config_id: i.string().indexed(), // Link to config
+      runner: i.string(), 
+      git_commit_sha: i.string(),
+      pipeline_file: i.string(),
+      created_at: i.string(),
+    }),
+
+    diarizationSegments: i.entity({
+      run_id: i.string().indexed(),
+      start_time: i.number().indexed(),
+      end_time: i.number(),
+      embedding_id: i.string(), // Link to Postgres vector ID
+    }),
+
+    speakers: i.entity({
+      name: i.string().indexed(),
+      is_human: i.boolean(),
+      created_at: i.string(),
+    }),
+
+    shazamMatches: i.entity({
+      video_id: i.string().indexed(),
+      start_time: i.number().indexed(),
+      end_time: i.number(),
+      shazam_track_id: i.string().indexed(),
+      title: i.string(),
+      artist: i.string(),
+      match_offset: i.number(),
+      created_at: i.string(),
+    }),
+  },
+  {
+      videoStableSegments: {
+        forward: { on: "videos", has: "many", label: "stableSegments" },
+        reverse: { on: "stableSegments", has: "one", label: "video" },
+      },
+      videoCorrectedSegments: {
+        forward: { on: "videos", has: "many", label: "correctedSegments" },
+        reverse: { on: "correctedSegments", has: "one", label: "video" },
+      },
+      stableSegmentCorrectedSegments: {
+        forward: { on: "stableSegments", has: "many", label: "corrections" },
+        reverse: { on: "correctedSegments", has: "one", label: "stableSegment" },
+      },
+      videoTranscriptionRuns: {
+        forward: { on: "videos", has: "many", label: "transcriptionRuns" },
+        reverse: { on: "transcriptionRuns", has: "one", label: "video" },
+      },
+      runTranscriptionSegments: {
+        forward: { on: "transcriptionRuns", has: "many", label: "transcriptionSegments" },
+        reverse: { on: "transcriptionSegments", has: "one", label: "run" },
+      },
+      stableSegmentTranscriptionSegments: {
+        forward: { on: "stableSegments", has: "many", label: "transcriptionSegments" },
+        reverse: { on: "transcriptionSegments", has: "many", label: "stableSegments" },
+      },
+      transcriptionRunConfig: {
+        forward: { on: "transcriptionRuns", has: "one", label: "config" },
+        reverse: { on: "transcriptionConfigs", has: "many", label: "runs" },
+      },
+      videoDiarizationRuns: {
+        forward: { on: "videos", has: "many", label: "diarizationRuns" },
+        reverse: { on: "diarizationRuns", has: "one", label: "video" },
+      },
+      diarizationRunTranscriptonRun: {
+        forward: { on: "diarizationRuns", has: "one", label: "transcriptionRun" },
+        reverse: { on: "transcriptionRuns", has: "many", label: "diarizationRuns" },
+      },
+      diarizationRunConfig: {
+        forward: { on: "diarizationRuns", has: "one", label: "config" },
+        reverse: { on: "diarizationConfigs", has: "many", label: "runs" },
+      },
+      runDiarizationSegments: {
+        forward: { on: "diarizationRuns", has: "many", label: "diarizationSegments" },
+        reverse: { on: "diarizationSegments", has: "one", label: "run" },
+      },
+      stableSegmentDiarizationSegments: {
+        forward: { on: "stableSegments", has: "many", label: "diarizationSegments" },
+        reverse: { on: "diarizationSegments", has: "many", label: "stableSegments" },
+      },
+      diarizationSegmentSpeaker: {
+        forward: { on: "diarizationSegments", has: "one", label: "speaker" },
+        reverse: { on: "speakers", has: "many", label: "diarizationSegments" },
+      },
+      correctedSegmentSpeaker: {
+        forward: { on: "correctedSegments", has: "one", label: "speaker" },
+        reverse: { on: "speakers", has: "many", label: "correctedSegments" },
+      },
+      videoShazamMatches: {
+          forward: { on: "videos", has: "many", label: "shazamMatches" },
+          reverse: { on: "shazamMatches", has: "one", label: "video" },
+      },
+  }
+);
+
+export default graph;
