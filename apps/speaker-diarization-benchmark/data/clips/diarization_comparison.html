@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<!--
+HOW:
+  Open this file in a browser served by the local Python server:
+  cd apps/speaker-diarization-benchmark && python -m http.server 8000
+  Then visit: http://localhost:8000/data/clips/diarization_comparison.html
+
+  [Inputs]
+  - manifest.json: Contains clips with transcriptions from different services
+  - Audio files in data/clips/
+
+  [Outputs]
+  - Visual comparison of diarization results from different services
+
+WHO:
+  Claude AI, User
+  (Context: Comparing PyAnnote API diarization vs ground truth)
+
+WHAT:
+  Side-by-side comparison view for diarization results.
+  Shows the same audio segment with speaker labels from different sources.
+
+WHEN:
+  2025-12-07
+  
+WHERE:
+  apps/speaker-diarization-benchmark/data/clips/diarization_comparison.html
+
+WHY:
+  To evaluate diarization accuracy by comparing automated speaker detection
+  against human-verified ground truth labels.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diarization Comparison</title>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --surface: #16213e;
+            --surface-hover: #1f2b4a;
+            --primary: #e94560;
+            --secondary: #0f3460;
+            --text: #eaeaea;
+            --text-muted: #8892a4;
+            --border: #2d3a56;
+        }
+        
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            background: var(--surface);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 1.4em;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        select {
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--secondary);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        select:focus { outline: 2px solid var(--primary); }
+        
+        .player-section {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        #video-title {
+            color: var(--text);
+            font-size: 1.1em;
+            margin: 0 0 10px 0;
+        }
+        
+        audio {
+            width: 100%;
+            height: 40px;
+        }
+        
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 250px);
+        }
+        
+        .column {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .col-header {
+            padding: 12px 15px;
+            background: var(--secondary);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .col-header .source-badge {
+            font-size: 0.75em;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: var(--primary);
+            color: white;
+        }
+        
+        .ground-truth .col-header { border-top: 3px solid #4caf50; }
+        .pyannote .col-header { border-top: 3px solid #ff9800; }
+        
+        .col-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .segment {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .segment:hover {
+            border-color: var(--primary);
+            transform: translateX(3px);
+        }
+        
+        .segment.active {
+            background: rgba(233, 69, 96, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(233, 69, 96, 0.2);
+        }
+        
+        .segment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+        }
+        
+        .speaker-label {
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        
+        /* Speaker colors */
+        .speaker-shane { background: #2196f3; color: white; }
+        .speaker-matt { background: #4caf50; color: white; }
+        .speaker-joe { background: #ff9800; color: white; }
+        .speaker-music { background: #9c27b0; color: white; }
+        .speaker-unknown { background: var(--border); color: var(--text-muted); }
+        .speaker-0 { background: #e91e63; color: white; }
+        .speaker-1 { background: #00bcd4; color: white; }
+        .speaker-2 { background: #8bc34a; color: white; }
+        .speaker-3 { background: #ffc107; color: black; }
+        .speaker-4 { background: #673ab7; color: white; }
+        
+        .timestamp {
+            color: var(--text-muted);
+            font-size: 0.8em;
+            font-family: monospace;
+        }
+        
+        .segment-text {
+            color: var(--text);
+            line-height: 1.5;
+        }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        /* Speaker mapping */
+        .mapping-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .mapping-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 0.9em;
+            color: var(--primary);
+        }
+        
+        .mapping-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .mapping-row label {
+            min-width: 100px;
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+        
+        .mapping-row select {
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎙️ Diarization Comparison</h1>
+        <div class="controls">
+            <label>Clip:</label>
+            <select id="clip-select"></select>
+            <label>Time Range:</label>
+            <select id="range-select">
+                <option value="60">First 60s</option>
+                <option value="120">First 2min</option>
+                <option value="300">First 5min</option>
+                <option value="all">All</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="player-section">
+        <h3 id="video-title">Select a clip...</h3>
+        <audio id="audio" controls></audio>
+        <div class="legend" id="legend"></div>
+    </div>
+    
+    <div class="mapping-section" id="mapping-section" style="display: none;">
+        <h3>Speaker Mapping (PyAnnote → Ground Truth)</h3>
+        <div id="mapping-rows"></div>
+    </div>
+    
+    <div class="comparison-container">
+        <div class="column ground-truth">
+            <div class="col-header">
+                <span>Ground Truth <span class="source-badge">Verified</span></span>
+                <span class="stats" id="gt-stats"></span>
+            </div>
+            <div class="col-content" id="gt-content"></div>
+        </div>
+        
+        <div class="column pyannote">
+            <div class="col-header">
+                <span>PyAnnote API <span class="source-badge">Model</span></span>
+                <span class="stats" id="pa-stats"></span>
+            </div>
+            <div class="col-content" id="pa-content"></div>
+        </div>
+    </div>
+    
+    <script>
+        // State
+        let manifestData = [];
+        let currentClip = null;
+        let audio = document.getElementById('audio');
+        let speakerMapping = {}; // PyAnnote speaker -> ground truth name
+        
+        // Known speaker names from ground truth
+        const knownSpeakers = ['Shane Gillis', 'Matt McCusker', 'Joe DeRosa', 'MSSP Theme Music'];
+        
+        // Load manifest
+        async function loadManifest() {
+            try {
+                const res = await fetch('/data/clips/manifest.json');
+                manifestData = await res.json();
+                populateClipSelect();
+            } catch (e) {
+                console.error('Failed to load manifest:', e);
+            }
+        }
+        
+        function populateClipSelect() {
+            const select = document.getElementById('clip-select');
+            select.innerHTML = '<option value="">Select clip...</option>';
+            
+            // Find clips that have pyannote_api transcription
+            manifestData.forEach(clip => {
+                const hasPyannote = clip.transcriptions?.pyannote_api;
+                if (hasPyannote) {
+                    const opt = document.createElement('option');
+                    opt.value = clip.id;
+                    opt.textContent = clip.id;
+                    select.appendChild(opt);
+                }
+            });
+            
+            // Auto-select full video if available
+            const fullVideo = manifestData.find(c => c.id === 'jAlKYYr1bpY.wav');
+            if (fullVideo) {
+                select.value = fullVideo.id;
+                loadClip(fullVideo.id);
+            }
+        }
+        
+        document.getElementById('clip-select').onchange = (e) => {
+            if (e.target.value) loadClip(e.target.value);
+        };
+        
+        document.getElementById('range-select').onchange = () => {
+            if (currentClip) renderComparison();
+        };
+        
+        function loadClip(clipId) {
+            currentClip = manifestData.find(c => c.id === clipId);
+            if (!currentClip) return;
+            
+            document.getElementById('video-title').textContent = clipId;
+            
+            // Set audio source
+            let audioPath = currentClip.clip_path || '';
+            if (!audioPath.startsWith('/')) audioPath = '/' + audioPath;
+            audio.src = audioPath;
+            
+            // Build speaker mapping UI
+            buildMappingUI();
+            
+            renderComparison();
+        }
+        
+        function buildMappingUI() {
+            const pyannoteSegs = currentClip.transcriptions?.pyannote_api || [];
+            const paSpeakers = [...new Set(pyannoteSegs.map(s => s.speaker))].sort();
+            
+            const container = document.getElementById('mapping-rows');
+            container.innerHTML = '';
+            
+            // Auto-map based on clip_youtube_jAlKYYr1bpY_0_60.wav ground truth
+            // From the ground truth file, we know:
+            // SPEAKER_02 → Theme Music initially, then Matt (context-dependent)
+            // SPEAKER_04 → Shane Gillis
+            // SPEAKER_03 → Matt McCusker
+            // Actually let me check the patterns...
+            
+            // For now, let user map manually
+            paSpeakers.forEach(spk => {
+                const row = document.createElement('div');
+                row.className = 'mapping-row';
+                
+                const label = document.createElement('label');
+                label.textContent = spk + ':';
+                
+                const select = document.createElement('select');
+                select.innerHTML = '<option value="">Unmapped</option>';
+                knownSpeakers.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.textContent = name;
+                    select.appendChild(opt);
+                });
+                
+                select.onchange = () => {
+                    speakerMapping[spk] = select.value;
+                    renderComparison();
+                };
+                
+                row.appendChild(label);
+                row.appendChild(select);
+                container.appendChild(row);
+            });
+            
+            document.getElementById('mapping-section').style.display = 'block';
+        }
+        
+        function renderComparison() {
+            if (!currentClip) return;
+            
+            const range = document.getElementById('range-select').value;
+            const maxTime = range === 'all' ? Infinity : parseInt(range);
+            
+            // Get ground truth (from verified clip if available)
+            const gtClip = manifestData.find(c => c.id === 'clip_youtube_jAlKYYr1bpY_0_60.wav');
+            let gtSegments = gtClip?.transcriptions?.mlx_whisper_turbo_seg_level || [];
+            gtSegments = gtSegments.filter(s => s.start < maxTime);
+            
+            // Get PyAnnote segments
+            let paSegments = currentClip.transcriptions?.pyannote_api || [];
+            paSegments = paSegments.filter(s => s.start < maxTime);
+            
+            // Render ground truth
+            const gtContent = document.getElementById('gt-content');
+            gtContent.innerHTML = '';
+            gtSegments.forEach(seg => {
+                gtContent.appendChild(createSegmentCard(seg, 'ground-truth'));
+            });
+            document.getElementById('gt-stats').textContent = `${gtSegments.length} segments`;
+            
+            // Render PyAnnote
+            const paContent = document.getElementById('pa-content');
+            paContent.innerHTML = '';
+            paSegments.forEach(seg => {
+                paContent.appendChild(createSegmentCard(seg, 'pyannote'));
+            });
+            document.getElementById('pa-stats').textContent = `${paSegments.length} segments`;
+            
+            // Update legend
+            updateLegend();
+        }
+        
+        function createSegmentCard(seg, source) {
+            const div = document.createElement('div');
+            div.className = 'segment';
+            div.dataset.start = seg.start;
+            div.dataset.end = seg.end;
+            
+            const speakerName = seg.speaker || 'UNKNOWN';
+            const displayName = source === 'pyannote' 
+                ? (speakerMapping[speakerName] || speakerName)
+                : speakerName;
+            
+            const speakerClass = getSpeakerClass(speakerName, source);
+            
+            div.innerHTML = `
+                <div class="segment-header">
+                    <span class="speaker-label ${speakerClass}">${displayName}</span>
+                    <span class="timestamp">${formatTime(seg.start)} - ${formatTime(seg.end)}</span>
+                </div>
+                <div class="segment-text">${seg.text || ''}</div>
+            `;
+            
+            div.onclick = () => {
+                audio.currentTime = seg.start;
+                audio.play();
+            };
+            
+            return div;
+        }
+        
+        function getSpeakerClass(speaker, source) {
+            if (source === 'ground-truth') {
+                if (speaker.includes('Shane')) return 'speaker-shane';
+                if (speaker.includes('Matt')) return 'speaker-matt';
+                if (speaker.includes('Joe')) return 'speaker-joe';
+                if (speaker.includes('Music') || speaker.includes('Theme')) return 'speaker-music';
+                return 'speaker-unknown';
+            } else {
+                // PyAnnote speakers: SPEAKER_XX
+                const num = speaker.replace('SPEAKER_', '');
+                return `speaker-${num}`;
+            }
+        }
+        
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = (seconds % 60).toFixed(1);
+            return `${m}:${s.padStart(4, '0')}`;
+        }
+        
+        function updateLegend() {
+            const legend = document.getElementById('legend');
+            legend.innerHTML = '';
+            
+            const speakers = [
+                { name: 'Shane Gillis', class: 'speaker-shane' },
+                { name: 'Matt McCusker', class: 'speaker-matt' },
+                { name: 'Joe DeRosa', class: 'speaker-joe' },
+                { name: 'Music', class: 'speaker-music' },
+            ];
+            
+            speakers.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `<div class="legend-color ${s.class}"></div>${s.name}`;
+                legend.appendChild(item);
+            });
+        }
+        
+        // Time sync highlighting
+        audio.ontimeupdate = () => {
+            const t = audio.currentTime;
+            document.querySelectorAll('.segment').forEach(el => {
+                const s = parseFloat(el.dataset.start);
+                const e = parseFloat(el.dataset.end);
+                if (t >= s && t < e) {
+                    if (!el.classList.contains('active')) {
+                        el.classList.add('active');
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        };
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            
+            if (e.key === ' ') {
+                e.preventDefault();
+                if (audio.paused) audio.play();
+                else audio.pause();
+            }
+        });
+        
+        // Initialize
+        loadManifest();
+    </script>
+</body>
+</html>
+
