@@ -30,7 +30,7 @@
 
 🐛 Updated ground_truth_instant.html for new schema
 
-[Commit](https://github.com/technoplato/toolshed/commit/4a7f813)
+[Commit](https://github.com/technoplato/toolshed/commit/d7a3cb4)
 
 - Query fetches words and speakerAssignments instead of old schema fields
 - renderTranscriptionWords groups words by segment index
