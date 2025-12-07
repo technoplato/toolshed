@@ -213,6 +213,44 @@ WHY:
   - **Long Term**: Future goals.
   - _Agents must update TASKS.md as progress is made._
 
+## Code Style Guidelines
+
+### Comment Placement
+
+Comments MUST be placed **ABOVE** the code they describe, **NEVER to the right**.
+
+Use multi-line `/** */` style comments for detailed explanations. Include examples where helpful.
+
+**❌ BAD (Comments to the right):**
+```typescript
+start_time: i.number().indexed(),  // For range queries
+embedding_id: i.string().optional(), // Links to Postgres
+```
+
+**✅ GOOD (Comments above):**
+```typescript
+/**
+ * Start time of the segment in seconds.
+ * Indexed to enable range queries like:
+ *   where: { start_time: { $lte: currentTime } }
+ */
+start_time: i.number().indexed(),
+
+/**
+ * Reference to the voice embedding in PostgreSQL (pgvector).
+ * Used for speaker identification by comparing to known speaker centroids.
+ */
+embedding_id: i.string().optional(),
+```
+
+### Schema Documentation
+
+When defining database schemas:
+1. Add a header section explaining design principles and entity relationships
+2. Document each entity with its relationships inline
+3. Include business logic explanations where relevant
+4. Provide concrete examples in link documentation
+
 ## Environment & Tools
 
 - **Python**: Use `uv` for dependency management.
