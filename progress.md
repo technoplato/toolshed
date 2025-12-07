@@ -26,6 +26,18 @@
 
 ---
 
+### December 7th, 2025 at 3:03:09 p.m.
+
+✅ Schema migration complete - all tests passing
+
+[Commit](https://github.com/technoplato/toolshed/commit/086006b)
+
+- Test script verifies: Publication, Video, Speaker, TranscriptionRun with Words, DiarizationRun with Segments, SpeakerAssignment
+- All handoff tasks completed: 1) Nuked DB, 2) Pushed schema, 3) Updated adapter, 4) Updated models, 5) Verified with tests
+- New schema enables: words as first-class entities, speaker assignments with history, independent transcription/diarization
+
+
+
 ### December 7th, 2025 at 3:01:50 p.m.
 
 ✨ Updated Python models and adapter to match new InstantDB schema
