@@ -30,7 +30,7 @@
 
 ✅ Schema migration complete - all tests passing
 
-[Commit](https://github.com/technoplato/toolshed/commit/086006b)
+[Commit](https://github.com/technoplato/toolshed/commit/d59169d)
 
 - Test script verifies: Publication, Video, Speaker, TranscriptionRun with Words, DiarizationRun with Segments, SpeakerAssignment
 - All handoff tasks completed: 1) Nuked DB, 2) Pushed schema, 3) Updated adapter, 4) Updated models, 5) Verified with tests
