@@ -37,9 +37,9 @@ import argparse
 from pathlib import Path
 from pathlib import Path
 from typing import Union
-from .config import IngestionConfig, WorkflowConfig, DownloadConfig
+from .config import IngestionConfig, WorkflowConfig, DownloadConfig, ServerConfig
 
-def parse_args() -> Union[IngestionConfig, DownloadConfig]:
+def parse_args() -> Union[IngestionConfig, DownloadConfig, ServerConfig]:
     parser = argparse.ArgumentParser(description="Audio Ingestion CLI")
     
     # Subcommands
@@ -76,6 +76,14 @@ def parse_args() -> Union[IngestionConfig, DownloadConfig]:
     download_parser.add_argument("--output-dir", type=str, default=".", help="Directory to save the downloaded video. Defaults to current directory. Filename format: 'Title [ID].ext'.")
     download_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging.")
     download_parser.add_argument("--dry-run", action="store_true", help="Simulate actions without downloading.")
+    
+    # Server command
+    server_parser = subparsers.add_parser("server", help="Start the Ground Truth server")
+    server_subparsers = server_parser.add_subparsers(dest="server_command", help="Server action")
+    
+    server_start_parser = server_subparsers.add_parser("start", help="Start the server")
+    server_start_parser.add_argument("--port", type=int, default=8000, help="Port to run the server on.")
+    server_start_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging.")
 
     args = parser.parse_args()
     
@@ -104,6 +112,11 @@ def parse_args() -> Union[IngestionConfig, DownloadConfig]:
             output_dir=Path(args.output_dir),
             verbose=args.verbose,
             dry_run=args.dry_run
+        )
+    elif args.command == "server" and args.server_command == "start":
+        return ServerConfig(
+            port=args.port,
+            verbose=args.verbose
         )
     else:
         parser.print_help()

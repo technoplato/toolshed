@@ -32,7 +32,8 @@ def get_git_info() -> Dict[str, Any]:
         }
     except FileNotFoundError:
         # git not found
-            "timestamp": "unknown",
+        return {
+            "commit_hash": "unknown",
             "is_dirty": False
         }
 

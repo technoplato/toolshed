@@ -61,3 +61,8 @@ class DownloadConfig(BaseModel):
     verbose: bool = False
     dry_run: bool = False
 
+class ServerConfig(BaseModel):
+    port: int = 8000
+    host: str = "0.0.0.0"
+    verbose: bool = False
+

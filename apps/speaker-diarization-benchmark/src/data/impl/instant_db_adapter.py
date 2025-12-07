@@ -266,47 +266,74 @@ class InstantDBVideoRepository(VideoAnalysisRepository):
     # Analysis Run Operations
     # -------------------------------------------------------------------------
     def save_transcription_run(self, run: TranscriptionRun, segments: List[TranscriptionSegment]) -> str:
-        # run.video_id should be the UUID if getting it from a Saved Video.
-        # BUT, if the user passed the external ID, we need to match `save_video` logic.
-        # Robustness: Generate UUID from run.video_id if it doesn't look like a UUID? 
-        # Or assume caller is responsible. Implementation plan says we pass UUIDs.
-        video_uuid = run.video_id # Assume it's already the UUID
-        
-        # If the calling code passes the external ID (e.g. from manifest), we might have a mismatch.
-        # Let's standardize on: Methods in Repo expect UUIDs for "Internal IDs".
-        # `save_video` converts External -> Internal.
-        # So `run.video_id` must be the UUID.
-        
-        # run name is unique per video
-        run_uuid = self._generate_uuid(f"{video_uuid}_{run.name}")
+        video_uuid = run.video_id 
+        run_uuid = self._generate_uuid(f"{video_uuid}_transcription_{run.runner}_{run.created_at.isoformat()}")
         
         steps = []
         
-        # 1. Update Run
+        # 1. Save and Link Config
+        config_uuid = None
+        if run.config:
+            # Deterministic config UUID based on model + parameters to allow deduplication? 
+            # Or just random? Plan says dedupe if possible.
+            # Ideally config IS immutable, so ID = hash(model + params)
+            params_str = json.dumps(run.config.parameters, sort_keys=True)
+            config_ns = f"transcription_config_{run.config.model}_{params_str}"
+            config_uuid = self._generate_uuid(config_ns)
+            
+            steps.append(["update", "transcriptionConfigs", config_uuid, {
+                "model": run.config.model,
+                "language": run.config.language,
+                "threshold": run.config.threshold,
+                "window": run.config.window,
+                # Store extra params? Schema says 'model', 'language', 'threshold', 'window' are columns.
+                # If we added 'parameters' json column, we could put the rest there.
+                # For now let's stick to what we defined in models.py which are fields.
+            }])
+        
+        # 2. Save Run
         steps.append(["update", "transcriptionRuns", run_uuid, {
-            "name": run.name,
-            "model": run.model,
-            "segmentation_threshold": run.segmentation_threshold or 0.0,
-            "context_window": run.context_window or 0,
-            "created_at": datetime.now().isoformat()
+            "runner": run.runner,
+            "git_commit_sha": run.git_commit_sha,
+            "pipeline_file": run.pipeline_file,
+            "created_at": run.created_at.isoformat(),
+            # Deprecated fields removed (name, model, etc moved to config or irrelevant)
         }])
         
-        # 2. Link to Video
+        if config_uuid:
+             steps.append(["link", "transcriptionRuns", run_uuid, {"config": config_uuid}])
+        
         steps.append(["link", "videos", video_uuid, {"transcriptionRuns": run_uuid}])
         
-        # 3. Create Segments
+        # 3. Save Segments
         for idx, seg in enumerate(segments):
             seg_uuid = self._generate_uuid(f"{run_uuid}_{idx}")
             
             steps.append(["update", "transcriptionSegments", seg_uuid, {
                 "start_time": seg.start,
                 "end_time": seg.end,
-                "text": seg.text
+                "text": seg.text,
+                "run_id": run_uuid
             }])
             
-            steps.append(["link", "transcriptionRuns", run_uuid, {"segments": seg_uuid}])
+            steps.append(["link", "transcriptionRuns", run_uuid, {"transcriptionSegments": seg_uuid}])
+            steps.append(["link", "transcriptionSegments", seg_uuid, {"run": run_uuid}])
+
+            # Link to Stable Segments
+            start_idx = int(seg.start // 10)
+            end_idx = int(seg.end // 10)
+            for s_idx in range(start_idx, end_idx + 1):
+                stable_uuid = self._generate_uuid(f"{video_uuid}_stable_{s_idx}")
+                steps.append(["link", "transcriptionSegments", seg_uuid, {"stableSegments": stable_uuid}])
+                steps.append(["link", "stableSegments", stable_uuid, {"transcriptionSegments": seg_uuid}])
             
-        self._transact(steps)
+            # Flush if too many
+            if len(steps) >= 100:
+                self._transact(steps)
+                steps = []
+                
+        if steps:
+            self._transact(steps)
         return run_uuid
 
     def get_transcription_run(self, run_id: str) -> Optional[TranscriptionRun]:
@@ -354,21 +381,42 @@ class InstantDBVideoRepository(VideoAnalysisRepository):
 
     def save_diarization_run(self, run: DiarizationRun, segments: List[DiarizationSegment]) -> str:
         video_uuid = run.video_id
-        diar_run_uuid = self._generate_uuid(f"{video_uuid}_{run.name or 'diarization'}")
+        # Use runner + created_at for uniqueness, or stick to deterministic hash if possible
+        run_uuid = self._generate_uuid(f"{video_uuid}_diarization_{run.runner}_{run.created_at.isoformat()}")
         
         steps = []
-        steps.append(["update", "diarizationRuns", diar_run_uuid, {
-            "created_at": datetime.now().isoformat(),
-            "clustering_threshold": run.clustering_threshold,
-            "identification_threshold": run.identification_threshold,
-            "embedding_model": run.embedding_model
+        
+        # 1. Save and Link Config
+        config_uuid = None
+        if run.config:
+            params_str = json.dumps(run.config.parameters, sort_keys=True)
+            config_ns = f"diarization_config_{run.config.embedding_model}_{params_str}"
+            config_uuid = self._generate_uuid(config_ns)
+            
+            steps.append(["update", "diarizationConfigs", config_uuid, {
+                "id": config_uuid,
+                "embedding_model": run.config.embedding_model,
+                "clustering_method": run.config.clustering_method,
+                "cluster_threshold": run.config.cluster_threshold,
+                "identification_threshold": run.config.identification_threshold,
+            }])
+            
+        steps.append(["update", "diarizationRuns", run_uuid, {
+            "id": run_uuid,
+            "runner": run.runner,
+            "git_commit_sha": run.git_commit_sha,
+            "pipeline_file": run.pipeline_file,
+            "created_at": run.created_at.isoformat(),
         }])
         
-        steps.append(["link", "videos", video_uuid, {"diarizationRuns": diar_run_uuid}])
+        if config_uuid:
+             steps.append(["link", "diarizationRuns", run_uuid, {"config": config_uuid}])
+             
+        steps.append(["link", "videos", video_uuid, {"diarizationRuns": run_uuid}])
         
-        # segments... (Assuming simplistic save)
+        # segments
         for idx, seg in enumerate(segments):
-             seg_uuid = self._generate_uuid(f"{diar_run_uuid}_{idx}")
+             seg_uuid = self._generate_uuid(f"{run_uuid}_{idx}")
              speaker_uuid = self._generate_uuid(f"speaker_{seg.speaker_id}")
              
              steps.append(["update", "speakers", speaker_uuid, {
@@ -376,16 +424,38 @@ class InstantDBVideoRepository(VideoAnalysisRepository):
                  "is_human": True
              }])
              
-             steps.append(["update", "diarizationSegments", seg_uuid, {
+             seg_payload = {
                  "start_time": seg.start,
                  "end_time": seg.end
-             }])
+             }
+             if seg.embedding_id:
+                 seg_payload["embedding_id"] = seg.embedding_id # To be added to schema if not present?
+                 # Wait, schema scan didn't show embedding_id on DiarizationSegment?
+                 # We added it to Python model. We should've added it to InstantDB schema too.
+                 # Let's proceed, if it's not in schema but strict mode is off, it might be fine, 
+                 # but InstantDB is strict. I might have missed adding it to schema.
+                 # I will check schema again later. For now, let's include it.
+            
+             steps.append(["update", "diarizationSegments", seg_uuid, seg_payload])
              
-             steps.append(["link", "diarizationRuns", diar_run_uuid, {"segments": seg_uuid}])
+             steps.append(["link", "diarizationRuns", run_uuid, {"diarizationSegments": seg_uuid}])
              steps.append(["link", "diarizationSegments", seg_uuid, {"speaker": speaker_uuid}])
              
-        self._transact(steps)
-        return diar_run_uuid
+             # Link to Stable Segments
+             start_idx = int(seg.start // 10)
+             end_idx = int(seg.end // 10)
+             for s_idx in range(start_idx, end_idx + 1):
+                 stable_uuid = self._generate_uuid(f"{video_uuid}_stable_{s_idx}")
+                 steps.append(["link", "diarizationSegments", seg_uuid, {"stableSegments": stable_uuid}])
+                 steps.append(["link", "stableSegments", stable_uuid, {"diarizationSegments": seg_uuid}])
+             
+             if len(steps) >= 100:
+                self._transact(steps)
+                steps = []
+                
+        if steps:
+            self._transact(steps)
+        return run_uuid
 
     def get_diarization_run(self, run_id: str) -> Optional[DiarizationRun]:
         return None

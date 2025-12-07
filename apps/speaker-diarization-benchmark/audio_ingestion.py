@@ -79,10 +79,11 @@ load_dotenv()
 sys.path.append(str(Path(__file__).parent))
 
 from ingestion.args import parse_args
-from ingestion.config import IngestionConfig, DownloadConfig
+from ingestion.config import IngestionConfig, DownloadConfig, ServerConfig
 from ingestion.download import download_video
 from ingestion.manifest import update_manifest
 from ingestion.report import generate_report
+from ingestion.server import run_server
 from transcribe import transcribe, TranscriptionResult, Segment, Word
 from utils import get_git_info
 
@@ -95,6 +96,10 @@ def main():
     
     if config.verbose:
         logger.setLevel(logging.DEBUG)
+        
+    if isinstance(config, ServerConfig):
+        run_server(config)
+        return
         
     logger.info(f"Starting audio ingestion")
     

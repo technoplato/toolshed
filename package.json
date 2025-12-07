@@ -3,7 +3,9 @@
     "version": "1.0.0",
     "description": "Root for InstantDB CLI",
     "dependencies": {
-        "@instantdb/core": "^0.22.78"
+        "@instantdb/admin": "^0.22.78",
+        "@instantdb/core": "^0.22.78",
+        "dotenv": "^17.2.3"
     },
     "devDependencies": {
         "instant-cli": "latest"

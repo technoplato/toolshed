@@ -26,6 +26,20 @@
 
 ---
 
+### December 7th, 2025 at 2:58:01 p.m.
+
+✨ Picked up beautiful-schema-fresh-restart handoff, nuked database for schema migration
+
+[Commit](https://github.com/technoplato/toolshed/commit/5c1bfb7)
+
+- Resolved branch checkout conflict in instant.schema.ts (kept new schema design)
+- Wiped InstantDB database: 102 entities deleted (videos, speakers, configs, runs, segments)
+- Updated nuke_db.py with proper documentation and new schema collection names
+- Added 20+ one_off scripts for database maintenance
+- Committed changes from worktree (7abbe54) into main workspace
+
+
+
 ### December 5th, 2025 at 12:54:16 p.m.
 
 📝 Added Good/Bad examples to AGENTS.md
@@ -34,8 +48,6 @@
 
 - Added explicit examples of poor vs high-quality documentation
 - Clarified expectations for agents
-
-
 
 ### December 5th, 2025 at 12:53:12 p.m.
 
@@ -47,8 +59,6 @@
 - Added mandatory Input/Output details
 - Clarified context requirements
 
-
-
 ### December 5th, 2025 at 12:31:42 p.m.
 
 🧹 Updated legacy documentation and progress script
@@ -57,8 +67,6 @@
 
 - Updated docstrings in key files to match guidelines
 - Added docstring check to update_progress.py
-
-
 
 ### December 5th, 2025 at 12:25:59 p.m.
 
@@ -70,8 +78,6 @@
 - Verified with YouTube and TikTok
 - Updated documentation
 
-
-
 ### December 4th, 2025 at 2:57:48 p.m.
 
 🧹 Updated project dependencies
@@ -79,8 +85,6 @@
 [Commit](https://github.com/technoplato/toolshed/commit/5b4816a)
 
 - Updated pyproject.toml and uv.lock
-
-
 
 ### December 4th, 2025 at 2:57:21 p.m.
 
@@ -92,8 +96,6 @@
 - Implemented base Workflow class
 - Migrated existing workflows to new structure
 
-
-
 ### December 4th, 2025 at 2:56:24 p.m.
 
 ✨ Enhanced Ground Truth UI
@@ -104,19 +106,15 @@
 - Implemented auto-scrolling and centering
 - Separated click targets for seeking and editing
 
-
-
 ### December 4th, 2025 at 2:56:01 p.m.
 
 ✨ Implemented Overlapped Speech Detection
 
 [Commit](https://github.com/technoplato/toolshed/commit/1ca0ae7)
 
-- Added  workflow using 
+- Added workflow using
 - Implemented manual chunk processing and merging logic
 - Fixed manifest update bugs
-
-
 
 ### December 4th, 2025 at 2:55:28 p.m.
 
@@ -124,10 +122,8 @@
 
 [Commit](https://github.com/technoplato/toolshed/commit/748ecad)
 
-- Vendored pipeline to 
-- Removed external dependency on unstable  package
-
-
+- Vendored pipeline to
+- Removed external dependency on unstable package
 
 ### December 3rd, 2025 at 10:25:11 p.m.
 
@@ -138,8 +134,6 @@
 - Caught BrokenPipeError and ConnectionResetError in copyfile
 - Prevented double-fault in fallback logic
 
-
-
 ### December 3rd, 2025 at 10:08:44 p.m.
 
 📝 Added Agent Instructions section
@@ -148,8 +142,6 @@
 
 - Added section on file documentation standards
 - Added section on progress tracking workflow
-
-
 
 ### December 3rd, 2025 at 10:01:26 p.m.
 
@@ -160,8 +152,6 @@
 - Extracted notes into 3 sections: Audio Ingestion CLI, Segmentation Hypotheses, Manual Correction
 - Added Table of Contents
 - Preserved Full Text Source
-
-
 
 ### December 2nd, 2025 at 2:09:58 p.m.
 
@@ -175,8 +165,6 @@
 - Fixed code duplication in ground_truth_ui.html
 - Updated server.py to remove old embeddings on correction
 
-
-
 ### December 2nd, 2025 at 2:08:44 p.m.
 
 ✨ Enhanced Diarization UI with Keyboard Navigation
@@ -189,8 +177,6 @@
 - Fixed code duplication in ground_truth_ui.html
 - Updated server.py to remove old embeddings on correction
 
-
-
 ### December 2nd, 2025 at 1:16:50 p.m.
 
 🧹 Updated progress script to output GitHub link
@@ -198,8 +184,6 @@
 [Commit](https://github.com/technoplato/toolshed/commit/cc3487e)
 
 - Added print statement to output GitHub commit link at the end of execution
-
-
 
 ### December 2nd, 2025 at 1:14:45 p.m.
 
@@ -211,8 +195,6 @@
 - Implemented segment_level_nearest_neighbor with min distance
 - Updated benchmark report format to include identification details
 
-
-
 ### December 2nd, 2025 at 12:48:41 p.m.
 
 ✨ Integrated experimental workflows and gold standard comparison
@@ -221,8 +203,6 @@
 
 - Added segment_level and pyannote_3.1 workflows
 - Implemented result appending and gold standard comparison logic
-
-
 
 ### December 1st, 2025 at 10:28:49 p.m.
 
