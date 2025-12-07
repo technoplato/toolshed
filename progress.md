@@ -30,7 +30,7 @@
 
 ✨ Ground truth data ingested into InstantDB
 
-[Commit](https://github.com/technoplato/toolshed/commit/9e9de2b)
+[Commit](https://github.com/technoplato/toolshed/commit/12cb371)
 
 - Created ingest_ground_truth.py script for parsing and ingesting verified data
 - Video: MSSP Ep 569 - Joe DeRosa (0-60s clip)
