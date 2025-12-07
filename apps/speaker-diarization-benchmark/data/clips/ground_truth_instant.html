@@ -60,28 +60,51 @@
         
         .segment-text {
             display: block;
-            padding: 6px 8px;
+            padding: 8px 10px;
             border-radius: 4px;
             cursor: text;
             background: rgba(0,0,0,0.02);
-            transition: background 0.1s;
-            line-height: 1.4;
-            color: #444;
+            transition: all 0.15s;
+            line-height: 1.5;
+            color: #333;
+            border: 1px solid transparent;
         }
-        .segment-text:hover { background: #eee; }
+        .segment-text:hover { 
+            background: #f5f5f5; 
+            border-color: #ddd;
+        }
+        .segment-text:active {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
         
         .seg-speaker {
             font-weight: bold;
             color: #333;
             cursor: pointer;
-            padding: 2px 4px;
+            padding: 2px 8px;
             border-radius: 3px;
+            background: #e8f5e9;
+            margin-right: 10px;
         }
-        .seg-speaker:hover { background: #e0e0e0; }
+        .seg-speaker:hover { background: #c8e6c9; }
+        .seg-speaker.unlabeled {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        .seg-speaker.unlabeled:hover { background: #ffe0b2; }
         
         .timestamp {
             color: #888;
             font-family: monospace;
+            font-size: 0.85em;
+        }
+        
+        .segment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
         }
         
         /* Loading overlay */
@@ -211,15 +234,20 @@
             layout.innerHTML = '';
             
             try {
-                // Transcription Columns
-                (video.transcriptionRuns || []).forEach(run => {
-                    renderColumn(run, 'transcription');
-                });
-
-                // Diarization Columns
-                (video.diarizationRuns || []).forEach(run => {
-                    renderColumn(run, 'diarization');
-                });
+                // Find preferred runs (or first available)
+                const transcriptionRuns = video.transcriptionRuns || [];
+                const diarizationRuns = video.diarizationRuns || [];
+                
+                const preferredTranscription = transcriptionRuns.find(r => r.is_preferred) || transcriptionRuns[0];
+                const preferredDiarization = diarizationRuns.find(r => r.is_preferred) || diarizationRuns[0];
+                
+                if (!preferredTranscription && !preferredDiarization) {
+                    layout.innerHTML = '<div style="padding:20px; color:#999;">No transcription or diarization runs found.</div>';
+                    return;
+                }
+                
+                // Render unified view: diarization segments enriched with words
+                renderUnifiedTranscript(preferredTranscription, preferredDiarization);
                 
             } catch (err) {
                 console.error("Render Error:", err);
@@ -227,157 +255,164 @@
             }
         }
 
-        function renderColumn(run, type) {
+        function renderUnifiedTranscript(transcriptionRun, diarizationRun) {
             const col = document.createElement('div');
             col.className = 'column';
+            col.style.maxWidth = '800px';
+            col.style.margin = '0 auto';
             
-            // Updated for new schema: use tool_version or workflow instead of runner
-            const label = type === 'transcription' ? 'T-Run' : 'D-Run';
-            const runName = type === 'transcription' 
-                ? (run.tool_version || run.config?.tool || 'unknown')
-                : (run.workflow || run.config?.tool || 'unknown');
-            col.innerHTML = `<div class="col-header">${label}: ${runName}</div>`;
+            // Header with run info
+            const tInfo = transcriptionRun ? (transcriptionRun.tool_version || 'unknown') : 'none';
+            const dInfo = diarizationRun ? (diarizationRun.workflow || 'unknown') : 'none';
+            col.innerHTML = `<div class="col-header">Transcript (${tInfo}) + Diarization (${dInfo})</div>`;
             
             const colContent = document.createElement('div');
             colContent.className = 'col-content';
             
-            if (type === 'transcription') {
-                // New schema: words instead of transcriptionSegments
-                renderTranscriptionWords(run, colContent);
+            // Get words and segments
+            const words = transcriptionRun?.words || [];
+            const segments = diarizationRun?.diarizationSegments || [];
+            
+            // Sort words by start time
+            words.sort((a, b) => a.start_time - b.start_time);
+            
+            // Filter out invalidated segments and sort
+            const validSegments = segments
+                .filter(s => typeof s.start_time === 'number' && !s.is_invalidated)
+                .sort((a, b) => a.start_time - b.start_time);
+            
+            if (validSegments.length === 0 && words.length === 0) {
+                colContent.innerHTML = '<div style="padding:10px; color:#999;">No data to display</div>';
+                col.appendChild(colContent);
+                layout.appendChild(col);
+                return;
+            }
+            
+            // If we have diarization, use it as the primary structure
+            // and attach words to each segment by time overlap
+            if (validSegments.length > 0) {
+                validSegments.forEach(seg => {
+                    // Find words that overlap with this segment
+                    const segWords = words.filter(w => {
+                        // Word overlaps if it starts before segment ends AND ends after segment starts
+                        return w.start_time < seg.end_time && w.end_time > seg.start_time;
+                    });
+                    
+                    const text = segWords.map(w => w.text).join(' ') || '(no words)';
+                    
+                    renderUnifiedSegment(colContent, seg, text, diarizationRun.id);
+                });
             } else {
-                // Diarization segments with speakerAssignments
-                renderDiarizationSegments(run, colContent);
+                // No diarization - just show words grouped by transcription_segment_index
+                const segmentGroups = {};
+                words.forEach(w => {
+                    const idx = w.transcription_segment_index ?? 0;
+                    if (!segmentGroups[idx]) segmentGroups[idx] = [];
+                    segmentGroups[idx].push(w);
+                });
+                
+                Object.keys(segmentGroups).sort((a, b) => Number(a) - Number(b)).forEach(idx => {
+                    const groupWords = segmentGroups[idx];
+                    groupWords.sort((a, b) => a.start_time - b.start_time);
+                    
+                    const fakeSeg = {
+                        start_time: groupWords[0].start_time,
+                        end_time: groupWords[groupWords.length - 1].end_time,
+                        speaker_label: 'UNKNOWN',
+                        speakerAssignments: []
+                    };
+                    
+                    const text = groupWords.map(w => w.text).join(' ');
+                    renderUnifiedSegment(colContent, fakeSeg, text, null);
+                });
             }
             
             col.appendChild(colContent);
             layout.appendChild(col);
         }
         
-        function renderTranscriptionWords(run, colContent) {
-            const words = run.words || [];
+        function renderUnifiedSegment(container, seg, text, runId) {
+            const item = document.createElement('div');
+            item.className = 'segment';
+            item.dataset.start = seg.start_time;
+            item.dataset.end = seg.end_time;
+            if (seg.id) item.dataset.id = seg.id;
+            item.dataset.type = 'unified';
+            if (runId) item.dataset.runId = runId;
+            if (seg.speaker_label) item.dataset.speakerLabel = seg.speaker_label;
             
-            if (!words.length) {
-                colContent.innerHTML = '<div style="padding:10px; color:#999;">No words</div>';
-                return;
-            }
+            // Get speaker name from assignments (most recent) or fall back to label
+            let speakerName = seg.speaker_label || "UNKNOWN";
+            let speakerId = null;
+            let assignmentSource = null;
             
-            // Group words by transcription_segment_index
-            const segmentGroups = {};
-            words.forEach(w => {
-                const idx = w.transcription_segment_index ?? 0;
-                if (!segmentGroups[idx]) {
-                    segmentGroups[idx] = [];
-                }
-                segmentGroups[idx].push(w);
-            });
-            
-            // Sort and render each group as a "segment"
-            Object.keys(segmentGroups).sort((a, b) => Number(a) - Number(b)).forEach(idx => {
-                const groupWords = segmentGroups[idx];
-                groupWords.sort((a, b) => a.start_time - b.start_time);
+            const assignments = seg.speakerAssignments || [];
+            if (assignments.length > 0) {
+                const sorted = [...assignments].sort((a, b) => 
+                    new Date(b.assigned_at) - new Date(a.assigned_at)
+                );
+                const mostRecent = sorted[0];
+                assignmentSource = mostRecent.source;
                 
-                const startTime = groupWords[0].start_time;
-                const endTime = groupWords[groupWords.length - 1].end_time;
-                const text = groupWords.map(w => w.text).join(' ');
-                
-                const item = document.createElement('div');
-                item.className = 'segment';
-                item.dataset.start = startTime;
-                item.dataset.end = endTime;
-                item.dataset.segmentIndex = idx;
-                item.dataset.type = 'transcription';
-                item.dataset.runId = run.id;
-                
-                item.innerHTML = `
-                    <div class="segment-header">
-                        <span class="timestamp">${startTime.toFixed(2)} - ${endTime.toFixed(2)}</span>
-                        <span style="color:#999; font-size:0.8em;">${groupWords.length} words</span>
-                    </div>
-                    <div class="segment-text">${text}</div>
-                `;
-                
-                item.onclick = (e) => { 
-                    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-                    e.stopPropagation();
-                    audio.currentTime = startTime; 
-                    audio.play(); 
-                };
-                
-                colContent.appendChild(item);
-            });
-        }
-        
-        function renderDiarizationSegments(run, colContent) {
-            const segs = run.diarizationSegments || [];
-            
-            if (!segs.length) {
-                colContent.innerHTML = '<div style="padding:10px; color:#999;">No segments</div>';
-                return;
-            }
-            
-            const validSegs = segs.filter(s => typeof s.start_time === 'number' && !s.is_invalidated);
-            validSegs.sort((a, b) => a.start_time - b.start_time);
-            
-            validSegs.forEach(s => {
-                const item = document.createElement('div');
-                item.className = 'segment';
-                item.dataset.start = s.start_time;
-                item.dataset.end = s.end_time;
-                item.dataset.id = s.id;
-                item.dataset.type = 'diarization';
-                item.dataset.runId = run.id;
-                item.dataset.speakerLabel = s.speaker_label;
-                
-                // New schema: speaker identity comes from speakerAssignments (most recent)
-                let speakerName = s.speaker_label || "UNKNOWN";
-                let speakerId = null;
-                
-                const assignments = s.speakerAssignments || [];
-                if (assignments.length > 0) {
-                    // Sort by assigned_at to get most recent
-                    const sorted = [...assignments].sort((a, b) => 
-                        new Date(b.assigned_at) - new Date(a.assigned_at)
-                    );
-                    const mostRecent = sorted[0];
-                    
-                    // Get speaker from assignment
-                    const speaker = mostRecent.speaker;
-                    if (speaker) {
-                        if (Array.isArray(speaker) && speaker.length > 0) {
-                            speakerName = speaker[0].name || speakerName;
-                            speakerId = speaker[0].id;
-                        } else if (speaker.name) {
-                            speakerName = speaker.name;
-                            speakerId = speaker.id;
-                        }
+                const speaker = mostRecent.speaker;
+                if (speaker) {
+                    if (Array.isArray(speaker) && speaker.length > 0) {
+                        speakerName = speaker[0].name || speakerName;
+                        speakerId = speaker[0].id;
+                    } else if (speaker.name) {
+                        speakerName = speaker.name;
+                        speakerId = speaker.id;
                     }
-                    
-                    // Show assignment source indicator
-                    const sourceIcon = mostRecent.source === 'user' ? '✓' : 
-                                       mostRecent.source === 'model' ? '🤖' : '';
-                    if (sourceIcon) speakerName = `${sourceIcon} ${speakerName}`;
                 }
-                
-                if (speakerId) item.dataset.spkId = speakerId;
-                
-                const confidenceStr = s.confidence ? ` (${(s.confidence * 100).toFixed(0)}%)` : '';
-                
-                item.innerHTML = `
-                    <div class="segment-header">
-                        <span class="timestamp">${s.start_time.toFixed(2)} - ${s.end_time.toFixed(2)}${confidenceStr}</span>
-                        <span class="seg-speaker">${speakerName}</span>
-                    </div>
-                `;
-                
-                item.onclick = (e) => { 
-                    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+            }
+            
+            if (speakerId) item.dataset.spkId = speakerId;
+            
+            // Source indicator
+            const sourceIcon = assignmentSource === 'user' ? '✓ ' : 
+                               assignmentSource === 'model' ? '🤖 ' : '';
+            
+            // Check if speaker is still a machine label
+            const isMachineLabel = speakerName.startsWith('SPEAKER_') || speakerName === 'UNKNOWN';
+            const speakerClass = isMachineLabel ? 'seg-speaker unlabeled' : 'seg-speaker';
+            
+            item.innerHTML = `
+                <div class="segment-header">
+                    <span class="${speakerClass}">${sourceIcon}${speakerName}</span>
+                    <span class="timestamp">${seg.start_time.toFixed(1)}s - ${seg.end_time.toFixed(1)}s</span>
+                </div>
+                <div class="segment-text" title="Click to edit • Cmd+Enter to split at newlines">${text}</div>
+            `;
+            
+            // Click on card (not text) = seek and play
+            item.onclick = (e) => { 
+                if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                if (e.target.classList.contains('segment-text')) return; // Let text handle its own click
+                if (e.target.classList.contains('seg-speaker')) return; // Let speaker handle its own click
+                e.stopPropagation();
+                audio.currentTime = seg.start_time; 
+                audio.play(); 
+            };
+            
+            // Click on text = edit mode (for splitting)
+            const textEl = item.querySelector('.segment-text');
+            if (textEl) {
+                textEl.onclick = (e) => {
                     e.stopPropagation();
-                    audio.currentTime = s.start_time; 
-                    audio.play(); 
+                    editSplit(item);
                 };
-                
-                colContent.appendChild(item);
-            });
+            }
+            
+            // Click on speaker = edit speaker
+            const spkEl = item.querySelector('.seg-speaker');
+            if (spkEl && seg.id) {
+                spkEl.onclick = (e) => {
+                    e.stopPropagation();
+                    editSpeaker(item);
+                };
+            }
+            
+            container.appendChild(item);
         }
 
         // --- KEYBOARD & ACTIONS ---
@@ -588,50 +623,126 @@
         
         function editSplit(segEl) {
             const textEl = segEl.querySelector('.segment-text');
-            const type = segEl.dataset.type;
             
-            // If diarization, maybe we add text editing capability?
-            // Diarization segments usually don't have text.
-            // If Transription:
-            if (!textEl && type === 'diarization') return alert("Splitting diarization without text is generic. Impl later.");
+            if (!textEl) {
+                alert("No text to edit in this segment.");
+                return;
+            }
             
             const currentText = textEl.textContent;
+            const segmentId = segEl.dataset.id;
+            const runId = segEl.dataset.runId;
+            const startTime = parseFloat(segEl.dataset.start);
+            const endTime = parseFloat(segEl.dataset.end);
+            
             const textarea = document.createElement('textarea');
             textarea.value = currentText.trim();
             textarea.style.width = '100%';
-            textarea.style.height = '60px';
+            textarea.style.minHeight = '80px';
+            textarea.style.padding = '8px';
+            textarea.style.fontFamily = 'inherit';
+            textarea.style.fontSize = 'inherit';
+            textarea.style.border = '2px solid #2196f3';
+            textarea.style.borderRadius = '4px';
+            textarea.style.resize = 'vertical';
             textarea.onclick = (e) => e.stopPropagation();
+            
+            // Add helper text
+            const helper = document.createElement('div');
+            helper.style.fontSize = '0.75em';
+            helper.style.color = '#666';
+            helper.style.marginTop = '4px';
+            helper.innerHTML = '<kbd>Cmd+Enter</kbd> to split at newlines • <kbd>Escape</kbd> to cancel';
             
             const parent = textEl.parentNode;
             parent.replaceChild(textarea, textEl);
+            parent.appendChild(helper);
             audio.pause();
             textarea.focus();
             
+            const cleanup = () => {
+                parent.replaceChild(textEl, textarea);
+                if (helper.parentNode) helper.remove();
+            };
+            
             textarea.onkeydown = (e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                    // Split!
-                    const lines = textarea.value.split('\n').filter(l => l.trim());
-                    if (lines.length > 1) {
-                         performSplit(segEl, lines);
-                    } else if (lines.length === 1 && lines[0] !== currentText) {
-                         // Just update text
-                         db.transact([
-                             db.tx.transcriptionSegments[segEl.dataset.id].update({ text: lines[0] })
-                         ]);
+                    e.preventDefault();
+                    
+                    const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l);
+                    
+                    if (lines.length > 1 && segmentId && runId) {
+                        // Split the segment!
+                        performSplit(segmentId, runId, startTime, endTime, lines);
+                        cleanup();
+                    } else if (lines.length === 1) {
+                        // Just one line - no split needed
+                        console.log("Only one line, no split performed");
+                        cleanup();
+                    } else {
+                        alert("Need segment ID and run ID to split. Make sure you're editing a diarization segment.");
+                        cleanup();
                     }
-                    // If no change or split, just revert? 
-                    // Render will handle revert on update.
                 }
+                
                 if (e.key === 'Escape') {
-                    parent.replaceChild(textEl, textarea);
+                    e.preventDefault();
+                    cleanup();
                 }
+            };
+            
+            textarea.onblur = (e) => {
+                // Small delay to allow Cmd+Enter to process first
+                setTimeout(() => {
+                    if (textarea.parentNode) cleanup();
+                }, 100);
             };
         }
         
-        function performSplit(segEl, lines) {
-            // Note: In the new schema, we have words not transcriptionSegments
-            // Splitting words is more complex - for now just show alert
-            alert("Word splitting not yet implemented in new schema. Use the server API for complex edits.");
+        /**
+         * Split a diarization segment into multiple segments.
+         * 
+         * NEW SCHEMA FLOW:
+         * 1. User edits segment text and adds newlines
+         * 2. Press Cmd+Enter to split
+         * 3. Server creates SegmentSplit record
+         * 4. Original segment marked is_invalidated=true
+         * 5. New segments created with SPLIT_0, SPLIT_1, etc. labels
+         * 6. UI refreshes via InstantDB subscription
+         */
+        async function performSplit(segmentId, runId, startTime, endTime, lines) {
+            if (lines.length < 2) {
+                alert("Need at least 2 lines to split. Add newlines to indicate split points.");
+                return;
+            }
+            
+            try {
+                const res = await fetch('/split_segment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        segment_id: segmentId,
+                        run_id: runId,
+                        start_time: startTime,
+                        end_time: endTime,
+                        lines: lines,
+                        split_by: 'ground_truth_ui'
+                    })
+                });
+                
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText);
+                }
+                
+                const result = await res.json();
+                console.log("Split successful:", result);
+                // InstantDB subscription will automatically update the UI
+                
+            } catch (e) {
+                console.error("Split failed:", e);
+                alert("Failed to split segment: " + e.message);
+            }
         }
         
         // New schema: Create speaker assignment instead of direct relabel
@@ -648,8 +759,10 @@
                     })
                 });
                 if (!res.ok) throw await res.text();
+                console.log("Speaker assignment created");
                 // InstantDB subscription will update UI
             } catch (e) {
+                console.error("Speaker assignment failed:", e);
                 alert("Failed to assign speaker: " + e);
             }
         }

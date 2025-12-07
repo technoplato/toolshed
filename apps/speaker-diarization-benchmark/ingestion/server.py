@@ -142,6 +142,8 @@ def make_handler_class(config: ServerConfig):
                 self.handle_split_segment()
             elif self.path == '/relabel_speaker_for_segment':
                 self.handle_relabel_speaker_for_segment()
+            elif self.path == '/assign_speaker':
+                self.handle_assign_speaker()
             elif self.path == '/delete_segment':
                 self.handle_delete_segment()
             else:
@@ -155,232 +157,243 @@ def make_handler_class(config: ServerConfig):
             self.end_headers()
 
         def handle_split_segment(self):
+            """
+            Split a diarization segment into multiple segments.
+            
+            NEW SCHEMA FLOW:
+            1. Create a SegmentSplit record (split_time, split_by, split_at)
+            2. Link SegmentSplit to original segment via segmentSplitOriginalSegment
+            3. Mark original segment as is_invalidated=true (NOT delete - history preserved)
+            4. Create N new DiarizationSegments with speaker_label="SPLIT_X"
+            5. Link new segments to SegmentSplit via segmentSplitResultingSegments
+            6. Link new segments to the diarization run
+            7. Optionally extract embeddings for new segments
+            """
             try:
+                import uuid
+                from datetime import datetime
+                
                 length = int(self.headers['Content-Length'])
                 data = json.loads(self.rfile.read(length))
                 print(f"Received split request: {data}")
                 
-                segment_id = data.get("segment_id")      # The ID of the DiarizationSegment to split
-                new_lines = data.get("new_lines", [])    # List of strings
-                video_id = data.get("video_id")          # ID of the video
-                run_id = data.get("run_id")              # ID of the DiarizationRun
-                start_time = data.get("start_time")      # Original segment start
-                end_time = data.get("end_time")          # Original segment end
+                segment_id = data.get("segment_id")
+                lines = data.get("lines", [])
+                run_id = data.get("run_id")
+                start_time = data.get("start_time")
+                end_time = data.get("end_time")
+                split_by = data.get("split_by", "ground_truth_ui")
                 
-                if not (segment_id and video_id and run_id and start_time is not None and end_time is not None):
-                    raise ValueError("Missing required fields: segment_id, video_id, run_id, start_time, end_time")
-
-                # 1. Get Video Filepath
-                video = repo.get_video(video_id) # We need to ensure get_video works or implement manual fetch
-                # InstantDBVideoRepository.get_video is NOT implemented fully in previous step (composite was empty, instant adapter might be too).
-                # Let's check InstantDBVideoRepository implementation.
-                # It has save_video, but get_video might be missing.
-                # Assuming I can't easily get filepath via repo yet without implementing it.
-                # But wait, I migrated `filepath` to InstantDB explicitly.
-                # I can query it.
+                if not segment_id or not run_id or start_time is None or end_time is None:
+                    raise ValueError("Missing required fields: segment_id, run_id, start_time, end_time")
                 
-                # Manual Query for Video Filepath
-                q_vid = {
-                    "videos": {
-                        "$": {"where": {"id": video_id}}
-                    }
-                }
-                res = repo._query(q_vid)
-                videos_list = res.get("videos", [])
-                if not videos_list:
-                    raise ValueError(f"Video {video_id} not found")
+                if len(lines) < 2:
+                    raise ValueError("Need at least 2 lines to split a segment")
                 
-                video_filepath = videos_list[0].get("filepath")
-                # Resolve relative path if needed
-                # manifest 'clip_path' was relative to 'data/clips'?
-                # The migration script saved what was in manifest.
-                # Typically `data/clips/foo.wav`.
-                if not os.path.isabs(video_filepath):
-                     # Assume relative to apps/speaker-diarization-benchmark/
-                     # We are in that dir when running usually?
-                     # `server.py` checked cwd.
-                     video_filepath = os.path.abspath(video_filepath)
-                
-                if not os.path.exists(video_filepath):
-                    print(f"Warning: Audio file not found at {video_filepath}")
-                    # We can't extract embeddings if file missing.
-                    # Proceed without embedding?
-                
-                # 2. Proportional Split Logic
-                total_chars = sum(len(line) for line in new_lines)
+                # Calculate proportional split times
+                total_chars = sum(len(line) for line in lines)
                 duration = end_time - start_time
-                current_start = start_time
                 
-                new_segments_payload = []
+                # Calculate split points (we use the boundary between lines)
+                split_times = []
+                current_time = start_time
+                for i, line in enumerate(lines[:-1]):  # Don't need split after last line
+                    prop = len(line) / total_chars if total_chars > 0 else 1.0 / len(lines)
+                    current_time += duration * prop
+                    split_times.append(current_time)
+                
+                # For this implementation, we use the FIRST split time as the primary split_time
+                # In theory, multi-way splits could be multiple SegmentSplit records
+                # For simplicity, we create ONE split record and multiple resulting segments
+                primary_split_time = split_times[0] if split_times else (start_time + end_time) / 2
                 
                 steps = []
                 
-                # Delete/Mark Old Segment
-                # Ideally "replaced_by" link, but for now just delete or unlink?
-                # User said: "mark the original segment as deleted/replaced"
-                # Since we don't have "deleted" flag in schema usually (unless we add it), simplest is to unlink from run.
-                # Or delete the entity.
-                steps.append(["delete", "diarizationSegments", segment_id])
+                # 1. Create SegmentSplit record
+                split_id = str(uuid.uuid4())
+                steps.append(["update", "segmentSplits", split_id, {
+                    "split_time": primary_split_time,
+                    "split_by": split_by,
+                    "split_at": datetime.now().isoformat(),
+                }])
                 
-                for idx, line in enumerate(new_lines):
-                    # Time calc
-                    if total_chars > 0:
-                        prop = len(line) / total_chars
+                # 2. Link SegmentSplit to original segment
+                steps.append(["link", "segmentSplits", split_id, {"originalSegment": segment_id}])
+                
+                # 3. Mark original segment as invalidated (NOT delete - preserve history)
+                steps.append(["update", "diarizationSegments", segment_id, {
+                    "is_invalidated": True
+                }])
+                
+                # 4. Create new segments
+                new_segments = []
+                current_start = start_time
+                
+                for idx, line in enumerate(lines):
+                    # Calculate end time
+                    if idx < len(split_times):
+                        seg_end = split_times[idx]
                     else:
-                        prop = 1.0 / len(new_lines)
+                        seg_end = end_time
                     
-                    seg_duration = duration * prop
-                    seg_end = current_start + seg_duration
-                    
-                    # 3. Embedding
-                    new_embedding_id = None
-                    if os.path.exists(video_filepath) and pg_client:
-                        try:
-                            # Extract & Embed
-                            vec = Embedder.extract_embedding(video_filepath, current_start, seg_end)
-                            # Save to Postgres
-                            # Generate ID
-                            new_embedding_id = str(uuid.uuid4())
-                            pg_client.add_embedding(new_embedding_id, vec, metadata={"video_id": video_id, "text": line})
-                        except Exception as e:
-                            print(f"Embedding failed for segment {idx}: {e}")
-                    
-                    # 4. Create New Segment
+                    # Create new segment
                     new_seg_id = str(uuid.uuid4())
+                    new_speaker_label = f"SPLIT_{idx}"
+                    
                     steps.append(["update", "diarizationSegments", new_seg_id, {
                         "start_time": current_start,
                         "end_time": seg_end,
-                        # "text": line, # DiarizationSegment doesn't have text usually? 
-                        # Migration script saved text to TranscriptionSegment.
-                        # DiarizationSegment has metrics?
-                        # If we are splitting Diarization, we assume we are refining WHO spoke WHEN.
-                        # Text assignment is implicit via time overlap with Transcription.
-                        # But wait, user passed `new_lines`.
-                        # If we want to save text, we might need a linked TranscriptionSegment?
-                        # For now, let's just save the DiarizationSegment. The text helps split the time.
-                        # We map it to "UNKNOWN" speaker as requested.
-                        "embedding_id": new_embedding_id,
+                        "speaker_label": new_speaker_label,
+                        "embedding_id": None,  # To be computed later
+                        "confidence": None,
+                        "is_invalidated": False,
+                        "created_at": datetime.now().isoformat(),
                     }])
                     
-                    # Link to Run
-                    steps.append(["link", "diarizationRuns", run_id, {"segments": new_seg_id}])
+                    # 5. Link new segment to SegmentSplit
+                    steps.append(["link", "segmentSplits", split_id, {"resultingSegments": new_seg_id}])
                     
-                    # Link to UNKNOWN speaker
-                    # Find or Create UNKNOWN speaker?
-                    # Ideally we have a generic UNKNOWN speaker or create a new "Unknown X"?
-                    # User: "initially be UNKNOWN".
-                    # I'll create a new speaker "UNKNOWN" (or find it) or just not link a speaker? 
-                    # Schema requires `speaker_id`?
-                    # Schema: `speaker_id: i.string().indexed()`. It's a string, not a link?
-                    # Wait, migration script:
-                    # `steps.append(["link", "diarizationSegments", seg_uuid, {"speaker": speaker_uuid}])`
-                    # `speaker_id` attr in schema was string.
-                    # Migration script saved: `speaker_uuid = ...`, `steps.append(["update", "speakers", speaker_uuid, {"name": seg.speaker_id}])`
-                    # `diarizationSegments` has `speaker_id` AND a link to `speakers`?
-                    # Schema:
-                    # diarizationSegments: { speaker_id: string, ... }
-                    # links: { speaker: ... }
-                    # So we should populate `speaker_id="UNKNOWN"` and maybe link to a speaker entity?
+                    # 6. Link new segment to diarization run
+                    steps.append(["link", "diarizationRuns", run_id, {"diarizationSegments": new_seg_id}])
                     
-                    steps.append(["update", "diarizationSegments", new_seg_id, {"speaker_id": "UNKNOWN"}])
-                    
-                    # Link to a shared "UNKNOWN" speaker entity?
-                    # Let's generate a consistent UUID for "UNKNOWN"
-                    uk_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, "SPEAKER_UNKNOWN"))
-                    steps.append(["update", "speakers", uk_uuid, {"name": "UNKNOWN", "is_human": False}])
-                    steps.append(["link", "diarizationSegments", new_seg_id, {"speaker": uk_uuid}])
-                    
-                    # Update loop vars
-                    current_start = seg_end
-                    
-                    new_segments_payload.append({
+                    new_segments.append({
                         "id": new_seg_id,
-                        "start": current_start - seg_duration,
-                        "end": seg_end,
-                        "speaker": "UNKNOWN"
+                        "start_time": current_start,
+                        "end_time": seg_end,
+                        "speaker_label": new_speaker_label,
+                        "text": line,
                     })
-
-                # Transact
+                    
+                    current_start = seg_end
+                
+                # Execute transaction
                 repo._transact(steps)
+                print(f"Split segment {segment_id} into {len(new_segments)} new segments")
+                
+                # TODO: Background job to extract embeddings for new segments
+                # This requires audio file access and pyannote embedding model
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                self.wfile.write(json.dumps({"segments": new_segments_payload}).encode())
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "split_id": split_id,
+                    "original_segment_id": segment_id,
+                    "new_segments": new_segments
+                }).encode())
 
             except Exception as e:
                 print(f"Error splitting: {e}")
                 import traceback
                 traceback.print_exc()
                 self.send_response(500)
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(str(e).encode())
 
         def handle_relabel_speaker_for_segment(self):
+            """Legacy endpoint - redirects to assign_speaker."""
+            return self.handle_assign_speaker()
+        
+        def handle_assign_speaker(self):
+            """
+            Create a speaker assignment for a diarization segment.
+            
+            NEW SCHEMA FLOW:
+            1. Find or create the Speaker entity by name
+            2. Create a SpeakerAssignment record with:
+               - source: "user" (manual correction)
+               - confidence: 1.0 (user is certain)
+               - assigned_by: user identifier
+               - assigned_at: timestamp
+            3. Link SpeakerAssignment to the segment and speaker
+            
+            History is preserved - previous assignments remain but UI shows most recent.
+            """
             try:
+                import uuid
+                from datetime import datetime
+                
                 length = int(self.headers['Content-Length'])
                 data = json.loads(self.rfile.read(length))
-                print(f"Received relabel request: {data}")
+                print(f"Received speaker assignment request: {data}")
                 
                 segment_id = data.get("segment_id")
-                new_speaker_id = data.get("new_speaker_id") # e.g. "Joe Rogan"
+                speaker_name = data.get("speaker_name") or data.get("new_speaker_id")
+                source = data.get("source", "user")
+                assigned_by = data.get("assigned_by", "ground_truth_ui")
+                confidence = data.get("confidence", 1.0 if source == "user" else None)
+                note = data.get("note")
                 
-                if not segment_id or not new_speaker_id:
-                    raise ValueError("Missing segment_id or new_speaker_id")
-                
-                # 1. Update InstantDB
-                speaker_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"SPEAKER_{new_speaker_id}")) # Consistent hash
+                if not segment_id or not speaker_name:
+                    raise ValueError("Missing segment_id or speaker_name")
                 
                 steps = []
-                # Ensure speaker exists
-                steps.append(["update", "speakers", speaker_uuid, {"name": new_speaker_id}])
                 
-                # Update Segment
-                steps.append(["update", "diarizationSegments", segment_id, {"speaker_id": new_speaker_id}])
-                # Link
-                steps.append(["link", "diarizationSegments", segment_id, {"speaker": speaker_uuid}])
-                # Note: Unlinking old speaker is automatic for one-to-one links? 
-                # DiarizationSegment -> Speaker is many-to-one.
-                # A segment has ONE speaker. "speaker" link is singular? 
-                # Schema: `diarizationSegments.link.speaker`. Usually one-to-one or many-to-one. 
-                # InstantDB links are many-to-many by default unless constrained? 
-                # But linking overwrites? No, it adds.
-                # We should unlink old? 
-                # "When you link two objects ... if the relationship is one-to-many..."
-                # I'll enable "unlink" if I can find the old speaker.
-                # But for now, linking new one implies relationship... 
-                # To be partial to "replace", we usually just link.
+                # 1. Find or create Speaker entity
+                speaker_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"speaker_{speaker_name}"))
+                steps.append(["update", "speakers", speaker_uuid, {
+                    "name": speaker_name,
+                    "is_human": True,
+                    "ingested_at": datetime.now().isoformat(),
+                }])
+                
+                # 2. Create SpeakerAssignment
+                assignment_id = str(uuid.uuid4())
+                assignment_data = {
+                    "source": source,
+                    "assigned_by": assigned_by,
+                    "assigned_at": datetime.now().isoformat(),
+                }
+                if confidence is not None:
+                    assignment_data["confidence"] = confidence
+                if note:
+                    assignment_data["note"] = note
+                    
+                steps.append(["update", "speakerAssignments", assignment_id, assignment_data])
+                
+                # 3. Link assignment to segment
+                steps.append(["link", "diarizationSegments", segment_id, {"speakerAssignments": assignment_id}])
+                
+                # 4. Link assignment to speaker
+                steps.append(["link", "speakerAssignments", assignment_id, {"speaker": speaker_uuid}])
                 
                 repo._transact(steps)
+                print(f"Created speaker assignment: {speaker_name} -> segment {segment_id}")
                 
-                # 2. Update Postgres
-                # We need segment's embedding_id
-                # Fetch segment to get embedding_id
-                q_seg = {
-                    "diarizationSegments": {
-                        "$": {"where": {"id": segment_id}}
-                    }
-                }
+                # Update Postgres if we have embedding
+                q_seg = {"diarizationSegments": {"$": {"where": {"id": segment_id}}}}
                 res = repo._query(q_seg)
                 segs = res.get("diarizationSegments", [])
                 if segs and pg_client:
                     seg = segs[0]
                     emb_id = seg.get("embedding_id")
                     if emb_id:
-                         # Update metadata/speaker_id in Postgres
-                         try:
-                             pg_client.update_speaker_id(emb_id, new_speaker_id)
-                             print(f"Updated Postgres speaker_id for embedding {emb_id} to {new_speaker_id}")
-                         except Exception as e:
-                             print(f"Failed to update Postgres for embedding {emb_id}: {e}")
+                        try:
+                            pg_client.update_speaker_id(emb_id, speaker_name)
+                            print(f"Updated Postgres speaker for embedding {emb_id}")
+                        except Exception as e:
+                            print(f"Failed to update Postgres: {e}")
 
                 self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
-                self.wfile.write(b"OK")
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "assignment_id": assignment_id,
+                    "speaker_id": speaker_uuid,
+                    "speaker_name": speaker_name
+                }).encode())
+                
             except Exception as e:
-                print(f"Error relabeling: {e}")
+                print(f"Error assigning speaker: {e}")
+                import traceback
                 traceback.print_exc()
                 self.send_response(500)
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.end_headers()
                 self.wfile.write(str(e).encode())
 

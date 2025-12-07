@@ -26,6 +26,19 @@
 
 ---
 
+### December 7th, 2025 at 3:13:10 p.m.
+
+✨ Unified transcript view with segment splitting support
+
+[Commit](https://github.com/technoplato/toolshed/commit/cee372d)
+
+- Merged transcription + diarization into single view - words correlated with segments by time overlap
+- Segment splitting: Click text, add newlines, Cmd+Enter to split
+- New schema compliance: SegmentSplit records, is_invalidated flag, SpeakerAssignment history
+- Server endpoints updated: /split_segment and /assign_speaker
+
+
+
 ### December 7th, 2025 at 3:06:41 p.m.
 
 🐛 Updated ground_truth_instant.html for new schema
