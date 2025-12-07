@@ -30,7 +30,7 @@
 
 ✨ Unified transcript view with segment splitting support
 
-[Commit](https://github.com/technoplato/toolshed/commit/cee372d)
+[Commit](https://github.com/technoplato/toolshed/commit/ec64abc)
 
 - Merged transcription + diarization into single view - words correlated with segments by time overlap
 - Segment splitting: Click text, add newlines, Cmd+Enter to split
