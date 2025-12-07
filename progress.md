@@ -30,7 +30,7 @@
 
 ✨ Picked up beautiful-schema-fresh-restart handoff, nuked database for schema migration
 
-[Commit](https://github.com/technoplato/toolshed/commit/5c1bfb7)
+[Commit](https://github.com/technoplato/toolshed/commit/c89e833)
 
 - Resolved branch checkout conflict in instant.schema.ts (kept new schema design)
 - Wiped InstantDB database: 102 entities deleted (videos, speakers, configs, runs, segments)
