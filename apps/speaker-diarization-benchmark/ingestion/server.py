@@ -36,7 +36,12 @@ import time
 from typing import List
 from pathlib import Path
 
-from .config import ServerConfig
+# Add project root to path for absolute imports
+project_root = Path(__file__).resolve().parents[1]
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+from ingestion.config import ServerConfig
 from src.data.factory import DatabaseFactory
 from src.data.models import DiarizationSegment, DiarizationRun
 from src.embeddings.pgvector_client import PgVectorClient
@@ -481,3 +486,26 @@ def make_handler_class(config: ServerConfig):
                 self.wfile.write(str(e).encode())
 
     return InstantDBHandler
+
+
+# =========================================================================
+# MAIN ENTRY POINT
+# =========================================================================
+if __name__ == "__main__":
+    import argparse
+    from dotenv import load_dotenv
+    
+    # Load .env from repo root
+    # server.py is at: apps/speaker-diarization-benchmark/ingestion/server.py
+    # parents: [0]=ingestion, [1]=speaker-diarization-benchmark, [2]=apps, [3]=toolshed(repo)
+    repo_root = Path(__file__).resolve().parents[3]
+    load_dotenv(repo_root / ".env")
+    
+    parser = argparse.ArgumentParser(description="Ground Truth UI Server (InstantDB)")
+    parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")
+    parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to bind to")
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    args = parser.parse_args()
+    
+    config = ServerConfig(port=args.port, host=args.host, verbose=args.verbose)
+    run_server(config)

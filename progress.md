@@ -26,6 +26,19 @@
 
 ---
 
+### December 7th, 2025 at 3:23:12 p.m.
+
+✨ Segment splitting working end-to-end
+
+[Commit](https://github.com/technoplato/toolshed/commit/4cb861e)
+
+- Simplified API: only segment_id + lines required (server fetches rest)
+- test_split_segment.py verified: SegmentSplit record, is_invalidated flag, SPLIT_X labels, all links
+- Server fixed: main entry point, .env loading, absolute imports
+- UI tested: click text → add newlines → Cmd+Enter splits segment correctly
+
+
+
 ### December 7th, 2025 at 3:13:10 p.m.
 
 ✨ Unified transcript view with segment splitting support
