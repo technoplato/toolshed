@@ -30,7 +30,7 @@
 
 ✨ Segment splitting working end-to-end
 
-[Commit](https://github.com/technoplato/toolshed/commit/4cb861e)
+[Commit](https://github.com/technoplato/toolshed/commit/b53cf40)
 
 - Simplified API: only segment_id + lines required (server fetches rest)
 - test_split_segment.py verified: SegmentSplit record, is_invalidated flag, SPLIT_X labels, all links
