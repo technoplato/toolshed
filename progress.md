@@ -26,6 +26,19 @@
 
 ---
 
+### December 7th, 2025 at 3:29:38 p.m.
+
+✨ Ground truth data ingested into InstantDB
+
+[Commit](https://github.com/technoplato/toolshed/commit/9e9de2b)
+
+- Created ingest_ground_truth.py script for parsing and ingesting verified data
+- Video: MSSP Ep 569 - Joe DeRosa (0-60s clip)
+- 4 speakers: Joe DeRosa, Matt McCusker, Shane Gillis, MSSP Theme Music
+- 192 words with timestamps + 43 diarization segments with speaker assignments
+
+
+
 ### December 7th, 2025 at 3:23:12 p.m.
 
 ✨ Segment splitting working end-to-end
