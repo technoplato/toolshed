@@ -26,6 +26,19 @@
 
 ---
 
+### December 7th, 2025 at 3:06:41 p.m.
+
+🐛 Updated ground_truth_instant.html for new schema
+
+[Commit](https://github.com/technoplato/toolshed/commit/4a7f813)
+
+- Query fetches words and speakerAssignments instead of old schema fields
+- renderTranscriptionWords groups words by segment index
+- renderDiarizationSegments shows speaker from most recent assignment with source indicator
+- UI now displays test video data correctly
+
+
+
 ### December 7th, 2025 at 3:03:09 p.m.
 
 ✅ Schema migration complete - all tests passing

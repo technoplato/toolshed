@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ground Truth (InstantDB - New Schema)</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 20px; background: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        select { padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-width: 200px; }
+        button { padding: 8px 16px; cursor: pointer; background: #2196f3; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #1976d2; }
+        
+        #layout { display: flex; gap: 20px; overflow-x: auto; }
+        .column { 
+            flex: 1; 
+            min-width: 300px; 
+            background: #fff; 
+            border: 1px solid #ddd; /* Match model-column border */
+            border-radius: 4px; 
+            display: flex; 
+            flex-direction: column; 
+            height: calc(100vh - 250px); /* Height match */
+        }
+        .col-header { padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; font-weight: bold; position: sticky; top: 0; z-index: 10; }
+        .col-content { flex: 1; overflow-y: auto; padding: 10px; }
+        
+        /* Polished Segment Card */
+        .segment { 
+            display: block;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .segment:hover { 
+            background: #fcfcfc; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .segment.active { 
+            background: #f0f7ff; 
+            border-left: 4px solid #2196f3; 
+            border-color: #bbdefb;
+        }
+        
+        .segment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        
+        .segment-text {
+            display: block;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: text;
+            background: rgba(0,0,0,0.02);
+            transition: background 0.1s;
+            line-height: 1.4;
+            color: #444;
+        }
+        .segment-text:hover { background: #eee; }
+        
+        .seg-speaker {
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .seg-speaker:hover { background: #e0e0e0; }
+        
+        .timestamp {
+            color: #888;
+            font-family: monospace;
+        }
+        
+        /* Loading overlay */
+        #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    </style>
+    <!-- <script type="module" src="https://js.instantdb.com/v0.12.7/client.js"></script> -->
+</head>
+<body>
+    <div id="loading">Loading...</div>
+    <div class="container">
+        <div class="header">
+            <h1>Ground Truth Creator <small style="font-size:0.5em; color:#888;">(New Schema - Dec 2025)</small></h1>
+            <div class="controls">
+                <select id="video-select"><option>Select Video...</option></select>
+                <div id="status"></div>
+            </div>
+        </div>
+        
+        <div id="player-section" style="display:none;">
+            <h3 id="video-title"></h3>
+            
+            <!-- Debug Dump (Moved) -->
+            <pre id="debug-dump" style="background: #eee; padding: 10px; overflow: auto; max-height: 200px; border: 1px solid #ccc; margin-bottom: 20px; font-size: 0.8em;"></pre>
+            
+            <audio id="audio" controls style="width: 100%; margin-bottom: 10px;"></audio>
+            <div id="layout"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { init, id } from "https://esm.sh/@instantdb/core@0.13.2?bundle";
+        
+        // --- CONFIG ---
+        const APP_ID = "d4802f0a-5c83-4db7-9e85-b97957881c59";
+        const db = init({ appId: APP_ID });
+        
+        // --- STATE ---
+        let currentVideoId = null;
+        let currentData = { transcriptionRuns: [], diarizationRuns: [] };
+        
+        const audio = document.getElementById('audio');
+        const layout = document.getElementById('layout');
+        const videoSelect = document.getElementById('video-select');
+        const statusDiv = document.getElementById('status');
+        const debugDump = document.getElementById('debug-dump');
+        
+        // --- INITIAL LOAD ---
+        db.subscribeQuery({ videos: {} }, (resp) => {
+            if (resp.error) {
+                console.error(resp.error);
+                statusDiv.textContent = "Error loading videos.";
+                return;
+            }
+            populateVideoSelect(resp.data.videos);
+        });
+        
+        function populateVideoSelect(videos) {
+            videoSelect.innerHTML = '<option value="">Select Video...</option>';
+            videos.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = v.title || v.filepath || v.id;
+                videoSelect.appendChild(opt);
+            });
+            const savedId = localStorage.getItem('ground_truth_active_video_id');
+            if (savedId && videos.some(v => v.id === savedId) && !currentVideoId) {
+                videoSelect.value = savedId;
+                loadVideo(savedId);
+            }
+        }
+        
+        videoSelect.onchange = (e) => {
+            const vid = e.target.value;
+            if (vid) {
+                localStorage.setItem('ground_truth_active_video_id', vid);
+                loadVideo(vid);
+            }
+        };
+        
+        function loadVideo(videoId) {
+            currentVideoId = videoId;
+            document.getElementById('player-section').style.display = 'block';
+            layout.innerHTML = '<div style="padding:20px;">Loading runs...</div>';
+            debugDump.textContent = "Loading debug info...";
+            
+            // Updated query for new schema:
+            // - words instead of transcriptionSegments
+            // - speakerAssignments instead of direct speaker link
+            const query = {
+                videos: {
+                    $: { where: { id: videoId } },
+                    transcriptionRuns: { 
+                        words: {},
+                        config: {} 
+                    },
+                    diarizationRuns: { 
+                        diarizationSegments: { 
+                            speakerAssignments: { speaker: {} } 
+                        },
+                        config: {}
+                    }
+                }
+            };
+            
+            db.subscribeQuery(query, (resp) => {
+                if (resp.error) return console.error(resp.error);
+                debugDump.textContent = JSON.stringify(resp.data, null, 2);
+
+                const video = resp.data.videos[0];
+                if (!video) {
+                    layout.innerHTML = '<div style="padding:20px;">Video not found in DB.</div>';
+                    return;
+                }
+                
+                // Update Player
+                document.getElementById('video-title').textContent = video.title;
+                let path = video.filepath || "";
+                if (path && !path.startsWith('/') && !path.startsWith('http')) { path = '/' + path; }
+                const currentSrc = audio.getAttribute('src');
+                if (currentSrc !== path) audio.src = path;
+
+                renderLayout(video);
+            });
+        }
+        
+        function renderLayout(video) {
+            layout.innerHTML = '';
+            
+            try {
+                // Transcription Columns
+                (video.transcriptionRuns || []).forEach(run => {
+                    renderColumn(run, 'transcription');
+                });
+
+                // Diarization Columns
+                (video.diarizationRuns || []).forEach(run => {
+                    renderColumn(run, 'diarization');
+                });
+                
+            } catch (err) {
+                console.error("Render Error:", err);
+                layout.innerHTML += `<div style="color:red; margin:10px;">Error rendering: ${err.message}</div>`;
+            }
+        }
+
+        function renderColumn(run, type) {
+            const col = document.createElement('div');
+            col.className = 'column';
+            
+            // Updated for new schema: use tool_version or workflow instead of runner
+            const label = type === 'transcription' ? 'T-Run' : 'D-Run';
+            const runName = type === 'transcription' 
+                ? (run.tool_version || run.config?.tool || 'unknown')
+                : (run.workflow || run.config?.tool || 'unknown');
+            col.innerHTML = `<div class="col-header">${label}: ${runName}</div>`;
+            
+            const colContent = document.createElement('div');
+            colContent.className = 'col-content';
+            
+            if (type === 'transcription') {
+                // New schema: words instead of transcriptionSegments
+                renderTranscriptionWords(run, colContent);
+            } else {
+                // Diarization segments with speakerAssignments
+                renderDiarizationSegments(run, colContent);
+            }
+            
+            col.appendChild(colContent);
+            layout.appendChild(col);
+        }
+        
+        function renderTranscriptionWords(run, colContent) {
+            const words = run.words || [];
+            
+            if (!words.length) {
+                colContent.innerHTML = '<div style="padding:10px; color:#999;">No words</div>';
+                return;
+            }
+            
+            // Group words by transcription_segment_index
+            const segmentGroups = {};
+            words.forEach(w => {
+                const idx = w.transcription_segment_index ?? 0;
+                if (!segmentGroups[idx]) {
+                    segmentGroups[idx] = [];
+                }
+                segmentGroups[idx].push(w);
+            });
+            
+            // Sort and render each group as a "segment"
+            Object.keys(segmentGroups).sort((a, b) => Number(a) - Number(b)).forEach(idx => {
+                const groupWords = segmentGroups[idx];
+                groupWords.sort((a, b) => a.start_time - b.start_time);
+                
+                const startTime = groupWords[0].start_time;
+                const endTime = groupWords[groupWords.length - 1].end_time;
+                const text = groupWords.map(w => w.text).join(' ');
+                
+                const item = document.createElement('div');
+                item.className = 'segment';
+                item.dataset.start = startTime;
+                item.dataset.end = endTime;
+                item.dataset.segmentIndex = idx;
+                item.dataset.type = 'transcription';
+                item.dataset.runId = run.id;
+                
+                item.innerHTML = `
+                    <div class="segment-header">
+                        <span class="timestamp">${startTime.toFixed(2)} - ${endTime.toFixed(2)}</span>
+                        <span style="color:#999; font-size:0.8em;">${groupWords.length} words</span>
+                    </div>
+                    <div class="segment-text">${text}</div>
+                `;
+                
+                item.onclick = (e) => { 
+                    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                    e.stopPropagation();
+                    audio.currentTime = startTime; 
+                    audio.play(); 
+                };
+                
+                colContent.appendChild(item);
+            });
+        }
+        
+        function renderDiarizationSegments(run, colContent) {
+            const segs = run.diarizationSegments || [];
+            
+            if (!segs.length) {
+                colContent.innerHTML = '<div style="padding:10px; color:#999;">No segments</div>';
+                return;
+            }
+            
+            const validSegs = segs.filter(s => typeof s.start_time === 'number' && !s.is_invalidated);
+            validSegs.sort((a, b) => a.start_time - b.start_time);
+            
+            validSegs.forEach(s => {
+                const item = document.createElement('div');
+                item.className = 'segment';
+                item.dataset.start = s.start_time;
+                item.dataset.end = s.end_time;
+                item.dataset.id = s.id;
+                item.dataset.type = 'diarization';
+                item.dataset.runId = run.id;
+                item.dataset.speakerLabel = s.speaker_label;
+                
+                // New schema: speaker identity comes from speakerAssignments (most recent)
+                let speakerName = s.speaker_label || "UNKNOWN";
+                let speakerId = null;
+                
+                const assignments = s.speakerAssignments || [];
+                if (assignments.length > 0) {
+                    // Sort by assigned_at to get most recent
+                    const sorted = [...assignments].sort((a, b) => 
+                        new Date(b.assigned_at) - new Date(a.assigned_at)
+                    );
+                    const mostRecent = sorted[0];
+                    
+                    // Get speaker from assignment
+                    const speaker = mostRecent.speaker;
+                    if (speaker) {
+                        if (Array.isArray(speaker) && speaker.length > 0) {
+                            speakerName = speaker[0].name || speakerName;
+                            speakerId = speaker[0].id;
+                        } else if (speaker.name) {
+                            speakerName = speaker.name;
+                            speakerId = speaker.id;
+                        }
+                    }
+                    
+                    // Show assignment source indicator
+                    const sourceIcon = mostRecent.source === 'user' ? '✓' : 
+                                       mostRecent.source === 'model' ? '🤖' : '';
+                    if (sourceIcon) speakerName = `${sourceIcon} ${speakerName}`;
+                }
+                
+                if (speakerId) item.dataset.spkId = speakerId;
+                
+                const confidenceStr = s.confidence ? ` (${(s.confidence * 100).toFixed(0)}%)` : '';
+                
+                item.innerHTML = `
+                    <div class="segment-header">
+                        <span class="timestamp">${s.start_time.toFixed(2)} - ${s.end_time.toFixed(2)}${confidenceStr}</span>
+                        <span class="seg-speaker">${speakerName}</span>
+                    </div>
+                `;
+                
+                item.onclick = (e) => { 
+                    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                    e.stopPropagation();
+                    audio.currentTime = s.start_time; 
+                    audio.play(); 
+                };
+                
+                colContent.appendChild(item);
+            });
+        }
+
+        // --- KEYBOARD & ACTIONS ---
+        
+        document.addEventListener('keydown', (e) => {
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return; 
+            
+            // Space: Toggle Play
+            if (e.code === 'Space') {
+                e.preventDefault();
+                audio.paused ? audio.play() : audio.pause();
+                return;
+            }
+            
+            // Navigation
+            if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(e.code)) {
+                e.preventDefault();
+                navigate(e.code === 'ArrowLeft' || e.code === 'ArrowUp' ? -1 : 1);
+                return;
+            }
+            
+            // Enter: Edit Speaker (Diarization)
+            if (e.code === 'Enter' && !e.metaKey && !e.ctrlKey) {
+                e.preventDefault();
+                const active = document.querySelector('.segment.active');
+                if (active && active.dataset.type === 'diarization') {
+                    editSpeaker(active);
+                }
+                return;
+            }
+            
+            // Cmd+Enter: Split (Both)
+            if ((e.metaKey || e.ctrlKey) && e.code === 'Enter') {
+                e.preventDefault();
+                const active = document.querySelector('.segment.active');
+                if (active) {
+                    editSplit(active);
+                }
+                return;
+            }
+            
+            // Delete / Backspace: Delete Segment (Diarization)
+            // Use Ctrl+Delete or Cmd+Backspace to avoid accidental deletions?
+            // User asked for "removing... incorrectly linked".
+            // Let's protect it slightly with Cmd/Ctrl or just confirm?
+            // Let's try Delete key directly, but maybe with confirm?
+            // "Backspace" is dangerous for text editing (handled by input check above).
+            // "Delete" (Fn+Backspace on Mac) is safer.
+            // Let's support both but with confirm.
+            if (['Delete', 'Backspace'].includes(e.code) && !e.target.isContentEditable) {
+                // Double check input focus again just in case
+                if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+                
+                const active = document.querySelector('.segment.active');
+                if (active && active.dataset.type === 'diarization') {
+                    e.preventDefault();
+                    if (confirm("Are you sure you want to DELETE this segment and its embedding?")) {
+                        deleteSegment(active);
+                    }
+                }
+            }
+        });
+
+        async function deleteSegment(segEl) {
+             try {
+                const res = await fetch('/delete_segment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        segment_id: segEl.dataset.id
+                    })
+                });
+                if (!res.ok) throw await res.text();
+                // InstantDB updates automatically
+            } catch (e) {
+                alert("Failed to delete: " + e);
+            }
+        }
+
+        function navigate(dir) {
+            const allSegs = Array.from(document.querySelectorAll('.segment'));
+            if (!allSegs.length) return;
+            
+            // Sort deterministically by start time, then by runId (to group columns if times are equal), then ID
+            allSegs.sort((a,b) => {
+                const ta = parseFloat(a.dataset.start);
+                const tb = parseFloat(b.dataset.start);
+                if (ta !== tb) return ta - tb;
+                
+                // If times equal, sorting by DOM order might be safer for "visual" flow?
+                // But DOM order is Column A (all rows), Column B (all rows).
+                // So purely time-based sorting jumps between columns.
+                // If user wants to navigate "Down", they expect the next segment in THIS column?
+                // Or next chronological segment?
+                // Visual "Down" usually means next in column. 
+                // Visual "Right" means next column?
+                // User said "Up/Left... Down/Right".
+                // Let's implement Time-Based for now as it's general.
+                return 0; 
+                // Note: Sort is stable in modern JS, so DOM order preserved for equal times.
+            });
+            
+            // Find ALL active segments (could be multiple if overlapping)
+            // But usually only one is "active" by auto-scroll? 
+            // Actually auto-scroll makes multiple active if they overlap time.
+            // Let's find the FIRST active one in our sorted list.
+            let idx = allSegs.findIndex(el => el.classList.contains('active'));
+            
+            // If none active, find based on current audio time
+            if (idx === -1) {
+                const t = audio.currentTime;
+                // Find first segment starting after t? Or overlapping t?
+                idx = allSegs.findIndex(el => {
+                    const s = parseFloat(el.dataset.start);
+                    const e = parseFloat(el.dataset.end);
+                    return t >= s && t < e;
+                });
+                
+                // If still not found (gap), find next start
+                if (idx === -1) {
+                     idx = allSegs.findIndex(el => parseFloat(el.dataset.start) > t);
+                }
+                
+                if (idx === -1) idx = 0;
+            }
+            
+            let newIdx = idx + dir;
+            // Clamp
+            if (newIdx < 0) newIdx = 0;
+            if (newIdx >= allSegs.length) newIdx = allSegs.length - 1;
+            
+            const target = allSegs[newIdx];
+            if (target) {
+                console.log(`Navigating to ${newIdx} (Time: ${target.dataset.start})`);
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // We manually click to play/set active?
+                // navigate() implies moving selection? 
+                // Or just seeking?
+                // User said "Navigate to previous segment and start playback".
+                audio.currentTime = parseFloat(target.dataset.start);
+                audio.play();
+            }
+        }
+
+        // Auto-scroll / Active Class
+        audio.ontimeupdate = () => {
+            const t = audio.currentTime;
+            document.querySelectorAll('.segment').forEach(el => {
+                const s = parseFloat(el.dataset.start);
+                const e = parseFloat(el.dataset.end);
+                
+                // Allow a small tolerance for 'active'
+                if (t >= s && t < e) {
+                    if (!el.classList.contains('active')) {
+                        el.classList.add('active');
+                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+        };
+        
+        // --- EDITING LOGIC ---
+        
+        function editSpeaker(segEl) {
+            const spkEl = segEl.querySelector('.seg-speaker');
+            if (!spkEl) return;
+            
+            // Strip any source icons from the display name
+            const currentName = spkEl.textContent.replace(/^[✓🤖]\s*/, '').trim();
+            const speakerLabel = segEl.dataset.speakerLabel || '';
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = (currentName === "UNKNOWN" || currentName === speakerLabel) ? "" : currentName;
+            input.placeholder = `Speaker Name (was: ${speakerLabel})`;
+            input.style.width = "150px";
+            input.onclick = (e) => e.stopPropagation();
+            
+            const originalParent = spkEl.parentNode;
+            originalParent.replaceChild(input, spkEl);
+            audio.pause();
+            input.focus();
+            
+            const save = () => {
+                const newName = input.value.trim();
+                if (newName && newName !== currentName) {
+                    // New schema: Create speaker assignment
+                    createSpeakerAssignment(segEl.dataset.id, newName);
+                }
+                // Revert input to span (subscription will update with real data)
+                originalParent.replaceChild(spkEl, input);
+            };
+            
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                if (e.key === 'Escape') { input.value = currentName; input.blur(); }
+            };
+            input.onblur = save;
+        }
+        
+        // Legacy function kept for compatibility
+        async function relabelSegment(segId, newName) {
+            return createSpeakerAssignment(segId, newName);
+        }
+        
+        function editSplit(segEl) {
+            const textEl = segEl.querySelector('.segment-text');
+            const type = segEl.dataset.type;
+            
+            // If diarization, maybe we add text editing capability?
+            // Diarization segments usually don't have text.
+            // If Transription:
+            if (!textEl && type === 'diarization') return alert("Splitting diarization without text is generic. Impl later.");
+            
+            const currentText = textEl.textContent;
+            const textarea = document.createElement('textarea');
+            textarea.value = currentText.trim();
+            textarea.style.width = '100%';
+            textarea.style.height = '60px';
+            textarea.onclick = (e) => e.stopPropagation();
+            
+            const parent = textEl.parentNode;
+            parent.replaceChild(textarea, textEl);
+            audio.pause();
+            textarea.focus();
+            
+            textarea.onkeydown = (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                    // Split!
+                    const lines = textarea.value.split('\n').filter(l => l.trim());
+                    if (lines.length > 1) {
+                         performSplit(segEl, lines);
+                    } else if (lines.length === 1 && lines[0] !== currentText) {
+                         // Just update text
+                         db.transact([
+                             db.tx.transcriptionSegments[segEl.dataset.id].update({ text: lines[0] })
+                         ]);
+                    }
+                    // If no change or split, just revert? 
+                    // Render will handle revert on update.
+                }
+                if (e.key === 'Escape') {
+                    parent.replaceChild(textEl, textarea);
+                }
+            };
+        }
+        
+        function performSplit(segEl, lines) {
+            // Note: In the new schema, we have words not transcriptionSegments
+            // Splitting words is more complex - for now just show alert
+            alert("Word splitting not yet implemented in new schema. Use the server API for complex edits.");
+        }
+        
+        // New schema: Create speaker assignment instead of direct relabel
+        async function createSpeakerAssignment(segmentId, speakerName) {
+            try {
+                const res = await fetch('/assign_speaker', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        segment_id: segmentId,
+                        speaker_name: speakerName,
+                        source: 'user',
+                        assigned_by: 'ground_truth_ui'
+                    })
+                });
+                if (!res.ok) throw await res.text();
+                // InstantDB subscription will update UI
+            } catch (e) {
+                alert("Failed to assign speaker: " + e);
+            }
+        }
+
+    </script>
+</body>
+</html>
