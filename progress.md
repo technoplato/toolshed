@@ -30,7 +30,7 @@
 
 ✨ Updated Python models and adapter to match new InstantDB schema
 
-[Commit](https://github.com/technoplato/toolshed/commit/5f6bcb5)
+[Commit](https://github.com/technoplato/toolshed/commit/b80d358)
 
 - Pushed new schema to InstantDB (deleted old namespaces, created new ones)
 - models.py: Added Publication, Word, SpeakerAssignment, SegmentSplit, WordTextCorrection
