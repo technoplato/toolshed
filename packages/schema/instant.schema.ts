@@ -734,9 +734,11 @@ const schema = i.schema({
     speakerAssignments: i.entity({
       /**
        * How this assignment was made.
-       * "model" = automatic identification from embedding comparison
+       * "model" = automatic identification from embedding comparison (real-time)
        * "user" = manual correction by a human
        * "propagated" = automatically applied from another segment's correction
+       * "auto_identify" = batch identification from identify workflow
+       * "ground_truth" = verified human-labeled ground truth data
        */
       source: i.string().indexed(),
 
@@ -748,11 +750,25 @@ const schema = i.schema({
       confidence: i.number().optional(),
 
       /**
-       * User-provided note explaining the assignment.
-       * Especially useful for corrections.
-       * Example: "Clearly Matt's voice, not Joe's"
+       * Metadata about this assignment stored as JSON.
+       * 
+       * For user corrections:
+       *   { "reason": "Clearly Matt's voice, not Joe's" }
+       * 
+       * For auto-identification:
+       *   {
+       *     "method": "knn_identify",
+       *     "script_version": "v1",
+       *     "knn_distance": 0.42,
+       *     "top_matches": [
+       *       {"speaker": "Shane Gillis", "distance": 0.42, "count": 8},
+       *       {"speaker": "Matt McCusker", "distance": 0.58, "count": 2}
+       *     ],
+       *     "threshold": 0.5,
+       *     "cache_hit": true
+       *   }
        */
-      note: i.string().optional(),
+      note: i.json().optional(),
 
       /**
        * User ID who made this assignment. REQUIRED.
