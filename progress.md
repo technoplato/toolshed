@@ -30,7 +30,7 @@
 
 🐛 Fixed PostgreSQL port conflict and removed speechbrain
 
-[Commit](https://github.com/technoplato/toolshed/commit/c5c89dd)
+[Commit](https://github.com/technoplato/toolshed/commit/dbb8f7c)
 
 - Fixed port 5432→5433 using SPEAKER_DB_DSN env var
 - Removed speechbrain from pyproject.toml and benchmark.py
