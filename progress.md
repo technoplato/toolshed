@@ -26,6 +26,18 @@
 
 ---
 
+### December 8th, 2025 at 10:26:55 a.m.
+
+🐛 Fixed PostgreSQL port conflict and removed speechbrain
+
+[Commit](https://github.com/technoplato/toolshed/commit/c5c89dd)
+
+- Fixed port 5432→5433 using SPEAKER_DB_DSN env var
+- Removed speechbrain from pyproject.toml and benchmark.py
+- Enhanced cache logging with keys, paths, hit/miss details
+
+
+
 ### December 8th, 2025 at 9:22:32 a.m.
 
 ✨ Audio slicing optimization for diarization

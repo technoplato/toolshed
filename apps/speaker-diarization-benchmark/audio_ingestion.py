@@ -279,19 +279,29 @@ def run_ingest(config: IngestConfig) -> None:
         model="whisper-large-v3-turbo",
     )
     
+    # Log cache key and location for debugging
+    logger.info(f"   📁 Cache key: {trans_cache.cache_key}")
+    logger.info(f"   📁 Cache file: {trans_cache.cache_path}")
+    
     if trans_cache.has_range(cache_end_time):
         logger.info(f"   ✅ Cache HIT: transcription [0-{cache_end_time}s]")
+        logger.info(f"   ↳ Loading from: {trans_cache.cache_path.name}")
         transcription_data = trans_cache.get_filtered(config.start_time, cache_end_time)
         # Reconstruct TranscriptionResult
         transcription_result = _dict_to_transcription_result(transcription_data)
+        logger.info(f"   ↳ Loaded {len(transcription_result.segments)} segments, {sum(len(s.words) for s in transcription_result.segments)} words from cache")
     else:
         cached_end = trans_cache.get_cached_end()
         if cached_end:
             logger.info(f"   ⚠️ Cache MISS: have [0-{cached_end}s], need [0-{cache_end_time}s]")
+            logger.info(f"   ↳ Cache exists but doesn't cover requested range")
+            logger.info(f"   ↳ Will recompute full range [0-{cache_end_time}s]")
         else:
-            logger.info(f"   ⚠️ Cache MISS: no cache, computing [0-{cache_end_time}s]")
+            logger.info(f"   ⚠️ Cache MISS: no cache file found")
+            logger.info(f"   ↳ Will compute transcription [0-{cache_end_time}s]")
         
         # Compute transcription
+        logger.info(f"   🔄 Running MLX Whisper transcription...")
         transcription_result = transcribe(
             str(audio_path),
             start_time=None,  # Always start from 0 for caching
@@ -303,8 +313,10 @@ def run_ingest(config: IngestConfig) -> None:
             result=transcription_result.model_dump() if hasattr(transcription_result, 'model_dump') else transcription_result.dict(),
             end_time=cache_end_time,
         )
+        logger.info(f"   💾 Saved transcription cache: {trans_cache.cache_path.name}")
     
-    logger.info(f"   Transcription: {len(transcription_result.segments)} segments")
+    word_count = sum(len(s.words) for s in transcription_result.segments)
+    logger.info(f"   📊 Transcription result: {len(transcription_result.segments)} segments, {word_count} words")
     
     # ═══════════════════════════════════════════════════════════════════
     # STEP 3: Diarize (with caching)
@@ -316,27 +328,41 @@ def run_ingest(config: IngestConfig) -> None:
         workflow=config.workflow,
     )
     
+    # Log cache key and location for debugging
+    logger.info(f"   📁 Cache key: {diar_cache.cache_key}")
+    logger.info(f"   📁 Cache file: {diar_cache.cache_path}")
+    
     if diar_cache.has_range(cache_end_time):
         logger.info(f"   ✅ Cache HIT: diarization [0-{cache_end_time}s]")
+        logger.info(f"   ↳ Loading from: {diar_cache.cache_path.name}")
         segments = diar_cache.get_filtered(config.start_time, cache_end_time)
         stats = diar_cache.get_stats() or {}
+        speaker_labels = set(s.get("speaker", "UNKNOWN") for s in segments)
+        logger.info(f"   ↳ Loaded {len(segments)} segments, {len(speaker_labels)} speakers from cache")
     else:
         cached_end = diar_cache.get_cached_end()
         if cached_end:
             logger.info(f"   ⚠️ Cache MISS: have [0-{cached_end}s], need [0-{cache_end_time}s]")
+            logger.info(f"   ↳ Cache exists but doesn't cover requested range")
+            logger.info(f"   ↳ Will recompute full range [0-{cache_end_time}s]")
         else:
-            logger.info(f"   ⚠️ Cache MISS: no cache, computing [0-{cache_end_time}s]")
+            logger.info(f"   ⚠️ Cache MISS: no cache file found")
+            logger.info(f"   ↳ Will compute diarization [0-{cache_end_time}s]")
         
         # Slice audio to requested time range for faster diarization
         # This is critical - full audio file can be 767MB (1+ hr), but we only need 60s
         from ingestion.audio_utils import slice_audio
+        
+        original_size = audio_path.stat().st_size / (1024 * 1024)
+        logger.info(f"   🔪 Slicing audio ({original_size:.1f}MB) to [0-{cache_end_time}s]...")
         
         sliced_audio = slice_audio(
             audio_path=str(audio_path),
             start_time=0,  # Always start from 0 for cache consistency
             end_time=cache_end_time,
         )
-        logger.info(f"   Using sliced audio: {sliced_audio.name}")
+        sliced_size = sliced_audio.stat().st_size / (1024 * 1024)
+        logger.info(f"   ↳ Sliced: {sliced_audio.name} ({sliced_size:.1f}MB)")
         
         # Compute diarization on sliced audio
         from ingestion.args import get_workflow
@@ -345,12 +371,15 @@ def run_ingest(config: IngestConfig) -> None:
         workflow_config = WorkflowConfig(name=config.workflow)
         workflow = get_workflow(workflow_config)
         
+        logger.info(f"   🔄 Running PyAnnote diarization on sliced audio...")
         segments, stats = workflow.run(sliced_audio, transcription_result)
         
         # Save to cache
         diar_cache.save(segments=segments, stats=stats, end_time=cache_end_time)
+        logger.info(f"   💾 Saved diarization cache: {diar_cache.cache_path.name}")
     
-    logger.info(f"   Diarization: {len(segments)} segments")
+    speaker_labels = set(s.get("speaker", "UNKNOWN") for s in segments)
+    logger.info(f"   📊 Diarization result: {len(segments)} segments, {len(speaker_labels)} speakers ({', '.join(sorted(speaker_labels))})")
     
     # Prepare video data
     video_data = {
@@ -376,10 +405,13 @@ def run_ingest(config: IngestConfig) -> None:
             from ingestion.instant_client import InstantClient
             
             instant_client = InstantClient()
-            pg_dsn = os.getenv("POSTGRES_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
+            # Note: Use SPEAKER_DB_DSN for this project's specific postgres, not generic POSTGRES_DSN
+            # The docker-compose maps 5433->5432 to avoid conflicts with local postgres
+            pg_dsn = os.getenv("SPEAKER_DB_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
             pg_client = PgVectorClient(pg_dsn)
             
             embedding_count = get_embedding_count()
+            logger.info(f"   📊 PostgreSQL has {embedding_count} speaker embeddings")
             
             id_cache = IdentificationCache(
                 video_id=video_id,
@@ -388,10 +420,16 @@ def run_ingest(config: IngestConfig) -> None:
                 embedding_count=embedding_count,
             )
             
+            # Log cache key and location for debugging
+            logger.info(f"   📁 Cache key: {id_cache.cache_key}")
+            logger.info(f"   📁 Cache file: {id_cache.cache_path}")
+            
             if id_cache.has_range(cache_end_time):
                 logger.info(f"   ✅ Cache HIT: identification [0-{cache_end_time}s]")
+                logger.info(f"   ↳ Loading from: {id_cache.cache_path.name}")
                 # Note: For identification, we'd need to reconstruct the plan
                 # For now, we'll recompute (identification is fast)
+                logger.info(f"   ↳ Note: recomputing anyway (identification is fast)")
                 identification_plan = identify_speakers(
                     instant_client=instant_client,
                     pg_client=pg_client,
@@ -402,7 +440,13 @@ def run_ingest(config: IngestConfig) -> None:
                     audio_path=str(audio_path),
                 )
             else:
-                logger.info(f"   ⚠️ Cache MISS: computing identification")
+                cached_end = id_cache.get_cached_end()
+                if cached_end:
+                    logger.info(f"   ⚠️ Cache MISS: have [0-{cached_end}s], need [0-{cache_end_time}s]")
+                else:
+                    logger.info(f"   ⚠️ Cache MISS: no cache file found")
+                logger.info(f"   ↳ Will compute identification [0-{cache_end_time}s]")
+                logger.info(f"   🔄 Running KNN speaker identification...")
                 identification_plan = identify_speakers(
                     instant_client=instant_client,
                     pg_client=pg_client,
@@ -413,7 +457,13 @@ def run_ingest(config: IngestConfig) -> None:
                     audio_path=str(audio_path),
                 )
             
-            logger.info(f"   Identification: {identification_plan.identified_count} identified, {identification_plan.unknown_count} unknown")
+            logger.info(f"   📊 Identification result: {identification_plan.identified_count} identified, {identification_plan.unknown_count} unknown")
+            
+            # Log identified speakers
+            if identification_plan.speaker_assignments:
+                speakers = set(a.speaker_name for a in identification_plan.speaker_assignments if a.speaker_name)
+                if speakers:
+                    logger.info(f"   ↳ Identified speakers: {', '.join(sorted(speakers))}")
             
         except Exception as e:
             logger.warning(f"Speaker identification failed: {e}")

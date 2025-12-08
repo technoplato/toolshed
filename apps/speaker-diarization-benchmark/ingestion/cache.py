@@ -141,6 +141,11 @@ class TranscriptionCache:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_file = self.cache_dir / f"{self.cache_key}.json"
     
+    @property
+    def cache_path(self) -> Path:
+        """Alias for cache_file (for logging consistency)."""
+        return self.cache_file
+    
     def has_range(self, end_time: float) -> bool:
         """Check if we have cached data covering [0, end_time]."""
         if not self.cache_file.exists():
@@ -271,7 +276,6 @@ class DiarizationCache:
       - pyannote (default local)
       - pyannote_api (PyAnnote cloud API)
       - wespeaker
-      - speechbrain
     """
     
     def __init__(self, video_id: str, workflow: str):
@@ -284,6 +288,11 @@ class DiarizationCache:
         self.cache_dir = CACHE_DIR / "diarization"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_file = self.cache_dir / f"{self.cache_key}.json"
+    
+    @property
+    def cache_path(self) -> Path:
+        """Alias for cache_file (for logging consistency)."""
+        return self.cache_file
     
     def has_range(self, end_time: float) -> bool:
         """Check if we have cached data covering [0, end_time]."""
@@ -393,6 +402,11 @@ class IdentificationCache:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.cache_file = self.cache_dir / f"{self.cache_key}.json"
     
+    @property
+    def cache_path(self) -> Path:
+        """Alias for cache_file (for logging consistency)."""
+        return self.cache_file
+    
     def has_range(self, end_time: float) -> bool:
         """Check if we have cached data covering [0, end_time]."""
         if not self.cache_file.exists():
@@ -404,6 +418,18 @@ class IdentificationCache:
             return data.get("cached_end", 0) >= end_time
         except Exception:
             return False
+    
+    def get_cached_end(self) -> Optional[float]:
+        """Get the end time of cached data."""
+        if not self.cache_file.exists():
+            return None
+        
+        try:
+            with open(self.cache_file) as f:
+                data = json.load(f)
+            return data.get("cached_end")
+        except Exception:
+            return None
     
     def get_filtered(self, start_time: float, end_time: float) -> Optional[Dict[str, Any]]:
         """Get cached identification results filtered to [start_time, end_time]."""

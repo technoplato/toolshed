@@ -550,7 +550,9 @@ Examples:
     args = parser.parse_args()
     
     # Get Postgres DSN - note port 5433 is mapped from Docker
-    pg_dsn = os.getenv("POSTGRES_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
+    # Note: Use SPEAKER_DB_DSN for this project's specific postgres, not generic POSTGRES_DSN
+    # The docker-compose maps 5433->5432 to avoid conflicts with local postgres
+    pg_dsn = os.getenv("SPEAKER_DB_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
     
     print("🔧 Initializing clients...")
     
