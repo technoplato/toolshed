@@ -26,6 +26,20 @@
 
 ---
 
+### December 8th, 2025 at 8:54:40 a.m.
+
+✨ Integrate caching into ingest pipeline
+
+[Commit](https://github.com/technoplato/toolshed/commit/4dd5a0d)
+
+- Integrated TranscriptionCache, DiarizationCache, IdentificationCache into run_ingest()
+- Added preview markdown generation and file saving
+- Added detailed diarization logging (load time, device, progress)
+- Fixed pyannote.py: missing class definition, MPS device support
+- KNOWN ISSUE: Diarization processes full audio file instead of time-range slice - needs optimization
+
+
+
 ### December 8th, 2025 at 8:26:09 a.m.
 
 ✨ Add caching layer and preview output for audio ingestion

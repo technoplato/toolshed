@@ -22,17 +22,31 @@ import logging
 import torch
 from typing import List, Dict, Any, Tuple
 from pathlib import Path
-from .base import Workflow
+from ..base import Workflow
 
 logger = logging.getLogger(__name__)
 
+# Import safe globals helper
+try:
+    from ingestion.safe_globals import get_safe_globals
+except ImportError:
+    def get_safe_globals():
+        return []
+
+
+class PyannoteWorkflow(Workflow):
+    """Pyannote-based speaker diarization workflow."""
+    
     def __init__(self, config: Dict[str, Any] = None):
         super().__init__(config)
         self.model_name = self.config.get("model_name", "pyannote/speaker-diarization-3.1")
         self.use_auth_token = self.config.get("use_auth_token", True)
 
     def run(self, clip_path: Path, transcription_result: Any) -> Tuple[List[Dict[str, Any]], Dict[str, float]]:
-        stats = {'embedding_time': 0, 'segmentation_time': 0, 'clustering_time': 0}
+        stats = {'embedding_time': 0, 'segmentation_time': 0, 'clustering_time': 0, 'load_time': 0}
+        
+        logger.info(f"🎙️ PyAnnote Diarization: {clip_path}")
+        logger.info(f"   Model: {self.model_name}")
         
         hf_token = os.getenv("HF_TOKEN")
         if self.use_auth_token and not hf_token:
@@ -40,13 +54,14 @@ logger = logging.getLogger(__name__)
             if "precision" in self.model_name:
                  hf_token = os.getenv("PYANNOTEAI_API_KEY")
                  if not hf_token:
-                     logger.error("PYANNOTEAI_API_KEY not found in environment variables.")
+                     logger.error("❌ PYANNOTEAI_API_KEY not found in environment variables.")
                      return [], stats
             else:
-                logger.error("HF_TOKEN not found in environment variables.")
+                logger.error("❌ HF_TOKEN not found in environment variables.")
                 return [], stats
 
-        logger.info(f"Loading {self.model_name} pipeline...")
+        load_start = time.time()
+        logger.info(f"   ⏳ Loading pipeline (this may take 30-60s on first run)...")
         
         try:
             from pyannote.audio import Pipeline
@@ -58,23 +73,26 @@ logger = logging.getLogger(__name__)
                     # Fallback for newer versions that might use 'token' or no argument if logged in
                     pipeline = Pipeline.from_pretrained(self.model_name, token=hf_token)
             
-            pipeline.to(torch.device("cpu")) # Force CPU for now
+            device = "mps" if torch.backends.mps.is_available() else "cpu"
+            pipeline.to(torch.device(device))
+            stats['load_time'] = time.time() - load_start
+            logger.info(f"   ✅ Pipeline loaded in {stats['load_time']:.1f}s (device: {device})")
         except Exception as e:
-            logger.error(f"Failed to load pipeline: {e}")
+            logger.error(f"❌ Failed to load pipeline: {e}")
             return [], stats
             
-        start_time = time.time()
-        logger.info("Running diarization pipeline...")
+        diar_start = time.time()
+        logger.info(f"   ⏳ Running diarization (this may take 1-2 min for 60s audio)...")
         try:
             diarization = pipeline(str(clip_path))
+            stats['segmentation_time'] = time.time() - diar_start
+            logger.info(f"   ✅ Diarization complete in {stats['segmentation_time']:.1f}s")
         except Exception as e:
-            logger.error(f"Diarization failed: {e}")
+            logger.error(f"❌ Diarization failed: {e}")
             return [], stats
-            
-        stats['segmentation_time'] = time.time() - start_time
         
         # Align words with speakers
-        logger.info("Aligning transcription with diarization...")
+        logger.info("   ⏳ Aligning transcription with diarization...")
         
         # Create a list of (start, end, speaker)
         diar_segments = []
@@ -101,11 +119,14 @@ logger = logging.getLogger(__name__)
                     pass
 
         if not hasattr(diarization, 'itertracks'):
-             logger.error("Diarization object does not have itertracks method.")
+             logger.error("❌ Diarization object does not have itertracks method.")
              return [], stats
 
         for turn, _, speaker in diarization.itertracks(yield_label=True):
             diar_segments.append((turn.start, turn.end, speaker))
+        
+        unique_speakers = set(s for _, _, s in diar_segments)
+        logger.info(f"   Found {len(diar_segments)} raw segments, {len(unique_speakers)} speakers: {sorted(unique_speakers)}")
             
         # Flatten words from transcription result
         all_words = []
@@ -113,8 +134,10 @@ logger = logging.getLogger(__name__)
             all_words.extend(seg.words)
             
         if not all_words:
-            logger.warning("No words found in transcription.")
+            logger.warning("⚠️ No words found in transcription.")
             return [], stats
+        
+        logger.info(f"   Aligning {len(all_words)} words with speakers...")
 
         # Assign speaker to each word
         word_speakers = []
@@ -157,5 +180,8 @@ logger = logging.getLogger(__name__)
                 "text": " ".join([w.word for w in current_words]),
                 "speaker": current_speaker
             })
+        
+        total_time = stats.get('load_time', 0) + stats.get('segmentation_time', 0)
+        logger.info(f"   ✅ Created {len(segments)} aligned segments in {total_time:.1f}s total")
             
         return segments, stats

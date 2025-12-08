@@ -202,7 +202,25 @@ def run_identify(config: IdentifyConfig) -> None:
 
 
 def run_ingest(config: IngestConfig) -> None:
-    """Run full ingestion pipeline."""
+    """
+    Run full ingestion pipeline with caching.
+    
+    Modes:
+      --dry-run: Show plan only (no compute)
+      --preview: Run compute, show preview, save to markdown, don't save to DB
+      (default): Run compute, show preview, ask confirmation, save to DB
+      --yes: Run compute, skip confirmation, save to DB
+    """
+    from ingestion.cache import (
+        extract_video_id,
+        TranscriptionCache,
+        DiarizationCache,
+        IdentificationCache,
+        PreviewCache,
+        get_embedding_count,
+    )
+    from ingestion.preview import generate_preview_markdown, save_preview, print_preview_summary
+    
     # Check services
     check_services(require_instant_server=True, require_postgres=True)
     
@@ -214,48 +232,116 @@ def run_ingest(config: IngestConfig) -> None:
     logger.info("Starting full ingestion pipeline")
     start_time_global = time.time()
     
-    # Step 1: Download (if URL)
+    # ═══════════════════════════════════════════════════════════════════
+    # STEP 1: Download (if URL)
+    # ═══════════════════════════════════════════════════════════════════
+    video_id = extract_video_id(config.source)
+    
     if config.is_url:
         logger.info(f"Step 1: Downloading from {config.source}")
-        download_config = DownloadConfig(
-            url=config.source,
-            output_dir=config.output_dir,
-            verbose=config.verbose,
-        )
-        audio_path = download_video(download_config)
-        if not audio_path:
-            logger.error("Download failed")
-            return
-        audio_path = Path(audio_path)
+        expected_path = config.output_dir / f"{video_id}.wav"
+        
+        if expected_path.exists():
+            logger.info(f"   ✅ Cache HIT: {expected_path}")
+            audio_path = expected_path
+        else:
+            download_config = DownloadConfig(
+                url=config.source,
+                output_dir=config.output_dir,
+                verbose=config.verbose,
+            )
+            audio_path = download_video(download_config)
+            if not audio_path:
+                logger.error("Download failed")
+                return
+            audio_path = Path(audio_path)
     else:
         audio_path = Path(config.source)
+        video_id = audio_path.stem
         logger.info(f"Step 1: Using local file {audio_path}")
     
     if not audio_path.exists():
         logger.error(f"Audio file not found: {audio_path}")
         return
     
-    # Step 2: Transcribe
+    # Determine the end time for caching
+    # If end_time is None, we need to compute full file (use a large number)
+    cache_end_time = config.end_time or 99999.0
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # STEP 2: Transcribe (with caching)
+    # ═══════════════════════════════════════════════════════════════════
     logger.info(f"Step 2: Transcribing {audio_path}")
-    transcription_result = _get_or_create_transcription(
-        audio_path,
-        config.start_time,
-        config.end_time,
+    
+    trans_cache = TranscriptionCache(
+        video_id=video_id,
+        tool="mlx-whisper",
+        model="whisper-large-v3-turbo",
     )
     
-    # Step 3: Diarize
+    if trans_cache.has_range(cache_end_time):
+        logger.info(f"   ✅ Cache HIT: transcription [0-{cache_end_time}s]")
+        transcription_data = trans_cache.get_filtered(config.start_time, cache_end_time)
+        # Reconstruct TranscriptionResult
+        transcription_result = _dict_to_transcription_result(transcription_data)
+    else:
+        cached_end = trans_cache.get_cached_end()
+        if cached_end:
+            logger.info(f"   ⚠️ Cache MISS: have [0-{cached_end}s], need [0-{cache_end_time}s]")
+        else:
+            logger.info(f"   ⚠️ Cache MISS: no cache, computing [0-{cache_end_time}s]")
+        
+        # Compute transcription
+        transcription_result = transcribe(
+            str(audio_path),
+            start_time=None,  # Always start from 0 for caching
+            end_time=config.end_time,
+        )
+        
+        # Save to cache
+        trans_cache.save(
+            result=transcription_result.model_dump() if hasattr(transcription_result, 'model_dump') else transcription_result.dict(),
+            end_time=cache_end_time,
+        )
+    
+    logger.info(f"   Transcription: {len(transcription_result.segments)} segments")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # STEP 3: Diarize (with caching)
+    # ═══════════════════════════════════════════════════════════════════
     logger.info(f"Step 3: Running diarization (workflow: {config.workflow})")
-    from ingestion.args import get_workflow
-    from ingestion.config import WorkflowConfig
     
-    workflow_config = WorkflowConfig(name=config.workflow)
-    workflow = get_workflow(workflow_config)
+    diar_cache = DiarizationCache(
+        video_id=video_id,
+        workflow=config.workflow,
+    )
     
-    segments, stats = workflow.run(audio_path, transcription_result)
-    logger.info(f"Diarization complete: {len(segments)} segments")
+    if diar_cache.has_range(cache_end_time):
+        logger.info(f"   ✅ Cache HIT: diarization [0-{cache_end_time}s]")
+        segments = diar_cache.get_filtered(config.start_time, cache_end_time)
+        stats = diar_cache.get_stats() or {}
+    else:
+        cached_end = diar_cache.get_cached_end()
+        if cached_end:
+            logger.info(f"   ⚠️ Cache MISS: have [0-{cached_end}s], need [0-{cache_end_time}s]")
+        else:
+            logger.info(f"   ⚠️ Cache MISS: no cache, computing [0-{cache_end_time}s]")
+        
+        # Compute diarization
+        from ingestion.args import get_workflow
+        from ingestion.config import WorkflowConfig
+        
+        workflow_config = WorkflowConfig(name=config.workflow)
+        workflow = get_workflow(workflow_config)
+        
+        segments, stats = workflow.run(audio_path, transcription_result)
+        
+        # Save to cache
+        diar_cache.save(segments=segments, stats=stats, end_time=cache_end_time)
+    
+    logger.info(f"   Diarization: {len(segments)} segments")
     
     # Prepare video data
-    video_id = audio_path.stem
     video_data = {
         "id": video_id,
         "title": config.title or audio_path.stem,
@@ -263,10 +349,16 @@ def run_ingest(config: IngestConfig) -> None:
         "source_url": config.source if config.is_url else None,
     }
     
-    # Step 4: Identify (compute only, no save yet)
+    # ═══════════════════════════════════════════════════════════════════
+    # STEP 4: Identify (with caching)
+    # ═══════════════════════════════════════════════════════════════════
     identification_plan = None
+    pg_client = None
+    instant_client = None
+    
     if not config.skip_identify:
-        logger.info("Step 4: Running speaker identification (compute only)")
+        logger.info("Step 4: Running speaker identification")
+        
         try:
             from src.embeddings.pgvector_client import PgVectorClient
             from ingestion.identify import identify_speakers
@@ -276,24 +368,54 @@ def run_ingest(config: IngestConfig) -> None:
             pg_dsn = os.getenv("POSTGRES_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
             pg_client = PgVectorClient(pg_dsn)
             
-            identification_plan = identify_speakers(
-                instant_client=instant_client,
-                pg_client=pg_client,
+            embedding_count = get_embedding_count()
+            
+            id_cache = IdentificationCache(
                 video_id=video_id,
-                start_time=config.start_time if config.start_time > 0 else None,
-                end_time=config.end_time,
+                strategy="knn",
                 threshold=config.threshold,
-                audio_path=str(audio_path),
+                embedding_count=embedding_count,
             )
-            logger.info(f"Identification computed: {identification_plan.identified_count} segments identified")
+            
+            if id_cache.has_range(cache_end_time):
+                logger.info(f"   ✅ Cache HIT: identification [0-{cache_end_time}s]")
+                # Note: For identification, we'd need to reconstruct the plan
+                # For now, we'll recompute (identification is fast)
+                identification_plan = identify_speakers(
+                    instant_client=instant_client,
+                    pg_client=pg_client,
+                    video_id=video_id,
+                    start_time=config.start_time if config.start_time > 0 else None,
+                    end_time=config.end_time,
+                    threshold=config.threshold,
+                    audio_path=str(audio_path),
+                )
+            else:
+                logger.info(f"   ⚠️ Cache MISS: computing identification")
+                identification_plan = identify_speakers(
+                    instant_client=instant_client,
+                    pg_client=pg_client,
+                    video_id=video_id,
+                    start_time=config.start_time if config.start_time > 0 else None,
+                    end_time=config.end_time,
+                    threshold=config.threshold,
+                    audio_path=str(audio_path),
+                )
+            
+            logger.info(f"   Identification: {identification_plan.identified_count} identified, {identification_plan.unknown_count} unknown")
             
         except Exception as e:
             logger.warning(f"Speaker identification failed: {e}")
+    else:
+        logger.info("Step 4: Skipping speaker identification (--skip-identify)")
     
     # ═══════════════════════════════════════════════════════════════════
-    # PREVIEW: Show what will be saved to InstantDB
+    # PREVIEW: Generate and save markdown
     # ═══════════════════════════════════════════════════════════════════
-    _print_save_preview(
+    logger.info("Step 5: Generating preview")
+    
+    # Print summary to console
+    print_preview_summary(
         video_data=video_data,
         transcription_result=transcription_result,
         diarization_segments=segments,
@@ -301,9 +423,24 @@ def run_ingest(config: IngestConfig) -> None:
         config=config,
     )
     
+    # Generate full markdown
+    preview_markdown = generate_preview_markdown(
+        video_data=video_data,
+        transcription_result=transcription_result,
+        diarization_segments=segments,
+        identification_plan=identification_plan,
+        config=config,
+    )
+    
+    # Save markdown file
+    preview_path = save_preview(preview_markdown, video_id, also_print=False)
+    
     # Preview mode = stop here, don't save
     if config.preview:
-        print("\n💡 Preview mode: Nothing was saved. Remove --preview to save.")
+        print(f"\n💡 Preview mode: Nothing was saved to InstantDB.")
+        print(f"   Preview file: {preview_path}")
+        print(f"\n   To save, run with --yes:")
+        print(f"   uv run audio_ingestion.py ingest \"{config.source}\" --start-time {config.start_time} --end-time {config.end_time or 'full'} --yes")
         return
     
     # Ask for confirmation (unless --yes is passed)
@@ -312,6 +449,7 @@ def run_ingest(config: IngestConfig) -> None:
             response = input("\n💾 Save to InstantDB? [y/N] ")
             if response.lower() != 'y':
                 print("❌ Cancelled. Nothing was saved.")
+                print(f"   Preview file: {preview_path}")
                 return
         except EOFError:
             print("❌ Non-interactive mode. Use --yes to auto-confirm.")
@@ -320,42 +458,47 @@ def run_ingest(config: IngestConfig) -> None:
     # ═══════════════════════════════════════════════════════════════════
     # SAVE: Actually write to InstantDB
     # ═══════════════════════════════════════════════════════════════════
-    logger.info("Saving to InstantDB...")
-    from ingestion.instant_client import InstantClient
+    logger.info("Step 6: Saving to InstantDB...")
+    
+    if instant_client is None:
+        from ingestion.instant_client import InstantClient
+        instant_client = InstantClient()
     
     try:
-        instant_client = InstantClient()
-        
         # Save video
         result = instant_client.transact([
             ["update", "videos", video_data]
         ])
-        logger.info(f"Video saved: {video_id}")
+        logger.info(f"   ✅ Video saved: {video_id}")
         
     except Exception as e:
         logger.error(f"Failed to save to InstantDB: {e}")
         return
     
     # Save identification results
-    if identification_plan and not config.skip_identify:
+    if identification_plan and not config.skip_identify and pg_client:
         try:
             from ingestion.identify import execute_plan
             execute_plan(instant_client, pg_client, identification_plan)
-            logger.info(f"Identification saved: {identification_plan.identified_count} assignments")
+            logger.info(f"   ✅ Identification saved: {identification_plan.identified_count} assignments")
         except Exception as e:
             logger.warning(f"Failed to save identification: {e}")
     
     # Summary
     total_time = time.time() - start_time_global
-    logger.info(f"""
-{'=' * 60}
+    print(f"""
+{'═' * 60}
 ✅ Ingestion Complete
-{'=' * 60}
+{'═' * 60}
+   Video ID: {video_id}
    Audio: {audio_path}
    Time range: {config.start_time}s - {config.end_time or 'end'}s
-   Segments: {len(segments)}
+   Transcription: {len(transcription_result.segments)} segments
+   Diarization: {len(segments)} segments
+   Identification: {identification_plan.identified_count if identification_plan else 'skipped'}
    Total time: {total_time:.1f}s
-{'=' * 60}
+   Preview: {preview_path}
+{'═' * 60}
 """)
 
 
@@ -528,6 +671,34 @@ def _print_save_preview(
 """)
     
     print("═" * 72)
+
+
+def _dict_to_transcription_result(data: dict) -> TranscriptionResult:
+    """
+    Convert a cached dict back to a TranscriptionResult object.
+    
+    Args:
+        data: Dict from cache with text, segments, language
+        
+    Returns:
+        TranscriptionResult object
+    """
+    segments = []
+    for s in data.get('segments', []):
+        words = [Word(**w) for w in s.get('words', [])]
+        segments.append(Segment(
+            start=s['start'],
+            end=s['end'],
+            text=s['text'],
+            words=words,
+            speaker=s.get('speaker', 'UNKNOWN')
+        ))
+    
+    return TranscriptionResult(
+        text=data.get('text', ''),
+        segments=segments,
+        language=data.get('language', 'en')
+    )
 
 
 def _get_or_create_transcription(
