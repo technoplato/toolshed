@@ -30,7 +30,7 @@
 
 ✨ Mature audio_ingestion.py CLI per spec
 
-[Commit](https://github.com/technoplato/toolshed/commit/ffca947)
+[Commit](https://github.com/technoplato/toolshed/commit/d7f7a70)
 
 - Added service health checks (instant-server:3001, PostgreSQL:5433)
 - Added transcribe, identify, ingest subcommands with --start-time/--end-time
