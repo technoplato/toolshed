@@ -26,6 +26,22 @@
 
 ---
 
+### December 8th, 2025 at 8:11:35 a.m.
+
+✨ Mature audio_ingestion.py CLI per spec
+
+[Commit](https://github.com/technoplato/toolshed/commit/ffca947)
+
+- Added service health checks (instant-server:3001, PostgreSQL:5433)
+- Added transcribe, identify, ingest subcommands with --start-time/--end-time
+- Implemented comprehensive dry-run output showing WHY each tool is used
+- Moved transcribe.py from graveyard with time-range slicing
+- Deleted manifest.py - InstantDB is now sole source of truth
+- Upgraded pyannote.audio to 4.0.x
+- Fixed PostgreSQL health check to verify schema and show embedding count
+
+
+
 ### December 7th, 2025 at 10:00:22 p.m.
 
 ✨ Dockerized instant-server + comprehensive README
