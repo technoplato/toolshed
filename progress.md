@@ -26,6 +26,21 @@
 
 ---
 
+### December 8th, 2025 at 8:26:09 a.m.
+
+✨ Add caching layer and preview output for audio ingestion
+
+[Commit](https://github.com/technoplato/toolshed/commit/c819677)
+
+- Created ingestion/cache.py with range-based caching for transcription, diarization, identification
+- Cache keys use double underscore separators: {video_id}__{tool}__{model}
+- Created ingestion/preview.py for markdown output aligned with InstantDB schema
+- Moved identify_speakers.py to ingestion/identify.py (core pipeline component)
+- Added --preview flag (run compute, show preview, don't save)
+- Added --yes flag (skip confirmation prompt)
+
+
+
 ### December 8th, 2025 at 8:11:35 a.m.
 
 ✨ Mature audio_ingestion.py CLI per spec

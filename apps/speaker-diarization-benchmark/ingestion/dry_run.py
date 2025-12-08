@@ -297,7 +297,7 @@ def print_ingest_dry_run(config: IngestConfig) -> None:
    Top-K: 5 nearest neighbors
 {speaker_info}
    
-   📁 Implementation: scripts/one_off/identify_speakers.py
+   📁 Implementation: ingestion/identify.py
    🔧 Uses: pgvector for fast KNN search
    
    Why KNN identification?

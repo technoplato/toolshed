@@ -1,45 +1,43 @@
 #!/usr/bin/env python3
 """
 HOW:
-  # Dry run (default) - shows what would happen
-  uv run scripts/one_off/identify_speakers.py \
+  # Via audio_ingestion.py CLI (recommended)
+  uv run audio_ingestion.py identify \
     --video-id "20dbb029-5729-5072-8c6b-ef1f0a0cab0a" \
     --start-time 0 \
     --end-time 60
 
   # Execute - actually saves to DB
-  uv run scripts/one_off/identify_speakers.py \
+  uv run audio_ingestion.py identify \
     --video-id "20dbb029-5729-5072-8c6b-ef1f0a0cab0a" \
     --execute
 
-  # With custom threshold
-  uv run scripts/one_off/identify_speakers.py \
-    --video-id "..." \
-    --threshold 0.4 \
-    --execute
+  # As a module (for programmatic use)
+  from ingestion.identify import identify_speakers, execute_plan, IdentificationPlan
+  plan = identify_speakers(instant_client, pg_client, video_id="...")
+  execute_plan(instant_client, pg_client, plan)
 
   [Inputs]
-  - --video-id: Video UUID in InstantDB
-  - --start-time: Optional start time filter (seconds)
-  - --end-time: Optional end time filter (seconds)
-  - --threshold: Distance threshold for identification (default: 0.5)
-  - --top-k: Number of nearest neighbors to consider (default: 5)
-  - --execute: Actually save results (default: dry-run)
-  - --audio-path: Optional audio file path (auto-detected from video if omitted)
+  - video_id: Video UUID in InstantDB
+  - start_time: Optional start time filter (seconds)
+  - end_time: Optional end time filter (seconds)
+  - threshold: Distance threshold for identification (default: 0.5)
+  - top_k: Number of nearest neighbors to consider (default: 5)
+  - audio_path: Optional audio file path (auto-detected from video if omitted)
 
   [Outputs]
-  - Console output showing identification results
-  - If --execute: Speaker assignments saved to InstantDB
+  - IdentificationPlan with results for each segment
+  - If executed: Speaker assignments saved to InstantDB
 
   [Side Effects]
   - Reads from InstantDB (via TypeScript server)
   - Reads from PostgreSQL (embeddings)
   - May extract embeddings from audio file
-  - If --execute: Writes speaker assignments to InstantDB
+  - If executed: Writes speaker assignments to InstantDB
 
 WHO:
   Claude AI, User
-  (Context: Speaker identification workflow)
+  (Context: Speaker identification - core pipeline component)
 
 WHAT:
   Identifies speakers in diarization segments by comparing their voice
@@ -51,18 +49,23 @@ WHAT:
      a. Extract voice embedding (pyannote) if not already in Postgres
      b. Run KNN search against known embeddings
      c. If distance < threshold, identify as that speaker
-  3. Preview results (dry-run) or save to InstantDB (--execute)
+  3. Return IdentificationPlan (caller decides whether to execute)
 
 WHEN:
   2025-12-07
+  Last Modified: 2025-12-08
+  Change Log:
+  - 2025-12-08: Moved from scripts/one_off/ to ingestion/ as core pipeline component
 
 WHERE:
-  apps/speaker-diarization-benchmark/scripts/one_off/identify_speakers.py
+  apps/speaker-diarization-benchmark/ingestion/identify.py
 
 WHY:
   To automatically identify speakers in new audio by comparing their voice
   embeddings to previously labeled speakers. This speeds up the labeling
   process and provides consistent speaker identification.
+  
+  Part of the core audio ingestion pipeline, not a one-off script.
 """
 
 import sys
@@ -77,14 +80,14 @@ from dataclasses import dataclass, field, asdict
 from collections import defaultdict
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
-load_dotenv(Path(__file__).parent.parent.parent.parent.parent / ".env")
+load_dotenv(Path(__file__).parent.parent.parent.parent / ".env")
 
-from embeddings.pgvector_client import PgVectorClient
-from ingestion.instant_client import InstantClient, DiarizationSegment
+from src.embeddings.pgvector_client import PgVectorClient
+from .instant_client import InstantClient, DiarizationSegment
 
 
 @dataclass

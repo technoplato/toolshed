@@ -153,7 +153,9 @@ class IngestConfig(BaseModel):
         skip_identify: Skip speaker identification step
         workflow: Diarization workflow to use
         threshold: KNN threshold for identification
-        dry_run: Show what would happen without executing
+        dry_run: Show plan without running any compute
+        preview: Run compute and show what would be saved (without saving)
+        yes: Skip confirmation prompt and proceed with save
         verbose: Enable verbose logging
     """
     source: str
@@ -167,6 +169,8 @@ class IngestConfig(BaseModel):
     threshold: float = 0.5
     output_dir: Path = Path("data/clips")
     dry_run: bool = False
+    preview: bool = False
+    yes: bool = False
     verbose: bool = False
     
     class Config:

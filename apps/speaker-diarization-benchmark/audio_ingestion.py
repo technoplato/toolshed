@@ -164,10 +164,7 @@ def run_identify(config: IdentifyConfig) -> None:
         print_dry_run_output(config)
         return
     
-    # Import and run the identify_speakers script
-    sys.path.insert(0, str(Path(__file__).parent / "scripts" / "one_off"))
-    
-    from identify_speakers import identify_speakers, print_plan, execute_plan
+    from ingestion.identify import identify_speakers, print_plan, execute_plan
     from ingestion.instant_client import InstantClient
     from src.embeddings.pgvector_client import PgVectorClient
     
@@ -209,6 +206,7 @@ def run_ingest(config: IngestConfig) -> None:
     # Check services
     check_services(require_instant_server=True, require_postgres=True)
     
+    # Dry run = show plan only (no compute)
     if config.dry_run:
         print_dry_run_output(config)
         return
@@ -256,43 +254,29 @@ def run_ingest(config: IngestConfig) -> None:
     segments, stats = workflow.run(audio_path, transcription_result)
     logger.info(f"Diarization complete: {len(segments)} segments")
     
-    # Step 4: Save to InstantDB
-    logger.info("Step 4: Saving to InstantDB")
-    from ingestion.instant_client import InstantClient
+    # Prepare video data
+    video_id = audio_path.stem
+    video_data = {
+        "id": video_id,
+        "title": config.title or audio_path.stem,
+        "filepath": str(audio_path.resolve()),
+        "source_url": config.source if config.is_url else None,
+    }
     
-    try:
-        instant_client = InstantClient()
-        
-        # Create or get video
-        video_data = {
-            "title": config.title or audio_path.stem,
-            "filepath": str(audio_path.resolve()),
-            "source_url": config.source if config.is_url else None,
-        }
-        
-        # Use transact to create video
-        result = instant_client.transact([
-            ["update", "videos", {"id": audio_path.stem, **video_data}]
-        ])
-        video_id = audio_path.stem
-        logger.info(f"Video saved: {video_id}")
-        
-    except Exception as e:
-        logger.error(f"Failed to save to InstantDB: {e}")
-        return
-    
-    # Step 5: Identify (if not skipped)
+    # Step 4: Identify (compute only, no save yet)
+    identification_plan = None
     if not config.skip_identify:
-        logger.info("Step 5: Running speaker identification")
+        logger.info("Step 4: Running speaker identification (compute only)")
         try:
             from src.embeddings.pgvector_client import PgVectorClient
-            sys.path.insert(0, str(Path(__file__).parent / "scripts" / "one_off"))
-            from identify_speakers import identify_speakers, execute_plan
+            from ingestion.identify import identify_speakers
+            from ingestion.instant_client import InstantClient
             
+            instant_client = InstantClient()
             pg_dsn = os.getenv("POSTGRES_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
             pg_client = PgVectorClient(pg_dsn)
             
-            plan = identify_speakers(
+            identification_plan = identify_speakers(
                 instant_client=instant_client,
                 pg_client=pg_client,
                 video_id=video_id,
@@ -301,14 +285,65 @@ def run_ingest(config: IngestConfig) -> None:
                 threshold=config.threshold,
                 audio_path=str(audio_path),
             )
-            
-            execute_plan(instant_client, pg_client, plan)
-            logger.info(f"Identification complete: {plan.identified_count} segments identified")
+            logger.info(f"Identification computed: {identification_plan.identified_count} segments identified")
             
         except Exception as e:
             logger.warning(f"Speaker identification failed: {e}")
-    else:
-        logger.info("Step 5: Skipping speaker identification (--skip-identify)")
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # PREVIEW: Show what will be saved to InstantDB
+    # ═══════════════════════════════════════════════════════════════════
+    _print_save_preview(
+        video_data=video_data,
+        transcription_result=transcription_result,
+        diarization_segments=segments,
+        identification_plan=identification_plan,
+        config=config,
+    )
+    
+    # Preview mode = stop here, don't save
+    if config.preview:
+        print("\n💡 Preview mode: Nothing was saved. Remove --preview to save.")
+        return
+    
+    # Ask for confirmation (unless --yes is passed)
+    if not config.yes:
+        try:
+            response = input("\n💾 Save to InstantDB? [y/N] ")
+            if response.lower() != 'y':
+                print("❌ Cancelled. Nothing was saved.")
+                return
+        except EOFError:
+            print("❌ Non-interactive mode. Use --yes to auto-confirm.")
+            return
+    
+    # ═══════════════════════════════════════════════════════════════════
+    # SAVE: Actually write to InstantDB
+    # ═══════════════════════════════════════════════════════════════════
+    logger.info("Saving to InstantDB...")
+    from ingestion.instant_client import InstantClient
+    
+    try:
+        instant_client = InstantClient()
+        
+        # Save video
+        result = instant_client.transact([
+            ["update", "videos", video_data]
+        ])
+        logger.info(f"Video saved: {video_id}")
+        
+    except Exception as e:
+        logger.error(f"Failed to save to InstantDB: {e}")
+        return
+    
+    # Save identification results
+    if identification_plan and not config.skip_identify:
+        try:
+            from ingestion.identify import execute_plan
+            execute_plan(instant_client, pg_client, identification_plan)
+            logger.info(f"Identification saved: {identification_plan.identified_count} assignments")
+        except Exception as e:
+            logger.warning(f"Failed to save identification: {e}")
     
     # Summary
     total_time = time.time() - start_time_global
@@ -404,6 +439,95 @@ def run_legacy_diarize(config: IngestionConfig) -> None:
             json.dump(output_data, tmp, indent=2)
             logger.info(f"Dry run results saved to temp file: {tmp.name}")
             print(f"\nDry run results saved to: {tmp.name}")
+
+
+def _print_save_preview(
+    video_data: dict,
+    transcription_result: TranscriptionResult,
+    diarization_segments: list,
+    identification_plan,
+    config: IngestConfig,
+) -> None:
+    """Print a preview of exactly what will be saved to InstantDB."""
+    print("\n" + "═" * 72)
+    print("📋 PREVIEW: What will be saved to InstantDB")
+    print("═" * 72)
+    
+    # Video entity
+    print(f"""
+┌─ Video ─────────────────────────────────────────────────────────────┐
+│  id: {video_data['id']}
+│  title: {video_data['title']}
+│  filepath: {video_data['filepath'][:50]}...
+│  source_url: {video_data.get('source_url') or '(none)'}
+└─────────────────────────────────────────────────────────────────────┘
+""")
+    
+    # Transcription summary
+    word_count = sum(len(seg.words) for seg in transcription_result.segments)
+    print(f"""
+┌─ Transcription ─────────────────────────────────────────────────────┐
+│  Segments: {len(transcription_result.segments)}
+│  Words: {word_count}
+│  Language: {transcription_result.language}
+│  
+│  Sample (first 3 segments):""")
+    
+    for seg in transcription_result.segments[:3]:
+        text_preview = seg.text[:60] + "..." if len(seg.text) > 60 else seg.text
+        print(f"│    [{seg.start:.1f}s-{seg.end:.1f}s] {text_preview}")
+    
+    if len(transcription_result.segments) > 3:
+        print(f"│    ... and {len(transcription_result.segments) - 3} more segments")
+    print("└─────────────────────────────────────────────────────────────────────┘\n")
+    
+    # Diarization summary
+    speaker_labels = set(seg.get('speaker', 'UNKNOWN') for seg in diarization_segments)
+    print(f"""
+┌─ Diarization ───────────────────────────────────────────────────────┐
+│  Segments: {len(diarization_segments)}
+│  Unique speaker labels: {len(speaker_labels)} ({', '.join(sorted(speaker_labels)[:5])})
+│  
+│  Sample (first 5 segments):""")
+    
+    for seg in diarization_segments[:5]:
+        print(f"│    [{seg.get('start', 0):.1f}s-{seg.get('end', 0):.1f}s] {seg.get('speaker', 'UNKNOWN')}: {seg.get('text', '')[:40]}...")
+    
+    if len(diarization_segments) > 5:
+        print(f"│    ... and {len(diarization_segments) - 5} more segments")
+    print("└─────────────────────────────────────────────────────────────────────┘\n")
+    
+    # Identification summary (if run)
+    if identification_plan:
+        from collections import Counter
+        speaker_counts = Counter(
+            r.identified_speaker for r in identification_plan.results 
+            if r.status == "identified" and r.identified_speaker
+        )
+        
+        print(f"""
+┌─ Speaker Identification ────────────────────────────────────────────┐
+│  Total processed: {len(identification_plan.results)}
+│  ✅ Identified: {identification_plan.identified_count}
+│  ❓ Unknown: {identification_plan.unknown_count}
+│  ⏭️  Skipped: {identification_plan.skipped_count}
+│  
+│  Identifications by speaker:""")
+        
+        for speaker, count in speaker_counts.most_common(5):
+            print(f"│    • {speaker}: {count} segments")
+        
+        if len(speaker_counts) > 5:
+            print(f"│    ... and {len(speaker_counts) - 5} more speakers")
+        print("└─────────────────────────────────────────────────────────────────────┘\n")
+    elif config.skip_identify:
+        print("""
+┌─ Speaker Identification ────────────────────────────────────────────┐
+│  ⏭️  SKIPPED (--skip-identify flag)
+└─────────────────────────────────────────────────────────────────────┘
+""")
+    
+    print("═" * 72)
 
 
 def _get_or_create_transcription(

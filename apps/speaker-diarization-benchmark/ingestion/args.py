@@ -192,7 +192,9 @@ Run the complete audio ingestion pipeline:
     ingest_parser.add_argument("--pipeline", type=str, default="pyannote/speaker-diarization-3.1", help="PyAnnote pipeline")
     ingest_parser.add_argument("--threshold", type=float, default=0.5, help="KNN identification threshold")
     ingest_parser.add_argument("--output-dir", type=str, default="data/clips", help="Download output directory")
-    ingest_parser.add_argument("--dry-run", action="store_true", help="Show what would happen")
+    ingest_parser.add_argument("--dry-run", action="store_true", help="Show plan without running compute")
+    ingest_parser.add_argument("--preview", action="store_true", help="Run compute and show what would be saved (without saving)")
+    ingest_parser.add_argument("--yes", "-y", action="store_true", help="Skip confirmation and save directly")
     ingest_parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
 
     # === DOWNLOAD COMMAND ===
@@ -287,6 +289,8 @@ Run the complete audio ingestion pipeline:
             threshold=args.threshold,
             output_dir=Path(args.output_dir),
             dry_run=args.dry_run,
+            preview=args.preview,
+            yes=args.yes,
             verbose=args.verbose,
         )
     
