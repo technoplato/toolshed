@@ -30,7 +30,7 @@
 
 ✨ Audio slicing optimization for diarization
 
-[Commit](https://github.com/technoplato/toolshed/commit/cf76d9b)
+[Commit](https://github.com/technoplato/toolshed/commit/d5bc426)
 
 - Added ingestion/audio_utils.py with slice_audio() using ffmpeg
 - 767MB full file → 11MB sliced for 60s segment
