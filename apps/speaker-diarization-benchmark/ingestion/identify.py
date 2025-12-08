@@ -236,7 +236,7 @@ def extract_embedding_for_segment(
 
 
 def identify_speakers(
-    instant_client: InstantClient,
+    instant_client: Optional[InstantClient],
     pg_client: PgVectorClient,
     video_id: str,
     start_time: Optional[float] = None,
@@ -245,11 +245,19 @@ def identify_speakers(
     top_k: int = 5,
     audio_path: Optional[str] = None,
     use_cache: bool = True,
+    segments: Optional[List[DiarizationSegment]] = None,
 ) -> IdentificationPlan:
     """
     Identify speakers in diarization segments.
     
     This is the COMPUTE phase - no side effects to InstantDB.
+    
+    Args:
+        instant_client: InstantDB client (optional if segments provided)
+        pg_client: PostgreSQL client for embeddings
+        video_id: Video ID (for caching)
+        segments: Optional pre-computed segments (for preview mode).
+                  If provided, skips fetching from InstantDB.
     """
     print(f"\n🔍 Identifying speakers in video {video_id[:8]}...")
     print(f"   Threshold: {threshold}, Top-K: {top_k}")
@@ -270,19 +278,29 @@ def identify_speakers(
             print(f"📦 Using cached results (key: {cache_key})")
             return cached
     
-    # Get segments from InstantDB
-    print(f"\n📥 Fetching segments from InstantDB...")
-    segments = instant_client.get_diarization_segments(
-        video_id=video_id,
-        start_time=start_time,
-        end_time=end_time,
-    )
-    print(f"   Found {len(segments)} segments")
+    # Use provided segments or fetch from InstantDB
+    if segments is not None:
+        print(f"📥 Using {len(segments)} pre-computed segments (preview mode)")
+    elif instant_client is not None:
+        print(f"\n📥 Fetching segments from InstantDB...")
+        segments = instant_client.get_diarization_segments(
+            video_id=video_id,
+            start_time=start_time,
+            end_time=end_time,
+        )
+        print(f"   Found {len(segments)} segments")
+    else:
+        raise ValueError("Either instant_client or segments must be provided")
     
-    # Get all speakers for lookup
-    speakers = instant_client.get_speakers()
-    speaker_by_name = {s.name: s for s in speakers}
-    print(f"   Found {len(speakers)} speakers in database")
+    # Get all speakers for lookup (optional - only if we have a client)
+    speaker_by_name: Dict[str, Any] = {}
+    if instant_client is not None:
+        speakers = instant_client.get_speakers()
+        speaker_by_name = {s.name: s for s in speakers}
+        print(f"   Found {len(speakers)} speakers in database")
+    else:
+        # In preview mode, we'll get speaker info from PostgreSQL results
+        print(f"   Skipping speaker lookup (preview mode)")
     
     # Create plan
     plan = IdentificationPlan(
@@ -333,6 +351,8 @@ def identify_speakers(
                 continue
         
         # Get embedding from Postgres (by segment ID)
+        # Note: In preview mode (instant_client=None), segment IDs are temp UUIDs
+        # that won't exist in Postgres, so we'll extract embeddings but not save them
         embedding_record = pg_client.get_embedding(seg.id)
         
         if not embedding_record or not embedding_record.get("embedding"):
@@ -343,16 +363,18 @@ def identify_speakers(
                     audio_path, seg.start_time, seg.end_time
                 )
                 if embedding:
-                    # Save to Postgres
-                    pg_client.add_embedding(
-                        external_id=seg.id,
-                        embedding=embedding,
-                        speaker_id="UNKNOWN",
-                        video_id=video_id,
-                        start_time=seg.start_time,
-                        end_time=seg.end_time,
-                        speaker_label=seg.speaker_label,
-                    )
+                    # Only save to Postgres if we have a valid InstantDB client
+                    # (not in preview mode where video_id might be a YouTube ID)
+                    if instant_client is not None:
+                        pg_client.add_embedding(
+                            external_id=seg.id,
+                            embedding=embedding,
+                            speaker_id="UNKNOWN",
+                            video_id=video_id,
+                            start_time=seg.start_time,
+                            end_time=seg.end_time,
+                            speaker_label=seg.speaker_label,
+                        )
                     embedding_record = {"embedding": embedding}
             
             if not embedding_record or not embedding_record.get("embedding"):

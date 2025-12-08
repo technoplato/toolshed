@@ -542,15 +542,34 @@
         layout.innerHTML = "";
 
         try {
-          // Find preferred runs (or first available)
+          // Find best runs: prioritize runs with actual data, then longest duration
           const transcriptionRuns = video.transcriptionRuns || [];
           const diarizationRuns = video.diarizationRuns || [];
 
-          const preferredTranscription =
-            transcriptionRuns.find((r) => r.is_preferred) ||
-            transcriptionRuns[0];
-          const preferredDiarization =
-            diarizationRuns.find((r) => r.is_preferred) || diarizationRuns[0];
+          // For transcription: find run with most words, then longest duration
+          const preferredTranscription = transcriptionRuns
+            .filter((r) => r.words && r.words.length > 0)
+            .sort((a, b) => {
+              // First by word count (descending)
+              const wordDiff = (b.words?.length || 0) - (a.words?.length || 0);
+              if (wordDiff !== 0) return wordDiff;
+              // Then by duration (descending)
+              return (b.input_duration_seconds || 0) - (a.input_duration_seconds || 0);
+            })[0] || transcriptionRuns.find((r) => r.is_preferred) || transcriptionRuns[0];
+
+          // For diarization: find run with most segments, then longest duration
+          const preferredDiarization = diarizationRuns
+            .filter((r) => r.diarizationSegments && r.diarizationSegments.length > 0)
+            .sort((a, b) => {
+              // First by segment count (descending)
+              const segDiff = (b.diarizationSegments?.length || 0) - (a.diarizationSegments?.length || 0);
+              if (segDiff !== 0) return segDiff;
+              // Then by duration (descending)
+              return (b.input_duration_seconds || 0) - (a.input_duration_seconds || 0);
+            })[0] || diarizationRuns.find((r) => r.is_preferred) || diarizationRuns[0];
+          
+          console.log(`Selected transcription run: ${preferredTranscription?.id} (${preferredTranscription?.words?.length || 0} words)`);
+          console.log(`Selected diarization run: ${preferredDiarization?.id} (${preferredDiarization?.diarizationSegments?.length || 0} segments)`);
 
           if (!preferredTranscription && !preferredDiarization) {
             layout.innerHTML =

@@ -465,6 +465,10 @@ def run_ingest(config: IngestConfig) -> None:
             logger.info(f"   📁 Cache key: {id_cache.cache_key}")
             logger.info(f"   📁 Cache file: {id_cache.cache_path}")
             
+            # Convert dict segments to DiarizationSegment objects for identification
+            from ingestion.instant_client import DiarizationSegment
+            segment_objects = [DiarizationSegment.from_dict(s) for s in segments]
+            
             if id_cache.has_range(cache_end_time):
                 logger.info(f"   ✅ Cache HIT: identification [0-{cache_end_time}s]")
                 logger.info(f"   ↳ Loading from: {id_cache.cache_path.name}")
@@ -472,13 +476,14 @@ def run_ingest(config: IngestConfig) -> None:
                 # For now, we'll recompute (identification is fast)
                 logger.info(f"   ↳ Note: recomputing anyway (identification is fast)")
                 identification_plan = identify_speakers(
-                    instant_client=instant_client,
+                    instant_client=None,  # Not needed when segments provided
                     pg_client=pg_client,
                     video_id=video_id,
                     start_time=config.start_time if config.start_time > 0 else None,
                     end_time=config.end_time,
                     threshold=config.threshold,
                     audio_path=str(audio_path),
+                    segments=segment_objects,  # Pass in-memory segments
                 )
             else:
                 cached_end = id_cache.get_cached_end()
@@ -489,13 +494,14 @@ def run_ingest(config: IngestConfig) -> None:
                 logger.info(f"   ↳ Will compute identification [0-{cache_end_time}s]")
                 logger.info(f"   🔄 Running KNN speaker identification...")
                 identification_plan = identify_speakers(
-                    instant_client=instant_client,
+                    instant_client=None,  # Not needed when segments provided
                     pg_client=pg_client,
                     video_id=video_id,
                     start_time=config.start_time if config.start_time > 0 else None,
                     end_time=config.end_time,
                     threshold=config.threshold,
                     audio_path=str(audio_path),
+                    segments=segment_objects,  # Pass in-memory segments
                 )
             
             logger.info(f"   📊 Identification result: {identification_plan.identified_count} identified, {identification_plan.unknown_count} unknown")

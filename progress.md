@@ -26,6 +26,20 @@
 
 ---
 
+### December 8th, 2025 at 3:39:00 p.m.
+
+✨ Preview mode + Ground Truth UI improvements
+
+[Commit](https://github.com/technoplato/toolshed/commit/e70844a)
+
+- Fixed identify_speakers to work in preview mode with pre-computed segments
+- Removed unused embedding_centroid_id from speakers schema
+- Ground Truth UI now selects runs with most words/segments (not empty runs)
+- Added DiarizationSegment.from_dict() for workflow output conversion
+- Successfully ran 0-240s Joe DeRosa pipeline with speaker identification
+
+
+
 ### December 8th, 2025 at 2:55:15 p.m.
 
 ✨ Ground Truth UI fixes: audio scrubbing, seek, keyboard navigation

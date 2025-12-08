@@ -290,14 +290,6 @@ const schema = i.schema({
       is_human: i.boolean(),
 
       /**
-       * Reference to the centroid embedding in PostgreSQL.
-       * The centroid is the average of all confirmed voice embeddings
-       * for this speaker. Used for speaker identification.
-       * Example: "pgv_speaker_centroid_abc123"
-       */
-      embedding_centroid_id: i.string().optional(),
-
-      /**
        * Freeform metadata about the speaker.
        * Can include: bio, social links, known aliases, etc.
        */

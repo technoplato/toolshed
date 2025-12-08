@@ -85,6 +85,28 @@ class DiarizationSegment:
             if speaker and len(speaker) > 0:
                 return speaker[0].get("id")
         return None
+    
+    @classmethod
+    def from_dict(cls, d: Dict[str, Any], segment_id: Optional[str] = None) -> "DiarizationSegment":
+        """
+        Create a DiarizationSegment from a dict (e.g., from diarization workflow output).
+        
+        The workflow output format uses:
+          - 'start' or 'start_time' for start time
+          - 'end' or 'end_time' for end time
+          - 'speaker' or 'speaker_label' for speaker label
+        """
+        import uuid
+        return cls(
+            id=segment_id or d.get("id") or str(uuid.uuid4()),
+            start_time=d.get("start_time") or d.get("start", 0),
+            end_time=d.get("end_time") or d.get("end", 0),
+            speaker_label=d.get("speaker_label") or d.get("speaker", "UNKNOWN"),
+            embedding_id=d.get("embedding_id"),
+            confidence=d.get("confidence"),
+            is_invalidated=d.get("is_invalidated", False),
+            speaker_assignments=d.get("speaker_assignments", []),
+        )
 
 
 @dataclass
