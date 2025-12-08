@@ -472,9 +472,29 @@ const schema = i.schema({
       is_preferred: i.boolean().indexed(),
 
       /**
-       * Processing time in seconds.
+       * Duration of input audio that was processed (in seconds).
+       * May be less than full video duration if --start-time/--end-time used.
+       * Useful for cost calculations and performance comparisons.
+       */
+      input_duration_seconds: i.number().optional(),
+
+      /**
+       * Processing time in seconds (wall clock time).
+       * Compare with input_duration_seconds to get real-time factor.
        */
       processing_time_seconds: i.number().optional(),
+
+      /**
+       * Peak memory usage during processing (in MB).
+       * Tracked via psutil or similar.
+       */
+      peak_memory_mb: i.number().optional(),
+
+      /**
+       * Cost in USD when using paid APIs (e.g., OpenAI Whisper API).
+       * NULL for local processing (cost is compute time only).
+       */
+      cost_usd: i.number().optional(),
 
       /**
        * Any errors or warnings encountered.
@@ -531,9 +551,29 @@ const schema = i.schema({
       is_preferred: i.boolean().indexed(),
 
       /**
-       * Processing time in seconds.
+       * Duration of input audio that was processed (in seconds).
+       * May be less than full video duration if --start-time/--end-time used.
+       * Useful for cost calculations and performance comparisons.
+       */
+      input_duration_seconds: i.number().optional(),
+
+      /**
+       * Processing time in seconds (wall clock time).
+       * Compare with input_duration_seconds to get real-time factor.
        */
       processing_time_seconds: i.number().optional(),
+
+      /**
+       * Peak memory usage during processing (in MB).
+       * Tracked via psutil or similar.
+       */
+      peak_memory_mb: i.number().optional(),
+
+      /**
+       * Cost in USD when using paid APIs (e.g., PyAnnote AI API).
+       * NULL for local processing (cost is compute time only).
+       */
+      cost_usd: i.number().optional(),
 
       /**
        * Number of unique speakers detected.

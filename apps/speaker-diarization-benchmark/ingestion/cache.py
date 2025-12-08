@@ -240,8 +240,13 @@ class TranscriptionCache:
             print(f"⚠️ Cache read error: {e}")
             return None
     
-    def save(self, result: Dict[str, Any], end_time: float) -> None:
-        """Save transcription result to cache."""
+    def save(
+        self, 
+        result: Dict[str, Any], 
+        end_time: float, 
+        metrics: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Save transcription result to cache with optional metrics."""
         data = {
             "cached_at": datetime.now().isoformat(),
             "cached_end": end_time,
@@ -251,10 +256,29 @@ class TranscriptionCache:
             "result": result,
         }
         
+        if metrics:
+            data["metrics"] = metrics
+        
         with open(self.cache_file, "w") as f:
             json.dump(data, f, indent=2)
         
         print(f"💾 Transcription cached: {self.cache_key} [0-{end_time}s]")
+    
+    def get_metadata(self) -> Optional[Dict[str, Any]]:
+        """Get cache metadata including metrics."""
+        if not self.cache_file.exists():
+            return None
+        
+        try:
+            with open(self.cache_file) as f:
+                data = json.load(f)
+            return {
+                "cached_at": data.get("cached_at"),
+                "cached_end": data.get("cached_end"),
+                "metrics": data.get("metrics"),
+            }
+        except Exception:
+            return None
 
 
 class DiarizationCache:
@@ -352,8 +376,14 @@ class DiarizationCache:
         except Exception:
             return None
     
-    def save(self, segments: List[Dict[str, Any]], stats: Dict[str, Any], end_time: float) -> None:
-        """Save diarization result to cache."""
+    def save(
+        self, 
+        segments: List[Dict[str, Any]], 
+        stats: Dict[str, Any], 
+        end_time: float,
+        metrics: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Save diarization result to cache with optional metrics."""
         data = {
             "cached_at": datetime.now().isoformat(),
             "cached_end": end_time,
@@ -363,10 +393,29 @@ class DiarizationCache:
             "stats": stats,
         }
         
+        if metrics:
+            data["metrics"] = metrics
+        
         with open(self.cache_file, "w") as f:
             json.dump(data, f, indent=2)
         
         print(f"💾 Diarization cached: {self.cache_key} [0-{end_time}s]")
+    
+    def get_metadata(self) -> Optional[Dict[str, Any]]:
+        """Get cache metadata including metrics."""
+        if not self.cache_file.exists():
+            return None
+        
+        try:
+            with open(self.cache_file) as f:
+                data = json.load(f)
+            return {
+                "cached_at": data.get("cached_at"),
+                "cached_end": data.get("cached_end"),
+                "metrics": data.get("metrics"),
+            }
+        except Exception:
+            return None
 
 
 class IdentificationCache:

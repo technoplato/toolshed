@@ -66,11 +66,22 @@ def generate_preview_markdown(
     diarization_segments: List[Dict[str, Any]],
     identification_plan: Optional[Any],  # IdentificationPlan
     config: IngestConfig,
+    transcription_metrics: Optional[Dict[str, Any]] = None,
+    diarization_metrics: Optional[Dict[str, Any]] = None,
 ) -> str:
     """
     Generate a markdown preview of what will be saved to InstantDB.
     
     Structured around the InstantDB schema entities.
+    
+    Args:
+        video_data: Video entity data
+        transcription_result: TranscriptionResult from whisper
+        diarization_segments: List of diarization segments
+        identification_plan: Optional identification results
+        config: Pipeline configuration
+        transcription_metrics: Optional dict with processing_time_seconds, peak_memory_mb, cost_usd
+        diarization_metrics: Optional dict with processing_time_seconds, peak_memory_mb, cost_usd
     """
     lines = []
     now = datetime.now().isoformat()
@@ -83,6 +94,35 @@ def generate_preview_markdown(
     lines.append(f"**Time Range**: {config.start_time}s - {config.end_time or 'end'}s")
     lines.append(f"**Workflow**: {config.workflow}")
     lines.append(f"")
+    
+    # Run metrics summary
+    if transcription_metrics or diarization_metrics:
+        lines.append(f"### Run Metrics")
+        lines.append(f"")
+        lines.append(f"| Step | Duration | Memory | Cost | Realtime Factor |")
+        lines.append(f"|------|----------|--------|------|-----------------|")
+        
+        input_duration = config.end_time or 0
+        
+        if transcription_metrics:
+            proc_time = transcription_metrics.get('processing_time_seconds', 0)
+            memory = transcription_metrics.get('peak_memory_mb')
+            cost = transcription_metrics.get('cost_usd')
+            rt_factor = f"{input_duration / proc_time:.1f}x" if proc_time > 0 else "N/A"
+            lines.append(f"| Transcription | {proc_time:.2f}s | {f'{memory:.1f}MB' if memory else 'N/A'} | {f'${cost:.4f}' if cost else 'Free'} | {rt_factor} |")
+        
+        if diarization_metrics:
+            proc_time = diarization_metrics.get('processing_time_seconds', 0)
+            memory = diarization_metrics.get('peak_memory_mb')
+            cost = diarization_metrics.get('cost_usd')
+            rt_factor = f"{input_duration / proc_time:.1f}x" if proc_time > 0 else "N/A"
+            lines.append(f"| Diarization | {proc_time:.2f}s | {f'{memory:.1f}MB' if memory else 'N/A'} | {f'${cost:.4f}' if cost else 'Free'} | {rt_factor} |")
+        
+        total_time = (transcription_metrics or {}).get('processing_time_seconds', 0) + (diarization_metrics or {}).get('processing_time_seconds', 0)
+        total_cost = ((transcription_metrics or {}).get('cost_usd') or 0) + ((diarization_metrics or {}).get('cost_usd') or 0)
+        lines.append(f"| **Total** | **{total_time:.2f}s** | - | **{f'${total_cost:.4f}' if total_cost else 'Free'}** | - |")
+        lines.append(f"")
+    
     lines.append(f"---")
     lines.append(f"")
     
@@ -130,6 +170,22 @@ def generate_preview_markdown(
     lines.append(f"tool_version: mlx-whisper-0.4.x")
     lines.append(f"pipeline_script: audio_ingestion.py")
     lines.append(f"is_preferred: true")
+    
+    # Add metrics if available
+    if transcription_metrics:
+        input_dur = transcription_metrics.get('input_duration_seconds')
+        proc_time = transcription_metrics.get('processing_time_seconds')
+        memory = transcription_metrics.get('peak_memory_mb')
+        cost = transcription_metrics.get('cost_usd')
+        if input_dur:
+            lines.append(f"input_duration_seconds: {input_dur}")
+        if proc_time:
+            lines.append(f"processing_time_seconds: {proc_time:.2f}")
+        if memory:
+            lines.append(f"peak_memory_mb: {memory:.1f}")
+        if cost:
+            lines.append(f"cost_usd: {cost:.4f}")
+    
     lines.append(f"executed_at: {now}")
     lines.append(f"```")
     lines.append(f"")
@@ -192,6 +248,22 @@ def generate_preview_markdown(
     lines.append(f"pipeline_script: audio_ingestion.py")
     lines.append(f"is_preferred: true")
     lines.append(f"num_speakers_detected: {len(speaker_labels)}")
+    
+    # Add metrics if available
+    if diarization_metrics:
+        input_dur = diarization_metrics.get('input_duration_seconds')
+        proc_time = diarization_metrics.get('processing_time_seconds')
+        memory = diarization_metrics.get('peak_memory_mb')
+        cost = diarization_metrics.get('cost_usd')
+        if input_dur:
+            lines.append(f"input_duration_seconds: {input_dur}")
+        if proc_time:
+            lines.append(f"processing_time_seconds: {proc_time:.2f}")
+        if memory:
+            lines.append(f"peak_memory_mb: {memory:.1f}")
+        if cost:
+            lines.append(f"cost_usd: {cost:.4f}")
+    
     lines.append(f"executed_at: {now}")
     lines.append(f"```")
     lines.append(f"")

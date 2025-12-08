@@ -26,6 +26,20 @@
 
 ---
 
+### December 8th, 2025 at 12:45:06 p.m.
+
+✨ Added run metrics tracking (duration, memory, cost) to schema and pipeline
+
+[Commit](https://github.com/technoplato/toolshed/commit/830dbed)
+
+- Added input_duration_seconds, peak_memory_mb, cost_usd fields to InstantDB schema
+- Created ingestion/metrics.py for capturing processing metrics
+- Cache now stores and loads metrics
+- Preview markdown shows metrics table
+- Dry-run shows cost estimates comparing local vs API
+
+
+
 ### December 8th, 2025 at 10:26:55 a.m.
 
 🐛 Fixed PostgreSQL port conflict and removed speechbrain

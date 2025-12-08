@@ -90,6 +90,47 @@ def _get_cache_status(cache_path: Path) -> tuple[str, str]:
     return "⏳", "Will be computed"
 
 
+def _print_cost_estimate(duration_seconds: float, workflow: str) -> None:
+    """
+    Print estimated costs and processing times.
+    
+    Shows costs for both local processing (free but time-consuming)
+    and API alternatives (fast but paid).
+    """
+    if duration_seconds <= 0:
+        return
+    
+    duration_min = duration_seconds / 60
+    
+    # Estimated processing times (based on empirical measurements)
+    # These assume Apple Silicon (M1/M2/M3) with good performance
+    local_trans_time = duration_seconds * 0.15  # ~6.7x realtime
+    local_diar_time = duration_seconds * 0.1   # ~10x realtime with slicing
+    
+    # API costs (approximate, Dec 2025)
+    openai_cost = duration_min * 0.006  # $0.006 per minute
+    pyannote_api_cost = duration_min * 0.01  # ~$0.01 per minute
+    
+    print(f"""
+💰 Cost & Time Estimate
+{LINE_H * 40}
+   Input duration: {duration_seconds:.1f}s ({duration_min:.2f} min)
+   
+   ┌─────────────────────┬──────────────┬──────────────┐
+   │ Step                │ Local (Free) │ API (Paid)   │
+   ├─────────────────────┼──────────────┼──────────────┤
+   │ Transcription       │ ~{local_trans_time:.1f}s      │ ${openai_cost:.4f} (OpenAI) │
+   │ Diarization         │ ~{local_diar_time:.1f}s       │ ${pyannote_api_cost:.4f} (PyAnnote) │
+   ├─────────────────────┼──────────────┼──────────────┤
+   │ Total               │ ~{local_trans_time + local_diar_time:.1f}s, Free │ ${openai_cost + pyannote_api_cost:.4f}        │
+   └─────────────────────┴──────────────┴──────────────┘
+   
+   Current config: {workflow} (local)
+   • Transcription: MLX Whisper (local, free)
+   • Diarization: PyAnnote {workflow} (local, free)
+""")
+
+
 def print_transcribe_dry_run(config: TranscribeConfig) -> None:
     """Print dry-run output for transcribe command."""
     print(_header("DRY RUN: Transcribe", "📝"))
@@ -276,7 +317,7 @@ def print_ingest_dry_run(config: IngestConfig) -> None:
    
    📁 Implementation: ingestion/workflows/local/pyannote.py
    🔧 Uses: PyAnnote Audio for speaker segmentation
-   💾 Cache: data/cache/diarization/{video_id}__{workflow}.json
+   💾 Cache: data/cache/diarization/{video_id}__{config.workflow}.json
    
    ⚡ Audio Slicing Optimization:
    • Full audio file can be 767MB+ (1+ hour episodes)
@@ -341,6 +382,10 @@ def print_ingest_dry_run(config: IngestConfig) -> None:
    • Official TypeScript SDK (reliable)
    • Schema validation and relationships
 """)
+    
+    # Cost estimate section
+    duration_sec = config.end_time if config.end_time else 0
+    _print_cost_estimate(duration_sec, config.workflow)
     
     # Final command
     print(f"""

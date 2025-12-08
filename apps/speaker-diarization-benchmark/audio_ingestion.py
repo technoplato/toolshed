@@ -94,6 +94,7 @@ from ingestion.download import download_video
 from ingestion.server import run_server
 from ingestion.health import check_services
 from ingestion.dry_run import print_dry_run_output
+from ingestion.metrics import RunMetrics, track_run
 from transcribe import transcribe, TranscriptionResult, Segment, Word
 from utils import get_git_info
 
@@ -283,6 +284,9 @@ def run_ingest(config: IngestConfig) -> None:
     logger.info(f"   📁 Cache key: {trans_cache.cache_key}")
     logger.info(f"   📁 Cache file: {trans_cache.cache_path}")
     
+    # Initialize metrics tracking for transcription
+    transcription_metrics = RunMetrics(input_duration_seconds=cache_end_time)
+    
     if trans_cache.has_range(cache_end_time):
         logger.info(f"   ✅ Cache HIT: transcription [0-{cache_end_time}s]")
         logger.info(f"   ↳ Loading from: {trans_cache.cache_path.name}")
@@ -290,6 +294,13 @@ def run_ingest(config: IngestConfig) -> None:
         # Reconstruct TranscriptionResult
         transcription_result = _dict_to_transcription_result(transcription_data)
         logger.info(f"   ↳ Loaded {len(transcription_result.segments)} segments, {sum(len(s.words) for s in transcription_result.segments)} words from cache")
+        # Load cached metrics if available
+        cached_metadata = trans_cache.get_metadata()
+        if cached_metadata and cached_metadata.get("metrics"):
+            m = cached_metadata["metrics"]
+            transcription_metrics.processing_time_seconds = m.get("processing_time_seconds")
+            transcription_metrics.peak_memory_mb = m.get("peak_memory_mb")
+            transcription_metrics.cost_usd = m.get("cost_usd")
     else:
         cached_end = trans_cache.get_cached_end()
         if cached_end:
@@ -300,18 +311,26 @@ def run_ingest(config: IngestConfig) -> None:
             logger.info(f"   ⚠️ Cache MISS: no cache file found")
             logger.info(f"   ↳ Will compute transcription [0-{cache_end_time}s]")
         
-        # Compute transcription
+        # Compute transcription with metrics tracking
         logger.info(f"   🔄 Running MLX Whisper transcription...")
-        transcription_result = transcribe(
-            str(audio_path),
-            start_time=None,  # Always start from 0 for caching
-            end_time=config.end_time,
-        )
+        with track_run(input_duration_seconds=cache_end_time) as transcription_metrics:
+            transcription_result = transcribe(
+                str(audio_path),
+                start_time=None,  # Always start from 0 for caching
+                end_time=config.end_time,
+            )
         
-        # Save to cache
+        logger.info(f"   ⏱️ Transcription completed in {transcription_metrics.processing_time_seconds:.2f}s")
+        if transcription_metrics.peak_memory_mb:
+            logger.info(f"   💾 Peak memory: {transcription_metrics.peak_memory_mb:.1f}MB")
+        if transcription_metrics.realtime_factor:
+            logger.info(f"   ⚡ {transcription_metrics.realtime_factor:.1f}x realtime")
+        
+        # Save to cache with metrics
         trans_cache.save(
             result=transcription_result.model_dump() if hasattr(transcription_result, 'model_dump') else transcription_result.dict(),
             end_time=cache_end_time,
+            metrics=transcription_metrics.to_dict(),
         )
         logger.info(f"   💾 Saved transcription cache: {trans_cache.cache_path.name}")
     
@@ -332,6 +351,9 @@ def run_ingest(config: IngestConfig) -> None:
     logger.info(f"   📁 Cache key: {diar_cache.cache_key}")
     logger.info(f"   📁 Cache file: {diar_cache.cache_path}")
     
+    # Initialize metrics tracking for diarization
+    diarization_metrics = RunMetrics(input_duration_seconds=cache_end_time)
+    
     if diar_cache.has_range(cache_end_time):
         logger.info(f"   ✅ Cache HIT: diarization [0-{cache_end_time}s]")
         logger.info(f"   ↳ Loading from: {diar_cache.cache_path.name}")
@@ -339,6 +361,13 @@ def run_ingest(config: IngestConfig) -> None:
         stats = diar_cache.get_stats() or {}
         speaker_labels = set(s.get("speaker", "UNKNOWN") for s in segments)
         logger.info(f"   ↳ Loaded {len(segments)} segments, {len(speaker_labels)} speakers from cache")
+        # Load cached metrics if available
+        cached_metadata = diar_cache.get_metadata()
+        if cached_metadata and cached_metadata.get("metrics"):
+            m = cached_metadata["metrics"]
+            diarization_metrics.processing_time_seconds = m.get("processing_time_seconds")
+            diarization_metrics.peak_memory_mb = m.get("peak_memory_mb")
+            diarization_metrics.cost_usd = m.get("cost_usd")
     else:
         cached_end = diar_cache.get_cached_end()
         if cached_end:
@@ -364,7 +393,7 @@ def run_ingest(config: IngestConfig) -> None:
         sliced_size = sliced_audio.stat().st_size / (1024 * 1024)
         logger.info(f"   ↳ Sliced: {sliced_audio.name} ({sliced_size:.1f}MB)")
         
-        # Compute diarization on sliced audio
+        # Compute diarization on sliced audio with metrics tracking
         from ingestion.args import get_workflow
         from ingestion.config import WorkflowConfig
         
@@ -372,10 +401,22 @@ def run_ingest(config: IngestConfig) -> None:
         workflow = get_workflow(workflow_config)
         
         logger.info(f"   🔄 Running PyAnnote diarization on sliced audio...")
-        segments, stats = workflow.run(sliced_audio, transcription_result)
+        with track_run(input_duration_seconds=cache_end_time) as diarization_metrics:
+            segments, stats = workflow.run(sliced_audio, transcription_result)
         
-        # Save to cache
-        diar_cache.save(segments=segments, stats=stats, end_time=cache_end_time)
+        logger.info(f"   ⏱️ Diarization completed in {diarization_metrics.processing_time_seconds:.2f}s")
+        if diarization_metrics.peak_memory_mb:
+            logger.info(f"   💾 Peak memory: {diarization_metrics.peak_memory_mb:.1f}MB")
+        if diarization_metrics.realtime_factor:
+            logger.info(f"   ⚡ {diarization_metrics.realtime_factor:.1f}x realtime")
+        
+        # Save to cache with metrics
+        diar_cache.save(
+            segments=segments, 
+            stats=stats, 
+            end_time=cache_end_time,
+            metrics=diarization_metrics.to_dict(),
+        )
         logger.info(f"   💾 Saved diarization cache: {diar_cache.cache_path.name}")
     
     speaker_labels = set(s.get("speaker", "UNKNOWN") for s in segments)
@@ -484,13 +525,15 @@ def run_ingest(config: IngestConfig) -> None:
         config=config,
     )
     
-    # Generate full markdown
+    # Generate full markdown with metrics
     preview_markdown = generate_preview_markdown(
         video_data=video_data,
         transcription_result=transcription_result,
         diarization_segments=segments,
         identification_plan=identification_plan,
         config=config,
+        transcription_metrics=transcription_metrics.to_dict() if hasattr(transcription_metrics, 'to_dict') else None,
+        diarization_metrics=diarization_metrics.to_dict() if hasattr(diarization_metrics, 'to_dict') else None,
     )
     
     # Save markdown file
