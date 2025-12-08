@@ -1,0 +1,71 @@
+# =============================================================================
+# DOCKERFILE: InstantDB TypeScript Server
+# =============================================================================
+#
+# HOW:
+#   # Build and run via docker compose (recommended)
+#   docker compose up -d instant-server
+#
+#   # Build standalone
+#   docker build -f Dockerfile.instant-server -t instant-server ../..
+#
+#   # Run standalone
+#   docker run -p 3001:3001 \
+#     -e INSTANT_APP_ID=your-app-id \
+#     -e INSTANT_ADMIN_SECRET=your-secret \
+#     instant-server
+#
+# WHO:
+#   Claude AI, User
+#
+# WHAT:
+#   Builds a lightweight container for the InstantDB TypeScript server.
+#   Uses Bun runtime for fast startup and low memory footprint.
+#
+# WHEN:
+#   2025-12-08
+#
+# WHERE:
+#   apps/speaker-diarization-benchmark/Dockerfile.instant-server
+#
+# WHY:
+#   Containerizing the server ensures:
+#   - Consistent runtime environment across machines
+#   - Easy deployment alongside PostgreSQL
+#   - No need for local Node.js/Bun installation
+#   - Healthchecks and restart policies via Docker
+# =============================================================================
+
+FROM oven/bun:1 AS base
+WORKDIR /app
+
+# Install dependencies (from root package.json)
+FROM base AS deps
+COPY package.json bun.lockb* ./
+RUN bun install --frozen-lockfile || bun install
+
+# Runtime stage
+FROM base AS runtime
+
+# Copy node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy the server file directly
+COPY apps/speaker-diarization-benchmark/ingestion/instant_server.ts ./instant_server.ts
+
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Environment variables (override via docker-compose or -e flags)
+ENV PORT=3001
+ENV INSTANT_APP_ID=""
+ENV INSTANT_ADMIN_SECRET=""
+
+EXPOSE 3001
+
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=10s \
+  CMD curl -f http://localhost:3001/health || exit 1
+
+# Run the server
+CMD ["bun", "run", "instant_server.ts"]

@@ -1,43 +1,103 @@
 # =============================================================================
+# SPEAKER DIARIZATION BENCHMARK - DOCKER COMPOSE
+# =============================================================================
+#
 # HOW:
+#   # Start all services
+#   docker compose up -d
+#
+#   # Start specific service
 #   docker compose up -d postgres
-#   # Wait for healthcheck to pass (~5-10 seconds)
-#   docker compose logs postgres
+#   docker compose up -d instant-server
+#
+#   # View logs
+#   docker compose logs -f
+#   docker compose logs -f instant-server
+#
+#   # Stop all
+#   docker compose down
 #
 #   [Inputs]
 #   - Docker Engine running
-#   - Port 5433 available on host
+#   - .env file in project root (toolshed/.env) with:
+#     - INSTANT_APP_ID
+#     - INSTANT_ADMIN_SECRET
+#     - HF_TOKEN (optional, for embedding extraction)
+#   - Ports 5433 and 3001 available
 #
 #   [Outputs]
-#   - PostgreSQL with pgvector running on localhost:5433
-#   - Database: speaker_embeddings
-#   - User: diarization / Password: diarization_dev
+#   - PostgreSQL with pgvector on localhost:5433
+#   - InstantDB TypeScript server on localhost:3001
 #
 #   [Side Effects]
-#   - Creates Docker volume 'pgdata' for persistent storage
-#   - Runs init-db.sql on first startup
+#   - Creates Docker volumes for data persistence
+#   - Runs init-db.sql on first Postgres startup
 #
 # WHO:
 #   Claude AI, User
-#   (Context: Setting up pgvector for speaker embedding storage)
+#   (Context: Infrastructure for speaker diarization benchmark)
 #
 # WHAT:
-#   Docker Compose configuration for PostgreSQL with pgvector extension.
-#   Provides local database for speaker embedding KNN search.
+#   Docker Compose stack providing:
+#   1. PostgreSQL + pgvector: Vector database for speaker embeddings
+#   2. instant-server: TypeScript server wrapping InstantDB Admin SDK
 #
 # WHEN:
 #   2025-12-07
+#   Last Modified: 2025-12-08
 #
 # WHERE:
 #   apps/speaker-diarization-benchmark/docker-compose.yml
 #
 # WHY:
-#   Enable fast nearest-neighbor search on 512-dimensional speaker embeddings.
-#   Docker provides consistent, reproducible database setup.
-#   pgvector/pgvector:pg16 image has extension pre-installed.
+#   This architecture separates concerns:
+#
+#   1. PostgreSQL/pgvector handles VECTOR SIMILARITY SEARCH
+#      - 512-dimensional speaker embeddings
+#      - KNN search for speaker identification
+#      - IVFFlat indexing for fast queries
+#      - Why not in InstantDB? InstantDB doesn't support vector types
+#
+#   2. InstantDB handles RELATIONAL DATA + REAL-TIME SYNC
+#      - Videos, speakers, segments, assignments
+#      - Real-time updates to UI
+#      - Schema validation and relationships
+#      - Why not just Postgres? We want real-time sync + official SDK
+#
+#   3. TypeScript server wraps InstantDB Admin SDK
+#      - InstantDB's Python support is unofficial/unreliable
+#      - TypeScript SDK is officially supported + well-documented
+#      - Python scripts call TypeScript server via HTTP
+#      - Why not direct Python calls? Reduces flaky dependencies
+#
+#   ARCHITECTURE:
+#   ┌─────────────────┐     HTTP      ┌──────────────────┐     Admin SDK   ┌───────────┐
+#   │  Python Scripts │ ◄──────────► │  instant-server  │ ◄─────────────► │ InstantDB │
+#   │  (audio_ingest) │              │   (TypeScript)   │                 │  (cloud)  │
+#   └────────┬────────┘              └──────────────────┘                 └───────────┘
+#            │
+#            │ psycopg
+#            ▼
+#   ┌─────────────────┐
+#   │   PostgreSQL    │
+#   │   (pgvector)    │
+#   │   localhost:5433│
+#   └─────────────────┘
+#
 # =============================================================================
 
 services:
+  # ===========================================================================
+  # POSTGRESQL WITH PGVECTOR
+  # ===========================================================================
+  # Stores 512-dimensional speaker voice embeddings for KNN search.
+  # Used by Python scripts directly via psycopg.
+  #
+  # Why pgvector?
+  # - Purpose-built for vector similarity search
+  # - IVFFlat index provides O(√n) query time vs O(n) brute force
+  # - Native PostgreSQL = familiar tooling, transactions, reliability
+  # ===========================================================================
   postgres:
     image: pgvector/pgvector:pg16
     container_name: speaker-diarization-postgres
@@ -52,7 +112,7 @@ services:
     volumes:
       # Persistent data storage
       - pgdata:/var/lib/postgresql/data
-      # Init script runs on first startup
+      # Init script runs on first startup only
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U diarization -d speaker_embeddings"]
@@ -60,5 +120,53 @@ services:
       timeout: 5s
       retries: 5
 
+  # ===========================================================================
+  # INSTANTDB TYPESCRIPT SERVER
+  # ===========================================================================
+  # Wraps InstantDB Admin SDK in a simple HTTP server.
+  # Python scripts call this instead of using unofficial Python clients.
+  #
+  # Why a separate server?
+  # - InstantDB's TypeScript SDK is official + well-maintained
+  # - Python InstantDB clients are unofficial and unreliable
+  # - HTTP interface is language-agnostic and easy to debug
+  # - Centralizes all InstantDB logic in one place
+  #
+  # Endpoints:
+  # - GET  /health                    Health check
+  # - POST /query                     Execute InstaQL query
+  # - POST /transact                  Execute transaction
+  # - GET  /videos/:id                Get video with runs/segments
+  # - GET  /diarization-segments      Get segments with filters
+  # - POST /speaker-assignments       Create speaker assignments
+  # - GET  /speakers                  List all speakers
+  # - POST /speakers                  Get or create speaker
+  # ===========================================================================
+  instant-server:
+    build:
+      context: ../..
+      dockerfile: apps/speaker-diarization-benchmark/Dockerfile.instant-server
+    container_name: instant-server
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    # Environment variables - use --env-file flag when running docker compose
+    # Example: docker compose --env-file ../../.env up -d
+    # Or set them directly via environment block below
+    environment:
+      INSTANT_APP_ID: ${INSTANT_APP_ID}
+      INSTANT_ADMIN_SECRET: ${INSTANT_ADMIN_SECRET}
+      PORT: "3001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   pgdata:
+    name: speaker-diarization-pgdata

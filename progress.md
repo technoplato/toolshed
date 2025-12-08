@@ -26,6 +26,20 @@
 
 ---
 
+### December 7th, 2025 at 10:00:22 p.m.
+
+✨ Dockerized instant-server + comprehensive README
+
+[Commit](https://github.com/technoplato/toolshed/commit/574fc22)
+
+- NEW: Dockerfile.instant-server - Bun-based container for TypeScript server
+- NEW: start.sh - Convenience wrapper for docker compose
+- UPDATED: docker-compose.yml - Added instant-server service
+- UPDATED: README.md - Complete architecture documentation with WHY explanations
+- Tested: Both services healthy, identify_speakers.py works end-to-end
+
+
+
 ### December 7th, 2025 at 9:52:44 p.m.
 
 ✨ Complete speaker identification workflow

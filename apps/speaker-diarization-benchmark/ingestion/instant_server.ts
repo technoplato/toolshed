@@ -50,9 +50,23 @@
 import { init, id, tx } from "@instantdb/admin";
 import { config } from "dotenv";
 import { join } from "path";
+import { existsSync } from "fs";
 
-// Load .env from toolshed root
-config({ path: join(__dirname, "../../../.env") });
+// Load .env from various possible locations
+// Docker: env vars set directly via docker-compose
+// Local: load from toolshed root or current directory
+const envPaths = [
+  join(__dirname, "../../../.env"),      // Local: toolshed root
+  join(__dirname, "../../.env"),         // Local: apps/speaker-diarization
+  ".env",                                 // Docker or current dir
+];
+
+for (const envPath of envPaths) {
+  if (existsSync(envPath)) {
+    config({ path: envPath });
+    break;
+  }
+}
 
 const APP_ID = process.env.INSTANT_APP_ID!;
 const ADMIN_TOKEN = process.env.INSTANT_ADMIN_SECRET!;
@@ -60,6 +74,11 @@ const PORT = parseInt(process.env.PORT || "3001");
 
 if (!APP_ID || !ADMIN_TOKEN) {
   console.error("❌ Missing INSTANT_APP_ID or INSTANT_ADMIN_SECRET");
+  console.error("   Set these environment variables or create a .env file");
+  console.error("   Current env:", { 
+    INSTANT_APP_ID: APP_ID ? "(set)" : "(missing)", 
+    INSTANT_ADMIN_SECRET: ADMIN_TOKEN ? "(set)" : "(missing)" 
+  });
   process.exit(1);
 }
 
