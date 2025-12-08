@@ -30,7 +30,7 @@
 
 ✨ Dockerized instant-server + comprehensive README
 
-[Commit](https://github.com/technoplato/toolshed/commit/574fc22)
+[Commit](https://github.com/technoplato/toolshed/commit/cc988fb)
 
 - NEW: Dockerfile.instant-server - Bun-based container for TypeScript server
 - NEW: start.sh - Convenience wrapper for docker compose
