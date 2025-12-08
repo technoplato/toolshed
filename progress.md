@@ -30,7 +30,7 @@
 
 ✨ Added run metrics tracking (duration, memory, cost) to schema and pipeline
 
-[Commit](https://github.com/technoplato/toolshed/commit/830dbed)
+[Commit](https://github.com/technoplato/toolshed/commit/75d67a3)
 
 - Added input_duration_seconds, peak_memory_mb, cost_usd fields to InstantDB schema
 - Created ingestion/metrics.py for capturing processing metrics
