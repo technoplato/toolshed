@@ -276,6 +276,13 @@ def print_ingest_dry_run(config: IngestConfig) -> None:
    
    📁 Implementation: ingestion/workflows/local/pyannote.py
    🔧 Uses: PyAnnote Audio for speaker segmentation
+   💾 Cache: data/cache/diarization/{video_id}__{workflow}.json
+   
+   ⚡ Audio Slicing Optimization:
+   • Full audio file can be 767MB+ (1+ hour episodes)
+   • Audio is sliced to requested time range BEFORE diarization
+   • data/cache/sliced/{video_id}__0_60_*.wav (~10MB for 60s)
+   • Speeds up diarization from 10+ min to ~30 seconds
    
    Why pyannote-local?
    • Runs entirely on local hardware (no API costs)

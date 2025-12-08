@@ -327,14 +327,25 @@ def run_ingest(config: IngestConfig) -> None:
         else:
             logger.info(f"   ⚠️ Cache MISS: no cache, computing [0-{cache_end_time}s]")
         
-        # Compute diarization
+        # Slice audio to requested time range for faster diarization
+        # This is critical - full audio file can be 767MB (1+ hr), but we only need 60s
+        from ingestion.audio_utils import slice_audio
+        
+        sliced_audio = slice_audio(
+            audio_path=str(audio_path),
+            start_time=0,  # Always start from 0 for cache consistency
+            end_time=cache_end_time,
+        )
+        logger.info(f"   Using sliced audio: {sliced_audio.name}")
+        
+        # Compute diarization on sliced audio
         from ingestion.args import get_workflow
         from ingestion.config import WorkflowConfig
         
         workflow_config = WorkflowConfig(name=config.workflow)
         workflow = get_workflow(workflow_config)
         
-        segments, stats = workflow.run(audio_path, transcription_result)
+        segments, stats = workflow.run(sliced_audio, transcription_result)
         
         # Save to cache
         diar_cache.save(segments=segments, stats=stats, end_time=cache_end_time)

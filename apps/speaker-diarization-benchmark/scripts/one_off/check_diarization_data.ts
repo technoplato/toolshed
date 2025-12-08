@@ -102,7 +102,7 @@ async function main() {
     // Diarization Runs
     const diarRuns = video.diarizationRuns || [];
     console.log(`\n🎙️ Diarization Runs: ${diarRuns.length}`);
-    
+
     for (const run of diarRuns) {
       const segments = run.diarizationSegments || [];
       console.log(`\n  Run: ${run.id.slice(0, 8)}...`);
@@ -116,7 +116,10 @@ async function main() {
         console.log(`    Sample segments:`);
         segments.slice(0, 5).forEach((seg) => {
           const assignments = seg.speakerAssignments || [];
-          const speaker = assignments[0]?.speaker?.[0]?.name || seg.speaker_label || "UNKNOWN";
+          const speaker =
+            assignments[0]?.speaker?.[0]?.name ||
+            seg.speaker_label ||
+            "UNKNOWN";
           console.log(
             `      ${seg.start_time?.toFixed(1)}s - ${seg.end_time?.toFixed(1)}s: ${speaker}`
           );
@@ -130,7 +133,7 @@ async function main() {
     // Transcription Runs
     const transRuns = video.transcriptionRuns || [];
     console.log(`\n📝 Transcription Runs: ${transRuns.length}`);
-    
+
     for (const run of transRuns) {
       const words = run.words || [];
       console.log(`\n  Run: ${run.id.slice(0, 8)}...`);
@@ -145,9 +148,10 @@ async function main() {
   videos.forEach((v) => {
     const diarCount = v.diarizationRuns?.length || 0;
     const transCount = v.transcriptionRuns?.length || 0;
-    console.log(`  - ${v.title || v.id.slice(0, 8)} (${diarCount} diar, ${transCount} trans)`);
+    console.log(
+      `  - ${v.title || v.id.slice(0, 8)} (${diarCount} diar, ${transCount} trans)`
+    );
   });
 }
 
 main().catch(console.error);
-

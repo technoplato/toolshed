@@ -26,6 +26,19 @@
 
 ---
 
+### December 8th, 2025 at 9:22:32 a.m.
+
+✨ Audio slicing optimization for diarization
+
+[Commit](https://github.com/technoplato/toolshed/commit/cf76d9b)
+
+- Added ingestion/audio_utils.py with slice_audio() using ffmpeg
+- 767MB full file → 11MB sliced for 60s segment
+- Diarization: 10+ min → 9.6s total
+- Sliced audio cached at data/cache/sliced/
+
+
+
 ### December 8th, 2025 at 8:54:40 a.m.
 
 ✨ Integrate caching into ingest pipeline

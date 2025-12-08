@@ -1,1148 +1,1294 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ground Truth (InstantDB - New Schema)</title>
     <style>
-        body { font-family: system-ui, sans-serif; max-width: 95%; margin: 0 auto; padding: 20px; background: #f4f4f9; }
-        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .controls { display: flex; gap: 10px; align-items: center; }
-        select { padding: 8px; border-radius: 4px; border: 1px solid #ddd; min-width: 200px; }
-        button { padding: 8px 16px; cursor: pointer; background: #2196f3; color: white; border: none; border-radius: 4px; }
-        button:hover { background: #1976d2; }
-        
-        #layout { display: flex; gap: 20px; overflow-x: auto; }
-        .column { 
-            flex: 1; 
-            min-width: 300px; 
-            background: #fff; 
-            border: 1px solid #ddd; /* Match model-column border */
-            border-radius: 4px; 
-            display: flex; 
-            flex-direction: column; 
-            height: calc(100vh - 250px); /* Height match */
-        }
-        .col-header { padding: 10px; border-bottom: 1px solid #eee; background: #f9f9f9; font-weight: bold; position: sticky; top: 0; z-index: 10; }
-        .col-content { flex: 1; overflow-y: auto; padding: 10px; }
-        
-        /* Polished Segment Card */
-        .segment { 
-            display: block;
-            background: #fff;
-            border: 1px solid #eee;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .segment:hover { 
-            background: #fcfcfc; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .segment.active { 
-            background: #f0f7ff; 
-            border-left: 4px solid #2196f3; 
-            border-color: #bbdefb;
-        }
-        
-        .segment-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.85em;
-            color: #666;
-        }
-        
-        .segment-text {
-            display: block;
-            padding: 8px 10px;
-            border-radius: 4px;
-            cursor: text;
-            background: rgba(0,0,0,0.02);
-            transition: all 0.15s;
-            line-height: 1.5;
-            color: #333;
-            border: 1px solid transparent;
-        }
-        .segment-text:hover { 
-            background: #f5f5f5; 
-            border-color: #ddd;
-        }
-        .segment-text:active {
-            background: #e3f2fd;
-            border-color: #2196f3;
-        }
-        
-        .seg-speaker {
-            font-weight: bold;
-            color: #333;
-            cursor: pointer;
-            padding: 2px 8px;
-            border-radius: 3px;
-            background: #e8f5e9;
-            margin-right: 10px;
-        }
-        .seg-speaker:hover { background: #c8e6c9; }
-        .seg-speaker.unlabeled {
-            background: #fff3e0;
-            color: #e65100;
-        }
-        .seg-speaker.unlabeled:hover { background: #ffe0b2; }
-        
-        .timestamp {
-            color: #888;
-            font-family: monospace;
-            font-size: 0.85em;
-        }
-        
-        .segment-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        
-        /* Loading overlay */
-        #loading { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
-        
-        /* Speaker autocomplete dropdown */
-        .speaker-autocomplete {
-            position: relative;
-            display: inline-block;
-        }
-        .speaker-autocomplete input {
-            width: 180px;
-            padding: 6px 10px;
-            border: 2px solid #2196f3;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-        .speaker-autocomplete input:focus {
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
-        }
-        .autocomplete-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            max-height: 200px;
-            overflow-y: auto;
-            background: white;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            z-index: 100;
-        }
-        .autocomplete-item {
-            padding: 8px 10px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        .autocomplete-item:hover, .autocomplete-item.selected {
-            background: #e3f2fd;
-        }
-        .autocomplete-item.current-video {
-            border-left: 3px solid #4caf50;
-            background: #f1f8e9;
-        }
-        .autocomplete-item.current-video:hover, .autocomplete-item.current-video.selected {
-            background: #dcedc8;
-        }
-        .autocomplete-section {
-            padding: 4px 10px;
-            font-size: 0.75em;
-            color: #666;
-            background: #f5f5f5;
-            font-weight: bold;
-            border-top: 1px solid #eee;
-        }
-        
-        /* Shortcuts help panel */
-        #shortcuts-panel {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 12px 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 0.85em;
-            z-index: 50;
-            max-width: 280px;
-        }
-        #shortcuts-panel h4 {
-            margin: 0 0 10px 0;
-            font-size: 0.9em;
-            color: #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #shortcuts-panel .toggle-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 1.2em;
-            padding: 0;
-            color: #666;
-        }
-        .shortcut-list {
-            display: none;
-        }
-        .shortcut-list.expanded {
-            display: block;
-        }
-        .shortcut-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        .shortcut-row:last-child { border-bottom: none; }
-        .shortcut-key {
-            font-family: monospace;
-            background: #f5f5f5;
-            padding: 2px 6px;
-            border-radius: 3px;
-            border: 1px solid #ddd;
-            font-size: 0.9em;
-        }
-        .shortcut-desc {
-            color: #666;
-        }
-        
-        /* Active segment has keyboard focus indicator */
-        .segment.active {
-            outline: 2px solid #2196f3;
-            outline-offset: 1px;
-        }
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 95%;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f4f4f9;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      select {
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        min-width: 200px;
+      }
+      button {
+        padding: 8px 16px;
+        cursor: pointer;
+        background: #2196f3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      button:hover {
+        background: #1976d2;
+      }
+
+      #layout {
+        display: flex;
+        gap: 20px;
+        overflow-x: auto;
+      }
+      .column {
+        flex: 1;
+        min-width: 300px;
+        background: #fff;
+        border: 1px solid #ddd; /* Match model-column border */
+        border-radius: 4px;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 250px); /* Height match */
+      }
+      .col-header {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        background: #f9f9f9;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .col-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+      }
+
+      /* Polished Segment Card */
+      .segment {
+        display: block;
+        background: #fff;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        padding: 10px;
+        margin-bottom: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s;
+        cursor: pointer;
+      }
+      .segment:hover {
+        background: #fcfcfc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .segment.active {
+        background: #f0f7ff;
+        border-left: 4px solid #2196f3;
+        border-color: #bbdefb;
+      }
+
+      .segment-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+        font-size: 0.85em;
+        color: #666;
+      }
+
+      .segment-text {
+        display: block;
+        padding: 8px 10px;
+        border-radius: 4px;
+        cursor: text;
+        background: rgba(0, 0, 0, 0.02);
+        transition: all 0.15s;
+        line-height: 1.5;
+        color: #333;
+        border: 1px solid transparent;
+      }
+      .segment-text:hover {
+        background: #f5f5f5;
+        border-color: #ddd;
+      }
+      .segment-text:active {
+        background: #e3f2fd;
+        border-color: #2196f3;
+      }
+
+      .seg-speaker {
+        font-weight: bold;
+        color: #333;
+        cursor: pointer;
+        padding: 2px 8px;
+        border-radius: 3px;
+        background: #e8f5e9;
+        margin-right: 10px;
+      }
+      .seg-speaker:hover {
+        background: #c8e6c9;
+      }
+      .seg-speaker.unlabeled {
+        background: #fff3e0;
+        color: #e65100;
+      }
+      .seg-speaker.unlabeled:hover {
+        background: #ffe0b2;
+      }
+
+      .timestamp {
+        color: #888;
+        font-family: monospace;
+        font-size: 0.85em;
+      }
+
+      .segment-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      /* Loading overlay */
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      /* Speaker autocomplete dropdown */
+      .speaker-autocomplete {
+        position: relative;
+        display: inline-block;
+      }
+      .speaker-autocomplete input {
+        width: 180px;
+        padding: 6px 10px;
+        border: 2px solid #2196f3;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      .speaker-autocomplete input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+      }
+      .autocomplete-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 4px 4px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        z-index: 100;
+      }
+      .autocomplete-item {
+        padding: 8px 10px;
+        cursor: pointer;
+        font-size: 0.9em;
+      }
+      .autocomplete-item:hover,
+      .autocomplete-item.selected {
+        background: #e3f2fd;
+      }
+      .autocomplete-item.current-video {
+        border-left: 3px solid #4caf50;
+        background: #f1f8e9;
+      }
+      .autocomplete-item.current-video:hover,
+      .autocomplete-item.current-video.selected {
+        background: #dcedc8;
+      }
+      .autocomplete-section {
+        padding: 4px 10px;
+        font-size: 0.75em;
+        color: #666;
+        background: #f5f5f5;
+        font-weight: bold;
+        border-top: 1px solid #eee;
+      }
+
+      /* Shortcuts help panel */
+      #shortcuts-panel {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 12px 16px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        font-size: 0.85em;
+        z-index: 50;
+        max-width: 280px;
+      }
+      #shortcuts-panel h4 {
+        margin: 0 0 10px 0;
+        font-size: 0.9em;
+        color: #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #shortcuts-panel .toggle-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 0;
+        color: #666;
+      }
+      .shortcut-list {
+        display: none;
+      }
+      .shortcut-list.expanded {
+        display: block;
+      }
+      .shortcut-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      .shortcut-row:last-child {
+        border-bottom: none;
+      }
+      .shortcut-key {
+        font-family: monospace;
+        background: #f5f5f5;
+        padding: 2px 6px;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+        font-size: 0.9em;
+      }
+      .shortcut-desc {
+        color: #666;
+      }
+
+      /* Active segment has keyboard focus indicator */
+      .segment.active {
+        outline: 2px solid #2196f3;
+        outline-offset: 1px;
+      }
     </style>
     <!-- <script type="module" src="https://js.instantdb.com/v0.12.7/client.js"></script> -->
-</head>
-<body>
+  </head>
+  <body>
     <div id="loading">Loading...</div>
-    
+
     <!-- Keyboard Shortcuts Help Panel -->
     <div id="shortcuts-panel">
-        <h4>
-            ⌨️ Shortcuts
-            <button class="toggle-btn" onclick="toggleShortcuts()">▼</button>
-        </h4>
-        <div class="shortcut-list" id="shortcut-list">
-            <div class="shortcut-row">
-                <span class="shortcut-key">Enter</span>
-                <span class="shortcut-desc">Edit speaker (active segment)</span>
-            </div>
-            <div class="shortcut-row">
-                <span class="shortcut-key">Space</span>
-                <span class="shortcut-desc">Play/pause audio</span>
-            </div>
-            <div class="shortcut-row">
-                <span class="shortcut-key">Click segment</span>
-                <span class="shortcut-desc">Seek & play</span>
-            </div>
-            <div class="shortcut-row">
-                <span class="shortcut-key">Click text</span>
-                <span class="shortcut-desc">Edit text for splitting</span>
-            </div>
-            <div class="shortcut-row">
-                <span class="shortcut-key">⌘+Enter</span>
-                <span class="shortcut-desc">Split at newlines</span>
-            </div>
-            <div class="shortcut-row">
-                <span class="shortcut-key">Escape</span>
-                <span class="shortcut-desc">Cancel editing</span>
-            </div>
-            <div class="shortcut-row">
-                <span class="shortcut-key">↑/↓</span>
-                <span class="shortcut-desc">Navigate suggestions</span>
-            </div>
+      <h4>
+        ⌨️ Shortcuts
+        <button class="toggle-btn" onclick="toggleShortcuts()">▼</button>
+      </h4>
+      <div class="shortcut-list" id="shortcut-list">
+        <div class="shortcut-row">
+          <span class="shortcut-key">Enter</span>
+          <span class="shortcut-desc">Edit speaker (active segment)</span>
         </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Space</span>
+          <span class="shortcut-desc">Play/pause audio</span>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Click segment</span>
+          <span class="shortcut-desc">Seek & play</span>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Click text</span>
+          <span class="shortcut-desc">Edit text for splitting</span>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">⌘+Enter</span>
+          <span class="shortcut-desc">Split at newlines</span>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">Escape</span>
+          <span class="shortcut-desc">Cancel editing</span>
+        </div>
+        <div class="shortcut-row">
+          <span class="shortcut-key">↑/↓</span>
+          <span class="shortcut-desc">Navigate suggestions</span>
+        </div>
+      </div>
     </div>
-    
+
     <div class="container">
-        <div class="header">
-            <h1>Ground Truth Creator <small style="font-size:0.5em; color:#888;">(New Schema - Dec 2025)</small></h1>
-            <div class="controls">
-                <select id="video-select"><option>Select Video...</option></select>
-                <div id="status"></div>
-            </div>
+      <div class="header">
+        <h1>
+          Ground Truth Creator
+          <small style="font-size: 0.5em; color: #888"
+            >(New Schema - Dec 2025)</small
+          >
+        </h1>
+        <div class="controls">
+          <select id="video-select">
+            <option>Select Video...</option>
+          </select>
+          <div id="status"></div>
         </div>
-        
-        <div id="player-section" style="display:none;">
-            <h3 id="video-title"></h3>
-            
-            <!-- Debug Dump (Moved) -->
-            <pre id="debug-dump" style="background: #eee; padding: 10px; overflow: auto; max-height: 200px; border: 1px solid #ccc; margin-bottom: 20px; font-size: 0.8em;"></pre>
-            
-            <audio id="audio" controls style="width: 100%; margin-bottom: 10px;"></audio>
-            <div id="layout"></div>
-        </div>
+      </div>
+
+      <div id="player-section" style="display: none">
+        <h3 id="video-title"></h3>
+
+        <!-- Debug Dump (Moved) -->
+        <pre
+          id="debug-dump"
+          style="
+            background: #eee;
+            padding: 10px;
+            overflow: auto;
+            max-height: 200px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            font-size: 0.8em;
+          "
+        ></pre>
+
+        <audio
+          id="audio"
+          controls
+          style="width: 100%; margin-bottom: 10px"
+        ></audio>
+        <div id="layout"></div>
+      </div>
     </div>
 
     <script type="module">
-        import { init, id } from "https://esm.sh/@instantdb/core@0.13.2?bundle";
-        
-        // --- CONFIG ---
-        const APP_ID = "d4802f0a-5c83-4db7-9e85-b97957881c59";
-        const db = init({ appId: APP_ID });
-        
-        // --- STATE ---
-        let currentVideoId = null;
-        let currentData = { transcriptionRuns: [], diarizationRuns: [] };
-        
-        const audio = document.getElementById('audio');
-        const layout = document.getElementById('layout');
-        const videoSelect = document.getElementById('video-select');
-        const statusDiv = document.getElementById('status');
-        const debugDump = document.getElementById('debug-dump');
-        
-        // --- INITIAL LOAD ---
-        db.subscribeQuery({ videos: {} }, (resp) => {
-            if (resp.error) {
-                console.error(resp.error);
-                statusDiv.textContent = "Error loading videos.";
-                return;
-            }
-            populateVideoSelect(resp.data.videos);
-        });
-        
-        // Subscribe to all speakers for autocomplete
-        db.subscribeQuery({ speakers: {} }, (resp) => {
-            if (resp.error) return console.error("Failed to load speakers:", resp.error);
-            allSpeakers = (resp.data.speakers || [])
-                .map(s => s.name)
-                .filter(Boolean)
-                .sort();
-            console.log("Loaded", allSpeakers.length, "speakers for autocomplete");
-        });
-        
-        function populateVideoSelect(videos) {
-            videoSelect.innerHTML = '<option value="">Select Video...</option>';
-            videos.forEach(v => {
-                const opt = document.createElement('option');
-                opt.value = v.id;
-                opt.textContent = v.title || v.filepath || v.id;
-                videoSelect.appendChild(opt);
-            });
-            const savedId = localStorage.getItem('ground_truth_active_video_id');
-            if (savedId && videos.some(v => v.id === savedId) && !currentVideoId) {
-                videoSelect.value = savedId;
-                loadVideo(savedId);
-            }
+      import { init, id } from "https://esm.sh/@instantdb/core@0.13.2?bundle";
+
+      // --- CONFIG ---
+      const APP_ID = "d4802f0a-5c83-4db7-9e85-b97957881c59";
+      const db = init({ appId: APP_ID });
+
+      // --- STATE ---
+      let currentVideoId = null;
+      let currentData = { transcriptionRuns: [], diarizationRuns: [] };
+
+      const audio = document.getElementById("audio");
+      const layout = document.getElementById("layout");
+      const videoSelect = document.getElementById("video-select");
+      const statusDiv = document.getElementById("status");
+      const debugDump = document.getElementById("debug-dump");
+
+      // --- INITIAL LOAD ---
+      db.subscribeQuery({ videos: {} }, (resp) => {
+        if (resp.error) {
+          console.error(resp.error);
+          statusDiv.textContent = "Error loading videos.";
+          return;
         }
-        
-        videoSelect.onchange = (e) => {
-            const vid = e.target.value;
-            if (vid) {
-                localStorage.setItem('ground_truth_active_video_id', vid);
-                loadVideo(vid);
-            }
+        populateVideoSelect(resp.data.videos);
+      });
+
+      // Subscribe to all speakers for autocomplete
+      db.subscribeQuery({ speakers: {} }, (resp) => {
+        if (resp.error)
+          return console.error("Failed to load speakers:", resp.error);
+        allSpeakers = (resp.data.speakers || [])
+          .map((s) => s.name)
+          .filter(Boolean)
+          .sort();
+        console.log("Loaded", allSpeakers.length, "speakers for autocomplete");
+      });
+
+      function populateVideoSelect(videos) {
+        videoSelect.innerHTML = '<option value="">Select Video...</option>';
+        videos.forEach((v) => {
+          const opt = document.createElement("option");
+          opt.value = v.id;
+          opt.textContent = v.title || v.filepath || v.id;
+          videoSelect.appendChild(opt);
+        });
+        const savedId = localStorage.getItem("ground_truth_active_video_id");
+        if (
+          savedId &&
+          videos.some((v) => v.id === savedId) &&
+          !currentVideoId
+        ) {
+          videoSelect.value = savedId;
+          loadVideo(savedId);
+        }
+      }
+
+      videoSelect.onchange = (e) => {
+        const vid = e.target.value;
+        if (vid) {
+          localStorage.setItem("ground_truth_active_video_id", vid);
+          loadVideo(vid);
+        }
+      };
+
+      function loadVideo(videoId) {
+        currentVideoId = videoId;
+        document.getElementById("player-section").style.display = "block";
+        layout.innerHTML = '<div style="padding:20px;">Loading runs...</div>';
+        debugDump.textContent = "Loading debug info...";
+
+        // Updated query for new schema:
+        // - words instead of transcriptionSegments
+        // - speakerAssignments instead of direct speaker link
+        const query = {
+          videos: {
+            $: { where: { id: videoId } },
+            transcriptionRuns: {
+              words: {},
+              config: {},
+            },
+            diarizationRuns: {
+              diarizationSegments: {
+                speakerAssignments: { speaker: {} },
+              },
+              config: {},
+            },
+          },
         };
-        
-        function loadVideo(videoId) {
-            currentVideoId = videoId;
-            document.getElementById('player-section').style.display = 'block';
-            layout.innerHTML = '<div style="padding:20px;">Loading runs...</div>';
-            debugDump.textContent = "Loading debug info...";
-            
-            // Updated query for new schema:
-            // - words instead of transcriptionSegments
-            // - speakerAssignments instead of direct speaker link
-            const query = {
-                videos: {
-                    $: { where: { id: videoId } },
-                    transcriptionRuns: { 
-                        words: {},
-                        config: {} 
-                    },
-                    diarizationRuns: { 
-                        diarizationSegments: { 
-                            speakerAssignments: { speaker: {} } 
-                        },
-                        config: {}
-                    }
-                }
-            };
-            
-            db.subscribeQuery(query, (resp) => {
-                if (resp.error) return console.error(resp.error);
-                debugDump.textContent = JSON.stringify(resp.data, null, 2);
 
-                const video = resp.data.videos[0];
-                if (!video) {
-                    layout.innerHTML = '<div style="padding:20px;">Video not found in DB.</div>';
-                    return;
-                }
-                
-                // Update Player
-                document.getElementById('video-title').textContent = video.title;
-                let path = video.filepath || "";
-                
-                // Convert absolute filepath to relative path for server
-                // e.g., /Users/.../apps/speaker-diarization-benchmark/data/clips/file.wav -> /data/clips/file.wav
-                if (path.includes('/apps/speaker-diarization-benchmark/')) {
-                    path = path.split('/apps/speaker-diarization-benchmark')[1];
-                } else if (path.includes('data/clips/')) {
-                    // Already relative or partially relative
-                    const match = path.match(/(data\/clips\/.+)/);
-                    if (match) path = '/' + match[1];
-                }
-                
-                if (path && !path.startsWith('/') && !path.startsWith('http')) { path = '/' + path; }
-                const currentSrc = audio.getAttribute('src');
-                if (currentSrc !== path) audio.src = path;
+        db.subscribeQuery(query, (resp) => {
+          if (resp.error) return console.error(resp.error);
+          debugDump.textContent = JSON.stringify(resp.data, null, 2);
 
-                // Extract speakers from current video for autocomplete
-                currentVideoSpeakers = extractSpeakersFromVideo(video);
-                
-                renderLayout(video);
-            });
-        }
-        
-        // Extract unique speaker names from a video's diarization segments
-        function extractSpeakersFromVideo(video) {
-            const speakers = new Set();
-            const diarRuns = video.diarizationRuns || [];
-            for (const run of diarRuns) {
-                for (const seg of (run.diarizationSegments || [])) {
-                    // Get speaker from assignment if available
-                    const assignments = seg.speakerAssignments || [];
-                    if (assignments.length > 0) {
-                        const mostRecent = assignments.sort((a, b) => 
-                            new Date(b.assigned_at || 0) - new Date(a.assigned_at || 0)
-                        )[0];
-                        const spk = mostRecent.speaker?.[0];
-                        if (spk?.name) speakers.add(spk.name);
-                    }
-                    // Also add speaker_label if it looks like a name
-                    const label = seg.speaker_label || '';
-                    if (label && !label.match(/^SPEAKER_\d+$/) && !label.match(/^SPLIT_\d+$/) && label !== 'UNKNOWN') {
-                        speakers.add(label);
-                    }
-                }
-            }
-            return Array.from(speakers).sort();
-        }
-        
-        function renderLayout(video) {
-            layout.innerHTML = '';
-            
-            try {
-                // Find preferred runs (or first available)
-                const transcriptionRuns = video.transcriptionRuns || [];
-                const diarizationRuns = video.diarizationRuns || [];
-                
-                const preferredTranscription = transcriptionRuns.find(r => r.is_preferred) || transcriptionRuns[0];
-                const preferredDiarization = diarizationRuns.find(r => r.is_preferred) || diarizationRuns[0];
-                
-                if (!preferredTranscription && !preferredDiarization) {
-                    layout.innerHTML = '<div style="padding:20px; color:#999;">No transcription or diarization runs found.</div>';
-                    return;
-                }
-                
-                // Render unified view: diarization segments enriched with words
-                renderUnifiedTranscript(preferredTranscription, preferredDiarization);
-                
-            } catch (err) {
-                console.error("Render Error:", err);
-                layout.innerHTML += `<div style="color:red; margin:10px;">Error rendering: ${err.message}</div>`;
-            }
-        }
+          const video = resp.data.videos[0];
+          if (!video) {
+            layout.innerHTML =
+              '<div style="padding:20px;">Video not found in DB.</div>';
+            return;
+          }
 
-        function renderUnifiedTranscript(transcriptionRun, diarizationRun) {
-            const col = document.createElement('div');
-            col.className = 'column';
-            col.style.maxWidth = '800px';
-            col.style.margin = '0 auto';
-            
-            // Header with run info
-            const tInfo = transcriptionRun ? (transcriptionRun.tool_version || 'unknown') : 'none';
-            const dInfo = diarizationRun ? (diarizationRun.workflow || 'unknown') : 'none';
-            col.innerHTML = `<div class="col-header">Transcript (${tInfo}) + Diarization (${dInfo})</div>`;
-            
-            const colContent = document.createElement('div');
-            colContent.className = 'col-content';
-            
-            // Get words and segments
-            const words = transcriptionRun?.words || [];
-            const segments = diarizationRun?.diarizationSegments || [];
-            
-            // Sort words by start time
-            words.sort((a, b) => a.start_time - b.start_time);
-            
-            // Filter out invalidated segments and sort
-            const validSegments = segments
-                .filter(s => typeof s.start_time === 'number' && !s.is_invalidated)
-                .sort((a, b) => a.start_time - b.start_time);
-            
-            if (validSegments.length === 0 && words.length === 0) {
-                colContent.innerHTML = '<div style="padding:10px; color:#999;">No data to display</div>';
-                col.appendChild(colContent);
-                layout.appendChild(col);
-                return;
-            }
-            
-            // If we have diarization, use it as the primary structure
-            // and attach words to each segment by time overlap
-            if (validSegments.length > 0) {
-                validSegments.forEach(seg => {
-                    // Find words that overlap with this segment
-                    const segWords = words.filter(w => {
-                        // Word overlaps if it starts before segment ends AND ends after segment starts
-                        return w.start_time < seg.end_time && w.end_time > seg.start_time;
-                    });
-                    
-                    const text = segWords.map(w => w.text).join(' ') || '(no words)';
-                    
-                    renderUnifiedSegment(colContent, seg, text, diarizationRun.id);
-                });
-            } else {
-                // No diarization - just show words grouped by transcription_segment_index
-                const segmentGroups = {};
-                words.forEach(w => {
-                    const idx = w.transcription_segment_index ?? 0;
-                    if (!segmentGroups[idx]) segmentGroups[idx] = [];
-                    segmentGroups[idx].push(w);
-                });
-                
-                Object.keys(segmentGroups).sort((a, b) => Number(a) - Number(b)).forEach(idx => {
-                    const groupWords = segmentGroups[idx];
-                    groupWords.sort((a, b) => a.start_time - b.start_time);
-                    
-                    const fakeSeg = {
-                        start_time: groupWords[0].start_time,
-                        end_time: groupWords[groupWords.length - 1].end_time,
-                        speaker_label: 'UNKNOWN',
-                        speakerAssignments: []
-                    };
-                    
-                    const text = groupWords.map(w => w.text).join(' ');
-                    renderUnifiedSegment(colContent, fakeSeg, text, null);
-                });
-            }
-            
-            col.appendChild(colContent);
-            layout.appendChild(col);
-        }
-        
-        function renderUnifiedSegment(container, seg, text, runId) {
-            const item = document.createElement('div');
-            item.className = 'segment';
-            item.dataset.start = seg.start_time;
-            item.dataset.end = seg.end_time;
-            if (seg.id) item.dataset.id = seg.id;
-            item.dataset.type = 'unified';
-            if (runId) item.dataset.runId = runId;
-            if (seg.speaker_label) item.dataset.speakerLabel = seg.speaker_label;
-            
-            // Get speaker name from assignments (most recent) or fall back to label
-            let speakerName = seg.speaker_label || "UNKNOWN";
-            let speakerId = null;
-            let assignmentSource = null;
-            
+          // Update Player
+          document.getElementById("video-title").textContent = video.title;
+          let path = video.filepath || "";
+
+          // Convert absolute filepath to relative path for server
+          // e.g., /Users/.../apps/speaker-diarization-benchmark/data/clips/file.wav -> /data/clips/file.wav
+          if (path.includes("/apps/speaker-diarization-benchmark/")) {
+            path = path.split("/apps/speaker-diarization-benchmark")[1];
+          } else if (path.includes("data/clips/")) {
+            // Already relative or partially relative
+            const match = path.match(/(data\/clips\/.+)/);
+            if (match) path = "/" + match[1];
+          }
+
+          if (path && !path.startsWith("/") && !path.startsWith("http")) {
+            path = "/" + path;
+          }
+          const currentSrc = audio.getAttribute("src");
+          if (currentSrc !== path) audio.src = path;
+
+          // Extract speakers from current video for autocomplete
+          currentVideoSpeakers = extractSpeakersFromVideo(video);
+
+          renderLayout(video);
+        });
+      }
+
+      // Extract unique speaker names from a video's diarization segments
+      function extractSpeakersFromVideo(video) {
+        const speakers = new Set();
+        const diarRuns = video.diarizationRuns || [];
+        for (const run of diarRuns) {
+          for (const seg of run.diarizationSegments || []) {
+            // Get speaker from assignment if available
             const assignments = seg.speakerAssignments || [];
             if (assignments.length > 0) {
-                const sorted = [...assignments].sort((a, b) => 
-                    new Date(b.assigned_at) - new Date(a.assigned_at)
-                );
-                const mostRecent = sorted[0];
-                assignmentSource = mostRecent.source;
-                
-                const speaker = mostRecent.speaker;
-                if (speaker) {
-                    if (Array.isArray(speaker) && speaker.length > 0) {
-                        speakerName = speaker[0].name || speakerName;
-                        speakerId = speaker[0].id;
-                    } else if (speaker.name) {
-                        speakerName = speaker.name;
-                        speakerId = speaker.id;
-                    }
-                }
+              const mostRecent = assignments.sort(
+                (a, b) =>
+                  new Date(b.assigned_at || 0) - new Date(a.assigned_at || 0)
+              )[0];
+              const spk = mostRecent.speaker?.[0];
+              if (spk?.name) speakers.add(spk.name);
             }
-            
-            if (speakerId) item.dataset.spkId = speakerId;
-            
-            // Source indicator
-            const sourceIcon = assignmentSource === 'user' ? '✓ ' : 
-                               assignmentSource === 'model' ? '🤖 ' : '';
-            
-            // Check if speaker is still a machine label
-            const isMachineLabel = speakerName.startsWith('SPEAKER_') || speakerName === 'UNKNOWN';
-            const speakerClass = isMachineLabel ? 'seg-speaker unlabeled' : 'seg-speaker';
-            
-            item.innerHTML = `
+            // Also add speaker_label if it looks like a name
+            const label = seg.speaker_label || "";
+            if (
+              label &&
+              !label.match(/^SPEAKER_\d+$/) &&
+              !label.match(/^SPLIT_\d+$/) &&
+              label !== "UNKNOWN"
+            ) {
+              speakers.add(label);
+            }
+          }
+        }
+        return Array.from(speakers).sort();
+      }
+
+      function renderLayout(video) {
+        layout.innerHTML = "";
+
+        try {
+          // Find preferred runs (or first available)
+          const transcriptionRuns = video.transcriptionRuns || [];
+          const diarizationRuns = video.diarizationRuns || [];
+
+          const preferredTranscription =
+            transcriptionRuns.find((r) => r.is_preferred) ||
+            transcriptionRuns[0];
+          const preferredDiarization =
+            diarizationRuns.find((r) => r.is_preferred) || diarizationRuns[0];
+
+          if (!preferredTranscription && !preferredDiarization) {
+            layout.innerHTML =
+              '<div style="padding:20px; color:#999;">No transcription or diarization runs found.</div>';
+            return;
+          }
+
+          // Render unified view: diarization segments enriched with words
+          renderUnifiedTranscript(preferredTranscription, preferredDiarization);
+        } catch (err) {
+          console.error("Render Error:", err);
+          layout.innerHTML += `<div style="color:red; margin:10px;">Error rendering: ${err.message}</div>`;
+        }
+      }
+
+      function renderUnifiedTranscript(transcriptionRun, diarizationRun) {
+        const col = document.createElement("div");
+        col.className = "column";
+        col.style.maxWidth = "800px";
+        col.style.margin = "0 auto";
+
+        // Header with run info
+        const tInfo = transcriptionRun
+          ? transcriptionRun.tool_version || "unknown"
+          : "none";
+        const dInfo = diarizationRun
+          ? diarizationRun.workflow || "unknown"
+          : "none";
+        col.innerHTML = `<div class="col-header">Transcript (${tInfo}) + Diarization (${dInfo})</div>`;
+
+        const colContent = document.createElement("div");
+        colContent.className = "col-content";
+
+        // Get words and segments
+        const words = transcriptionRun?.words || [];
+        const segments = diarizationRun?.diarizationSegments || [];
+
+        // Sort words by start time
+        words.sort((a, b) => a.start_time - b.start_time);
+
+        // Filter out invalidated segments and sort
+        const validSegments = segments
+          .filter((s) => typeof s.start_time === "number" && !s.is_invalidated)
+          .sort((a, b) => a.start_time - b.start_time);
+
+        if (validSegments.length === 0 && words.length === 0) {
+          colContent.innerHTML =
+            '<div style="padding:10px; color:#999;">No data to display</div>';
+          col.appendChild(colContent);
+          layout.appendChild(col);
+          return;
+        }
+
+        // If we have diarization, use it as the primary structure
+        // and attach words to each segment by time overlap
+        if (validSegments.length > 0) {
+          validSegments.forEach((seg) => {
+            // Find words that overlap with this segment
+            const segWords = words.filter((w) => {
+              // Word overlaps if it starts before segment ends AND ends after segment starts
+              return w.start_time < seg.end_time && w.end_time > seg.start_time;
+            });
+
+            const text = segWords.map((w) => w.text).join(" ") || "(no words)";
+
+            renderUnifiedSegment(colContent, seg, text, diarizationRun.id);
+          });
+        } else {
+          // No diarization - just show words grouped by transcription_segment_index
+          const segmentGroups = {};
+          words.forEach((w) => {
+            const idx = w.transcription_segment_index ?? 0;
+            if (!segmentGroups[idx]) segmentGroups[idx] = [];
+            segmentGroups[idx].push(w);
+          });
+
+          Object.keys(segmentGroups)
+            .sort((a, b) => Number(a) - Number(b))
+            .forEach((idx) => {
+              const groupWords = segmentGroups[idx];
+              groupWords.sort((a, b) => a.start_time - b.start_time);
+
+              const fakeSeg = {
+                start_time: groupWords[0].start_time,
+                end_time: groupWords[groupWords.length - 1].end_time,
+                speaker_label: "UNKNOWN",
+                speakerAssignments: [],
+              };
+
+              const text = groupWords.map((w) => w.text).join(" ");
+              renderUnifiedSegment(colContent, fakeSeg, text, null);
+            });
+        }
+
+        col.appendChild(colContent);
+        layout.appendChild(col);
+      }
+
+      function renderUnifiedSegment(container, seg, text, runId) {
+        const item = document.createElement("div");
+        item.className = "segment";
+        item.dataset.start = seg.start_time;
+        item.dataset.end = seg.end_time;
+        if (seg.id) item.dataset.id = seg.id;
+        item.dataset.type = "unified";
+        if (runId) item.dataset.runId = runId;
+        if (seg.speaker_label) item.dataset.speakerLabel = seg.speaker_label;
+
+        // Get speaker name from assignments (most recent) or fall back to label
+        let speakerName = seg.speaker_label || "UNKNOWN";
+        let speakerId = null;
+        let assignmentSource = null;
+
+        const assignments = seg.speakerAssignments || [];
+        if (assignments.length > 0) {
+          const sorted = [...assignments].sort(
+            (a, b) => new Date(b.assigned_at) - new Date(a.assigned_at)
+          );
+          const mostRecent = sorted[0];
+          assignmentSource = mostRecent.source;
+
+          const speaker = mostRecent.speaker;
+          if (speaker) {
+            if (Array.isArray(speaker) && speaker.length > 0) {
+              speakerName = speaker[0].name || speakerName;
+              speakerId = speaker[0].id;
+            } else if (speaker.name) {
+              speakerName = speaker.name;
+              speakerId = speaker.id;
+            }
+          }
+        }
+
+        if (speakerId) item.dataset.spkId = speakerId;
+
+        // Source indicator
+        const sourceIcon =
+          assignmentSource === "user"
+            ? "✓ "
+            : assignmentSource === "model"
+              ? "🤖 "
+              : "";
+
+        // Check if speaker is still a machine label
+        const isMachineLabel =
+          speakerName.startsWith("SPEAKER_") || speakerName === "UNKNOWN";
+        const speakerClass = isMachineLabel
+          ? "seg-speaker unlabeled"
+          : "seg-speaker";
+
+        item.innerHTML = `
                 <div class="segment-header">
                     <span class="${speakerClass}">${sourceIcon}${speakerName}</span>
                     <span class="timestamp">${seg.start_time.toFixed(1)}s - ${seg.end_time.toFixed(1)}s</span>
                 </div>
                 <div class="segment-text" title="Click to edit • Cmd+Enter to split at newlines">${text}</div>
             `;
-            
-            // Click on card (not text) = seek and play
-            item.onclick = (e) => { 
-                if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-                if (e.target.classList.contains('segment-text')) return; // Let text handle its own click
-                if (e.target.classList.contains('seg-speaker')) return; // Let speaker handle its own click
-                e.stopPropagation();
-                audio.currentTime = seg.start_time; 
-                audio.play(); 
-            };
-            
-            // Click on text = edit mode (for splitting)
-            const textEl = item.querySelector('.segment-text');
-            if (textEl) {
-                textEl.onclick = (e) => {
-                    e.stopPropagation();
-                    editSplit(item);
-                };
-            }
-            
-            // Click on speaker = edit speaker
-            const spkEl = item.querySelector('.seg-speaker');
-            if (spkEl && seg.id) {
-                spkEl.onclick = (e) => {
-                    e.stopPropagation();
-                    editSpeaker(item);
-                };
-            }
-            
-            container.appendChild(item);
-        }
 
-        // --- KEYBOARD & ACTIONS ---
-        
-        document.addEventListener('keydown', (e) => {
-            const tag = e.target.tagName;
-            if (tag === 'INPUT' || tag === 'TEXTAREA' || e.target.isContentEditable) return; 
-            
-            // Space: Toggle Play
-            if (e.code === 'Space') {
-                e.preventDefault();
-                audio.paused ? audio.play() : audio.pause();
-                return;
-            }
-            
-            // Navigation
-            if (['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(e.code)) {
-                e.preventDefault();
-                navigate(e.code === 'ArrowLeft' || e.code === 'ArrowUp' ? -1 : 1);
-                return;
-            }
-            
-            // Enter: Edit Speaker (Diarization)
-            if (e.code === 'Enter' && !e.metaKey && !e.ctrlKey) {
-                e.preventDefault();
-                const active = document.querySelector('.segment.active');
-                if (active && active.dataset.type === 'diarization') {
-                    editSpeaker(active);
-                }
-                return;
-            }
-            
-            // Cmd+Enter: Split (Both)
-            if ((e.metaKey || e.ctrlKey) && e.code === 'Enter') {
-                e.preventDefault();
-                const active = document.querySelector('.segment.active');
-                if (active) {
-                    editSplit(active);
-                }
-                return;
-            }
-            
-            // Delete / Backspace: Delete Segment (Diarization)
-            // Use Ctrl+Delete or Cmd+Backspace to avoid accidental deletions?
-            // User asked for "removing... incorrectly linked".
-            // Let's protect it slightly with Cmd/Ctrl or just confirm?
-            // Let's try Delete key directly, but maybe with confirm?
-            // "Backspace" is dangerous for text editing (handled by input check above).
-            // "Delete" (Fn+Backspace on Mac) is safer.
-            // Let's support both but with confirm.
-            if (['Delete', 'Backspace'].includes(e.code) && !e.target.isContentEditable) {
-                // Double check input focus again just in case
-                if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
-                
-                const active = document.querySelector('.segment.active');
-                if (active && active.dataset.type === 'diarization') {
-                    e.preventDefault();
-                    if (confirm("Are you sure you want to DELETE this segment and its embedding?")) {
-                        deleteSegment(active);
-                    }
-                }
-            }
-        });
-
-        async function deleteSegment(segEl) {
-             try {
-                const res = await fetch('/delete_segment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        segment_id: segEl.dataset.id
-                    })
-                });
-                if (!res.ok) throw await res.text();
-                // InstantDB updates automatically
-            } catch (e) {
-                alert("Failed to delete: " + e);
-            }
-        }
-
-        function navigate(dir) {
-            const allSegs = Array.from(document.querySelectorAll('.segment'));
-            if (!allSegs.length) return;
-            
-            // Sort deterministically by start time, then by runId (to group columns if times are equal), then ID
-            allSegs.sort((a,b) => {
-                const ta = parseFloat(a.dataset.start);
-                const tb = parseFloat(b.dataset.start);
-                if (ta !== tb) return ta - tb;
-                
-                // If times equal, sorting by DOM order might be safer for "visual" flow?
-                // But DOM order is Column A (all rows), Column B (all rows).
-                // So purely time-based sorting jumps between columns.
-                // If user wants to navigate "Down", they expect the next segment in THIS column?
-                // Or next chronological segment?
-                // Visual "Down" usually means next in column. 
-                // Visual "Right" means next column?
-                // User said "Up/Left... Down/Right".
-                // Let's implement Time-Based for now as it's general.
-                return 0; 
-                // Note: Sort is stable in modern JS, so DOM order preserved for equal times.
-            });
-            
-            // Find ALL active segments (could be multiple if overlapping)
-            // But usually only one is "active" by auto-scroll? 
-            // Actually auto-scroll makes multiple active if they overlap time.
-            // Let's find the FIRST active one in our sorted list.
-            let idx = allSegs.findIndex(el => el.classList.contains('active'));
-            
-            // If none active, find based on current audio time
-            if (idx === -1) {
-                const t = audio.currentTime;
-                // Find first segment starting after t? Or overlapping t?
-                idx = allSegs.findIndex(el => {
-                    const s = parseFloat(el.dataset.start);
-                    const e = parseFloat(el.dataset.end);
-                    return t >= s && t < e;
-                });
-                
-                // If still not found (gap), find next start
-                if (idx === -1) {
-                     idx = allSegs.findIndex(el => parseFloat(el.dataset.start) > t);
-                }
-                
-                if (idx === -1) idx = 0;
-            }
-            
-            let newIdx = idx + dir;
-            // Clamp
-            if (newIdx < 0) newIdx = 0;
-            if (newIdx >= allSegs.length) newIdx = allSegs.length - 1;
-            
-            const target = allSegs[newIdx];
-            if (target) {
-                console.log(`Navigating to ${newIdx} (Time: ${target.dataset.start})`);
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // We manually click to play/set active?
-                // navigate() implies moving selection? 
-                // Or just seeking?
-                // User said "Navigate to previous segment and start playback".
-                audio.currentTime = parseFloat(target.dataset.start);
-                audio.play();
-            }
-        }
-
-        // Auto-scroll / Active Class
-        audio.ontimeupdate = () => {
-            const t = audio.currentTime;
-            activeSegmentEl = null; // Reset
-            
-            document.querySelectorAll('.segment').forEach(el => {
-                const s = parseFloat(el.dataset.start);
-                const e = parseFloat(el.dataset.end);
-                
-                // Allow a small tolerance for 'active'
-                if (t >= s && t < e) {
-                    if (!el.classList.contains('active')) {
-                        el.classList.add('active');
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                    // Track the active segment for keyboard shortcuts
-                    activeSegmentEl = el;
-                } else {
-                    el.classList.remove('active');
-                }
-            });
+        // Click on card (not text) = seek and play
+        item.onclick = (e) => {
+          if (["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+          if (e.target.classList.contains("segment-text")) return; // Let text handle its own click
+          if (e.target.classList.contains("seg-speaker")) return; // Let speaker handle its own click
+          e.stopPropagation();
+          audio.currentTime = seg.start_time;
+          audio.play();
         };
-        
-        // --- EDITING LOGIC ---
-        
-        // Track active (playing) segment for keyboard shortcuts
-        let activeSegmentEl = null;
-        let allSpeakers = []; // All speakers from DB
-        let currentVideoSpeakers = []; // Speakers in current video
-        
-        // Toggle shortcuts panel
-        function toggleShortcuts() {
-            const list = document.getElementById('shortcut-list');
-            const btn = document.querySelector('#shortcuts-panel .toggle-btn');
-            list.classList.toggle('expanded');
-            btn.textContent = list.classList.contains('expanded') ? '▲' : '▼';
-        }
-        // Start with shortcuts visible
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('shortcut-list').classList.add('expanded');
-        });
-        
-        // Global keyboard handler
-        document.addEventListener('keydown', (e) => {
-            // Don't capture when in an input/textarea
-            if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
-            
-            // Space = play/pause
-            if (e.key === ' ' && e.target === document.body) {
-                e.preventDefault();
-                if (audio.paused) audio.play();
-                else audio.pause();
-            }
-            
-            // Enter on active (playing) segment = edit speaker
-            if (e.key === 'Enter' && activeSegmentEl) {
-                e.preventDefault();
-                editSpeaker(activeSegmentEl);
-            }
-        });
-        
-        function editSpeaker(segEl) {
-            const spkEl = segEl.querySelector('.seg-speaker');
-            if (!spkEl) return;
-            
-            // Strip any source icons from the display name
-            const currentName = spkEl.textContent.replace(/^[✓🤖]\s*/, '').trim();
-            const speakerLabel = segEl.dataset.speakerLabel || '';
-            
-            // Create autocomplete container
-            const container = document.createElement('div');
-            container.className = 'speaker-autocomplete';
-            container.onclick = (e) => e.stopPropagation();
-            
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.value = (currentName === "UNKNOWN" || currentName === speakerLabel) ? "" : currentName;
-            input.placeholder = `Speaker name...`;
-            
-            const dropdown = document.createElement('div');
-            dropdown.className = 'autocomplete-dropdown';
-            dropdown.style.display = 'none';
-            
-            container.appendChild(input);
-            container.appendChild(dropdown);
-            
-            const originalParent = spkEl.parentNode;
-            originalParent.replaceChild(container, spkEl);
-            audio.pause();
-            input.focus();
-            input.select();
-            
-            let selectedIndex = -1;
-            
-            // Build speaker suggestions
-            function getSuggestions(query) {
-                const q = query.toLowerCase();
-                const suggestions = [];
-                
-                // Current video speakers first
-                const currentMatches = currentVideoSpeakers
-                    .filter(s => s.toLowerCase().includes(q))
-                    .sort((a, b) => {
-                        // Exact start match first
-                        const aStarts = a.toLowerCase().startsWith(q);
-                        const bStarts = b.toLowerCase().startsWith(q);
-                        if (aStarts && !bStarts) return -1;
-                        if (!aStarts && bStarts) return 1;
-                        return a.localeCompare(b);
-                    });
-                
-                currentMatches.forEach(s => {
-                    suggestions.push({ name: s, isCurrentVideo: true });
-                });
-                
-                // All speakers (excluding ones already shown)
-                const otherMatches = allSpeakers
-                    .filter(s => s.toLowerCase().includes(q) && !currentVideoSpeakers.includes(s))
-                    .sort((a, b) => a.localeCompare(b));
-                
-                otherMatches.forEach(s => {
-                    suggestions.push({ name: s, isCurrentVideo: false });
-                });
-                
-                return suggestions;
-            }
-            
-            function renderDropdown() {
-                const suggestions = getSuggestions(input.value);
-                dropdown.innerHTML = '';
-                
-                if (suggestions.length === 0) {
-                    dropdown.style.display = 'none';
-                    return;
-                }
-                
-                let hasCurrentVideo = false;
-                let hasOther = false;
-                
-                suggestions.forEach((s, idx) => {
-                    // Section headers
-                    if (s.isCurrentVideo && !hasCurrentVideo) {
-                        const header = document.createElement('div');
-                        header.className = 'autocomplete-section';
-                        header.textContent = '📍 This Video';
-                        dropdown.appendChild(header);
-                        hasCurrentVideo = true;
-                    } else if (!s.isCurrentVideo && !hasOther) {
-                        const header = document.createElement('div');
-                        header.className = 'autocomplete-section';
-                        header.textContent = '🌐 All Speakers';
-                        dropdown.appendChild(header);
-                        hasOther = true;
-                    }
-                    
-                    const item = document.createElement('div');
-                    item.className = 'autocomplete-item' + (s.isCurrentVideo ? ' current-video' : '');
-                    if (idx === selectedIndex) item.classList.add('selected');
-                    item.textContent = s.name;
-                    item.onmousedown = (e) => {
-                        e.preventDefault();
-                        input.value = s.name;
-                        input.blur();
-                    };
-                    dropdown.appendChild(item);
-                });
-                
-                dropdown.style.display = 'block';
-            }
-            
-            input.oninput = () => {
-                selectedIndex = -1;
-                renderDropdown();
-            };
-            
-            input.onfocus = () => {
-                renderDropdown();
-            };
-            
-            input.onkeydown = (e) => {
-                const items = dropdown.querySelectorAll('.autocomplete-item');
-                
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
-                    renderDropdown();
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    selectedIndex = Math.max(selectedIndex - 1, -1);
-                    renderDropdown();
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (selectedIndex >= 0 && items[selectedIndex]) {
-                        input.value = items[selectedIndex].textContent;
-                    }
-                    input.blur();
-                } else if (e.key === 'Escape') {
-                    e.preventDefault();
-                    input.value = currentName;
-                    input.blur();
-                } else if (e.key === 'Tab' && items.length > 0) {
-                    e.preventDefault();
-                    const idx = selectedIndex >= 0 ? selectedIndex : 0;
-                    if (items[idx]) input.value = items[idx].textContent;
-                    input.blur();
-                }
-            };
-            
-            const cleanup = () => {
-                const newName = input.value.trim();
-                if (newName && newName !== currentName) {
-                    createSpeakerAssignment(segEl.dataset.id, newName);
-                }
-                originalParent.replaceChild(spkEl, container);
-            };
-            
-            input.onblur = () => {
-                // Small delay to allow click on dropdown
-                setTimeout(cleanup, 150);
-            };
-            
-            // Initial render
-            renderDropdown();
-        }
-        
-        // Legacy function kept for compatibility
-        async function relabelSegment(segId, newName) {
-            return createSpeakerAssignment(segId, newName);
-        }
-        
-        function editSplit(segEl) {
-            const textEl = segEl.querySelector('.segment-text');
-            
-            if (!textEl) {
-                alert("No text to edit in this segment.");
-                return;
-            }
-            
-            const currentText = textEl.textContent;
-            const segmentId = segEl.dataset.id;
-            
-            if (!segmentId) {
-                alert("No segment ID found. Cannot split this segment.");
-                return;
-            }
-            
-            const textarea = document.createElement('textarea');
-            textarea.value = currentText.trim();
-            textarea.style.width = '100%';
-            textarea.style.minHeight = '80px';
-            textarea.style.padding = '8px';
-            textarea.style.fontFamily = 'inherit';
-            textarea.style.fontSize = 'inherit';
-            textarea.style.border = '2px solid #2196f3';
-            textarea.style.borderRadius = '4px';
-            textarea.style.resize = 'vertical';
-            textarea.onclick = (e) => e.stopPropagation();
-            
-            // Add helper text
-            const helper = document.createElement('div');
-            helper.style.fontSize = '0.75em';
-            helper.style.color = '#666';
-            helper.style.marginTop = '4px';
-            helper.innerHTML = '<kbd>Cmd+Enter</kbd> to split at newlines • <kbd>Escape</kbd> to cancel';
-            
-            const parent = textEl.parentNode;
-            parent.replaceChild(textarea, textEl);
-            parent.appendChild(helper);
-            audio.pause();
-            textarea.focus();
-            
-            const cleanup = () => {
-                parent.replaceChild(textEl, textarea);
-                if (helper.parentNode) helper.remove();
-            };
-            
-            textarea.onkeydown = (e) => {
-                if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-                    e.preventDefault();
-                    
-                    const lines = textarea.value.split('\n').map(l => l.trim()).filter(l => l);
-                    
-                    if (lines.length > 1) {
-                        // Split the segment! Server will look up all the details.
-                        performSplit(segmentId, lines);
-                        cleanup();
-                    } else {
-                        // Just one line - no split needed
-                        console.log("Only one line, no split performed");
-                        cleanup();
-                    }
-                }
-                
-                if (e.key === 'Escape') {
-                    e.preventDefault();
-                    cleanup();
-                }
-            };
-            
-            textarea.onblur = (e) => {
-                // Small delay to allow Cmd+Enter to process first
-                setTimeout(() => {
-                    if (textarea.parentNode) cleanup();
-                }, 100);
-            };
-        }
-        
-        /**
-         * Split a diarization segment into multiple segments.
-         * 
-         * SIMPLIFIED API - just send:
-         * - segment_id: The segment to split
-         * - lines: Array of text lines (one per resulting segment)
-         * 
-         * Server looks up start_time, end_time, run_id from the segment.
-         * 
-         * FLOW:
-         * 1. User edits segment text and adds newlines
-         * 2. Press Cmd+Enter to split
-         * 3. Server creates SegmentSplit record (audit trail)
-         * 4. Original segment marked is_invalidated=true
-         * 5. New segments created with SPLIT_0, SPLIT_1, etc. labels
-         * 6. UI refreshes via InstantDB subscription
-         */
-        async function performSplit(segmentId, lines) {
-            if (!segmentId) {
-                alert("No segment ID - cannot split.");
-                return;
-            }
-            
-            if (lines.length < 2) {
-                alert("Need at least 2 lines to split. Add newlines to indicate split points.");
-                return;
-            }
-            
-            try {
-                const res = await fetch('/split_segment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        segment_id: segmentId,
-                        lines: lines
-                    })
-                });
-                
-                if (!res.ok) {
-                    const errText = await res.text();
-                    throw new Error(errText);
-                }
-                
-                const result = await res.json();
-                console.log("Split successful:", result);
-                // InstantDB subscription will automatically update the UI
-                
-            } catch (e) {
-                console.error("Split failed:", e);
-                alert("Failed to split segment: " + e.message);
-            }
-        }
-        
-        // New schema: Create speaker assignment instead of direct relabel
-        async function createSpeakerAssignment(segmentId, speakerName) {
-            try {
-                const res = await fetch('/assign_speaker', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        segment_id: segmentId,
-                        speaker_name: speakerName,
-                        source: 'user',
-                        assigned_by: 'ground_truth_ui'
-                    })
-                });
-                if (!res.ok) throw await res.text();
-                console.log("Speaker assignment created");
-                // InstantDB subscription will update UI
-            } catch (e) {
-                console.error("Speaker assignment failed:", e);
-                alert("Failed to assign speaker: " + e);
-            }
+
+        // Click on text = edit mode (for splitting)
+        const textEl = item.querySelector(".segment-text");
+        if (textEl) {
+          textEl.onclick = (e) => {
+            e.stopPropagation();
+            editSplit(item);
+          };
         }
 
+        // Click on speaker = edit speaker
+        const spkEl = item.querySelector(".seg-speaker");
+        if (spkEl && seg.id) {
+          spkEl.onclick = (e) => {
+            e.stopPropagation();
+            editSpeaker(item);
+          };
+        }
+
+        container.appendChild(item);
+      }
+
+      // --- KEYBOARD & ACTIONS ---
+
+      document.addEventListener("keydown", (e) => {
+        const tag = e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || e.target.isContentEditable)
+          return;
+
+        // Space: Toggle Play
+        if (e.code === "Space") {
+          e.preventDefault();
+          audio.paused ? audio.play() : audio.pause();
+          return;
+        }
+
+        // Navigation
+        if (
+          ["ArrowLeft", "ArrowUp", "ArrowRight", "ArrowDown"].includes(e.code)
+        ) {
+          e.preventDefault();
+          navigate(e.code === "ArrowLeft" || e.code === "ArrowUp" ? -1 : 1);
+          return;
+        }
+
+        // Enter: Edit Speaker (Diarization)
+        if (e.code === "Enter" && !e.metaKey && !e.ctrlKey) {
+          e.preventDefault();
+          const active = document.querySelector(".segment.active");
+          if (active && active.dataset.type === "diarization") {
+            editSpeaker(active);
+          }
+          return;
+        }
+
+        // Cmd+Enter: Split (Both)
+        if ((e.metaKey || e.ctrlKey) && e.code === "Enter") {
+          e.preventDefault();
+          const active = document.querySelector(".segment.active");
+          if (active) {
+            editSplit(active);
+          }
+          return;
+        }
+
+        // Delete / Backspace: Delete Segment (Diarization)
+        // Use Ctrl+Delete or Cmd+Backspace to avoid accidental deletions?
+        // User asked for "removing... incorrectly linked".
+        // Let's protect it slightly with Cmd/Ctrl or just confirm?
+        // Let's try Delete key directly, but maybe with confirm?
+        // "Backspace" is dangerous for text editing (handled by input check above).
+        // "Delete" (Fn+Backspace on Mac) is safer.
+        // Let's support both but with confirm.
+        if (
+          ["Delete", "Backspace"].includes(e.code) &&
+          !e.target.isContentEditable
+        ) {
+          // Double check input focus again just in case
+          if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName))
+            return;
+
+          const active = document.querySelector(".segment.active");
+          if (active && active.dataset.type === "diarization") {
+            e.preventDefault();
+            if (
+              confirm(
+                "Are you sure you want to DELETE this segment and its embedding?"
+              )
+            ) {
+              deleteSegment(active);
+            }
+          }
+        }
+      });
+
+      async function deleteSegment(segEl) {
+        try {
+          const res = await fetch("/delete_segment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              segment_id: segEl.dataset.id,
+            }),
+          });
+          if (!res.ok) throw await res.text();
+          // InstantDB updates automatically
+        } catch (e) {
+          alert("Failed to delete: " + e);
+        }
+      }
+
+      function navigate(dir) {
+        const allSegs = Array.from(document.querySelectorAll(".segment"));
+        if (!allSegs.length) return;
+
+        // Sort deterministically by start time, then by runId (to group columns if times are equal), then ID
+        allSegs.sort((a, b) => {
+          const ta = parseFloat(a.dataset.start);
+          const tb = parseFloat(b.dataset.start);
+          if (ta !== tb) return ta - tb;
+
+          // If times equal, sorting by DOM order might be safer for "visual" flow?
+          // But DOM order is Column A (all rows), Column B (all rows).
+          // So purely time-based sorting jumps between columns.
+          // If user wants to navigate "Down", they expect the next segment in THIS column?
+          // Or next chronological segment?
+          // Visual "Down" usually means next in column.
+          // Visual "Right" means next column?
+          // User said "Up/Left... Down/Right".
+          // Let's implement Time-Based for now as it's general.
+          return 0;
+          // Note: Sort is stable in modern JS, so DOM order preserved for equal times.
+        });
+
+        // Find ALL active segments (could be multiple if overlapping)
+        // But usually only one is "active" by auto-scroll?
+        // Actually auto-scroll makes multiple active if they overlap time.
+        // Let's find the FIRST active one in our sorted list.
+        let idx = allSegs.findIndex((el) => el.classList.contains("active"));
+
+        // If none active, find based on current audio time
+        if (idx === -1) {
+          const t = audio.currentTime;
+          // Find first segment starting after t? Or overlapping t?
+          idx = allSegs.findIndex((el) => {
+            const s = parseFloat(el.dataset.start);
+            const e = parseFloat(el.dataset.end);
+            return t >= s && t < e;
+          });
+
+          // If still not found (gap), find next start
+          if (idx === -1) {
+            idx = allSegs.findIndex((el) => parseFloat(el.dataset.start) > t);
+          }
+
+          if (idx === -1) idx = 0;
+        }
+
+        let newIdx = idx + dir;
+        // Clamp
+        if (newIdx < 0) newIdx = 0;
+        if (newIdx >= allSegs.length) newIdx = allSegs.length - 1;
+
+        const target = allSegs[newIdx];
+        if (target) {
+          console.log(
+            `Navigating to ${newIdx} (Time: ${target.dataset.start})`
+          );
+          target.scrollIntoView({ behavior: "smooth", block: "center" });
+          // We manually click to play/set active?
+          // navigate() implies moving selection?
+          // Or just seeking?
+          // User said "Navigate to previous segment and start playback".
+          audio.currentTime = parseFloat(target.dataset.start);
+          audio.play();
+        }
+      }
+
+      // Auto-scroll / Active Class
+      audio.ontimeupdate = () => {
+        const t = audio.currentTime;
+        activeSegmentEl = null; // Reset
+
+        document.querySelectorAll(".segment").forEach((el) => {
+          const s = parseFloat(el.dataset.start);
+          const e = parseFloat(el.dataset.end);
+
+          // Allow a small tolerance for 'active'
+          if (t >= s && t < e) {
+            if (!el.classList.contains("active")) {
+              el.classList.add("active");
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            // Track the active segment for keyboard shortcuts
+            activeSegmentEl = el;
+          } else {
+            el.classList.remove("active");
+          }
+        });
+      };
+
+      // --- EDITING LOGIC ---
+
+      // Track active (playing) segment for keyboard shortcuts
+      let activeSegmentEl = null;
+      let allSpeakers = []; // All speakers from DB
+      let currentVideoSpeakers = []; // Speakers in current video
+
+      // Toggle shortcuts panel
+      function toggleShortcuts() {
+        const list = document.getElementById("shortcut-list");
+        const btn = document.querySelector("#shortcuts-panel .toggle-btn");
+        list.classList.toggle("expanded");
+        btn.textContent = list.classList.contains("expanded") ? "▲" : "▼";
+      }
+      // Start with shortcuts visible
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("shortcut-list").classList.add("expanded");
+      });
+
+      // Global keyboard handler
+      document.addEventListener("keydown", (e) => {
+        // Don't capture when in an input/textarea
+        if (["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
+
+        // Space = play/pause
+        if (e.key === " " && e.target === document.body) {
+          e.preventDefault();
+          if (audio.paused) audio.play();
+          else audio.pause();
+        }
+
+        // Enter on active (playing) segment = edit speaker
+        if (e.key === "Enter" && activeSegmentEl) {
+          e.preventDefault();
+          editSpeaker(activeSegmentEl);
+        }
+      });
+
+      function editSpeaker(segEl) {
+        const spkEl = segEl.querySelector(".seg-speaker");
+        if (!spkEl) return;
+
+        // Strip any source icons from the display name
+        const currentName = spkEl.textContent.replace(/^[✓🤖]\s*/, "").trim();
+        const speakerLabel = segEl.dataset.speakerLabel || "";
+
+        // Create autocomplete container
+        const container = document.createElement("div");
+        container.className = "speaker-autocomplete";
+        container.onclick = (e) => e.stopPropagation();
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value =
+          currentName === "UNKNOWN" || currentName === speakerLabel
+            ? ""
+            : currentName;
+        input.placeholder = `Speaker name...`;
+
+        const dropdown = document.createElement("div");
+        dropdown.className = "autocomplete-dropdown";
+        dropdown.style.display = "none";
+
+        container.appendChild(input);
+        container.appendChild(dropdown);
+
+        const originalParent = spkEl.parentNode;
+        originalParent.replaceChild(container, spkEl);
+        audio.pause();
+        input.focus();
+        input.select();
+
+        let selectedIndex = -1;
+
+        // Build speaker suggestions
+        function getSuggestions(query) {
+          const q = query.toLowerCase();
+          const suggestions = [];
+
+          // Current video speakers first
+          const currentMatches = currentVideoSpeakers
+            .filter((s) => s.toLowerCase().includes(q))
+            .sort((a, b) => {
+              // Exact start match first
+              const aStarts = a.toLowerCase().startsWith(q);
+              const bStarts = b.toLowerCase().startsWith(q);
+              if (aStarts && !bStarts) return -1;
+              if (!aStarts && bStarts) return 1;
+              return a.localeCompare(b);
+            });
+
+          currentMatches.forEach((s) => {
+            suggestions.push({ name: s, isCurrentVideo: true });
+          });
+
+          // All speakers (excluding ones already shown)
+          const otherMatches = allSpeakers
+            .filter(
+              (s) =>
+                s.toLowerCase().includes(q) && !currentVideoSpeakers.includes(s)
+            )
+            .sort((a, b) => a.localeCompare(b));
+
+          otherMatches.forEach((s) => {
+            suggestions.push({ name: s, isCurrentVideo: false });
+          });
+
+          return suggestions;
+        }
+
+        function renderDropdown() {
+          const suggestions = getSuggestions(input.value);
+          dropdown.innerHTML = "";
+
+          if (suggestions.length === 0) {
+            dropdown.style.display = "none";
+            return;
+          }
+
+          let hasCurrentVideo = false;
+          let hasOther = false;
+
+          suggestions.forEach((s, idx) => {
+            // Section headers
+            if (s.isCurrentVideo && !hasCurrentVideo) {
+              const header = document.createElement("div");
+              header.className = "autocomplete-section";
+              header.textContent = "📍 This Video";
+              dropdown.appendChild(header);
+              hasCurrentVideo = true;
+            } else if (!s.isCurrentVideo && !hasOther) {
+              const header = document.createElement("div");
+              header.className = "autocomplete-section";
+              header.textContent = "🌐 All Speakers";
+              dropdown.appendChild(header);
+              hasOther = true;
+            }
+
+            const item = document.createElement("div");
+            item.className =
+              "autocomplete-item" + (s.isCurrentVideo ? " current-video" : "");
+            if (idx === selectedIndex) item.classList.add("selected");
+            item.textContent = s.name;
+            item.onmousedown = (e) => {
+              e.preventDefault();
+              input.value = s.name;
+              input.blur();
+            };
+            dropdown.appendChild(item);
+          });
+
+          dropdown.style.display = "block";
+        }
+
+        input.oninput = () => {
+          selectedIndex = -1;
+          renderDropdown();
+        };
+
+        input.onfocus = () => {
+          renderDropdown();
+        };
+
+        input.onkeydown = (e) => {
+          const items = dropdown.querySelectorAll(".autocomplete-item");
+
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+            renderDropdown();
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            selectedIndex = Math.max(selectedIndex - 1, -1);
+            renderDropdown();
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            if (selectedIndex >= 0 && items[selectedIndex]) {
+              input.value = items[selectedIndex].textContent;
+            }
+            input.blur();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            input.value = currentName;
+            input.blur();
+          } else if (e.key === "Tab" && items.length > 0) {
+            e.preventDefault();
+            const idx = selectedIndex >= 0 ? selectedIndex : 0;
+            if (items[idx]) input.value = items[idx].textContent;
+            input.blur();
+          }
+        };
+
+        const cleanup = () => {
+          const newName = input.value.trim();
+          if (newName && newName !== currentName) {
+            createSpeakerAssignment(segEl.dataset.id, newName);
+          }
+          originalParent.replaceChild(spkEl, container);
+        };
+
+        input.onblur = () => {
+          // Small delay to allow click on dropdown
+          setTimeout(cleanup, 150);
+        };
+
+        // Initial render
+        renderDropdown();
+      }
+
+      // Legacy function kept for compatibility
+      async function relabelSegment(segId, newName) {
+        return createSpeakerAssignment(segId, newName);
+      }
+
+      function editSplit(segEl) {
+        const textEl = segEl.querySelector(".segment-text");
+
+        if (!textEl) {
+          alert("No text to edit in this segment.");
+          return;
+        }
+
+        const currentText = textEl.textContent;
+        const segmentId = segEl.dataset.id;
+
+        if (!segmentId) {
+          alert("No segment ID found. Cannot split this segment.");
+          return;
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = currentText.trim();
+        textarea.style.width = "100%";
+        textarea.style.minHeight = "80px";
+        textarea.style.padding = "8px";
+        textarea.style.fontFamily = "inherit";
+        textarea.style.fontSize = "inherit";
+        textarea.style.border = "2px solid #2196f3";
+        textarea.style.borderRadius = "4px";
+        textarea.style.resize = "vertical";
+        textarea.onclick = (e) => e.stopPropagation();
+
+        // Add helper text
+        const helper = document.createElement("div");
+        helper.style.fontSize = "0.75em";
+        helper.style.color = "#666";
+        helper.style.marginTop = "4px";
+        helper.innerHTML =
+          "<kbd>Cmd+Enter</kbd> to split at newlines • <kbd>Escape</kbd> to cancel";
+
+        const parent = textEl.parentNode;
+        parent.replaceChild(textarea, textEl);
+        parent.appendChild(helper);
+        audio.pause();
+        textarea.focus();
+
+        const cleanup = () => {
+          parent.replaceChild(textEl, textarea);
+          if (helper.parentNode) helper.remove();
+        };
+
+        textarea.onkeydown = (e) => {
+          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+            e.preventDefault();
+
+            const lines = textarea.value
+              .split("\n")
+              .map((l) => l.trim())
+              .filter((l) => l);
+
+            if (lines.length > 1) {
+              // Split the segment! Server will look up all the details.
+              performSplit(segmentId, lines);
+              cleanup();
+            } else {
+              // Just one line - no split needed
+              console.log("Only one line, no split performed");
+              cleanup();
+            }
+          }
+
+          if (e.key === "Escape") {
+            e.preventDefault();
+            cleanup();
+          }
+        };
+
+        textarea.onblur = (e) => {
+          // Small delay to allow Cmd+Enter to process first
+          setTimeout(() => {
+            if (textarea.parentNode) cleanup();
+          }, 100);
+        };
+      }
+
+      /**
+       * Split a diarization segment into multiple segments.
+       *
+       * SIMPLIFIED API - just send:
+       * - segment_id: The segment to split
+       * - lines: Array of text lines (one per resulting segment)
+       *
+       * Server looks up start_time, end_time, run_id from the segment.
+       *
+       * FLOW:
+       * 1. User edits segment text and adds newlines
+       * 2. Press Cmd+Enter to split
+       * 3. Server creates SegmentSplit record (audit trail)
+       * 4. Original segment marked is_invalidated=true
+       * 5. New segments created with SPLIT_0, SPLIT_1, etc. labels
+       * 6. UI refreshes via InstantDB subscription
+       */
+      async function performSplit(segmentId, lines) {
+        if (!segmentId) {
+          alert("No segment ID - cannot split.");
+          return;
+        }
+
+        if (lines.length < 2) {
+          alert(
+            "Need at least 2 lines to split. Add newlines to indicate split points."
+          );
+          return;
+        }
+
+        try {
+          const res = await fetch("/split_segment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              segment_id: segmentId,
+              lines: lines,
+            }),
+          });
+
+          if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(errText);
+          }
+
+          const result = await res.json();
+          console.log("Split successful:", result);
+          // InstantDB subscription will automatically update the UI
+        } catch (e) {
+          console.error("Split failed:", e);
+          alert("Failed to split segment: " + e.message);
+        }
+      }
+
+      // New schema: Create speaker assignment instead of direct relabel
+      async function createSpeakerAssignment(segmentId, speakerName) {
+        try {
+          const res = await fetch("/assign_speaker", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              segment_id: segmentId,
+              speaker_name: speakerName,
+              source: "user",
+              assigned_by: "ground_truth_ui",
+            }),
+          });
+          if (!res.ok) throw await res.text();
+          console.log("Speaker assignment created");
+          // InstantDB subscription will update UI
+        } catch (e) {
+          console.error("Speaker assignment failed:", e);
+          alert("Failed to assign speaker: " + e);
+        }
+      }
     </script>
-</body>
+  </body>
 </html>
