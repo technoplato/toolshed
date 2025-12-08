@@ -5,6 +5,7 @@
 ### Core Principles
 
 **1. Deferred Side Effects Pattern** (for dry-run support):
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  WORKFLOW EXECUTION PATTERN                                 │
@@ -31,6 +32,7 @@
 ```
 
 **2. Intelligent Caching**:
+
 - Hash: `sha256(config + clip_path + start_time + end_time)`
 - Cache location: `data/cache/identify/{hash}.json`
 - Contains: embedding extraction results, KNN results
@@ -39,6 +41,7 @@
 ### Architecture Decision: TypeScript Server for InstantDB
 
 **Pattern:**
+
 - Python handles: Embedding extraction (pyannote), KNN search (PostgreSQL)
 - TypeScript server handles: All InstantDB operations
 - Communication: Python calls TypeScript server via HTTP
@@ -62,13 +65,13 @@
 
 ### Files to Create/Modify
 
-| File | Purpose |
-|------|---------|
+| File                                   | Purpose                                              |
+| -------------------------------------- | ---------------------------------------------------- |
 | `scripts/one_off/identify_speakers.py` | **Main script** - Python orchestrates identification |
-| `ingestion/instant_server.ts` | **NEW** - TypeScript server for InstantDB ops |
-| `ingestion/instant_client.py` | **NEW** - Python client to call TS server |
-| `audio_ingestion.py` | Update docstring with workflow pattern |
-| `packages/schema/instant.schema.ts` | Update `note` field to JSON type |
+| `ingestion/instant_server.ts`          | **NEW** - TypeScript server for InstantDB ops        |
+| `ingestion/instant_client.py`          | **NEW** - Python client to call TS server            |
+| `audio_ingestion.py`                   | Update docstring with workflow pattern               |
+| `packages/schema/instant.schema.ts`    | Update `note` field to JSON type                     |
 
 ### CLI Design
 
@@ -151,18 +154,18 @@ The `speakerAssignments.note` field will store identification metadata as JSON:
   "method": "knn_identify",
   "script_version": "v1",
   "timestamp": "2025-12-07T...",
-  
+
   // KNN results
   "knn_distance": 0.42,
   "top_matches": [
     {"speaker": "Shane Gillis", "distance": 0.42, "count": 8},
     {"speaker": "Matt McCusker", "distance": 0.58, "count": 2}
   ],
-  
+
   // Config used
   "threshold": 0.5,
   "top_k": 10,
-  
+
   // Cache info
   "cache_hit": true,
   "cache_key": "abc123..."
@@ -174,15 +177,18 @@ The `speakerAssignments.note` field will store identification metadata as JSON:
 **Decision: YES - Auto-invalidate when new embeddings added**
 
 Pros:
+
 - Ensures identification always uses latest speaker data
 - Prevents stale results if user adds new labeled segments
 - Simple to implement (track embedding count or last-modified)
 
 Cons:
+
 - May cause unnecessary recomputation
 - Could be slow if frequently adding embeddings
 
 **Implementation:**
+
 - Store `embedding_count` and `last_embedding_id` in cache metadata
 - On cache read, quick check: `SELECT COUNT(*), MAX(id) FROM speaker_embeddings`
 - If different, invalidate and recompute
@@ -193,4 +199,3 @@ Cons:
 2. ✅ **Architecture:** TypeScript server for InstantDB, Python for everything else
 3. ✅ **Cache invalidation:** Yes, auto-invalidate on new embeddings
 4. ✅ **Identification Run entity:** No - use `note` JSON field instead
-

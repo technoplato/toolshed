@@ -751,10 +751,10 @@ const schema = i.schema({
 
       /**
        * Metadata about this assignment stored as JSON.
-       * 
+       *
        * For user corrections:
        *   { "reason": "Clearly Matt's voice, not Joe's" }
-       * 
+       *
        * For auto-identification:
        *   {
        *     "method": "knn_identify",
@@ -1003,7 +1003,11 @@ const schema = i.schema({
      */
     transcriptionRunConfig: {
       forward: { on: "transcriptionRuns", has: "one", label: "config" },
-      reverse: { on: "transcriptionConfigs", has: "many", label: "transcriptionRuns" },
+      reverse: {
+        on: "transcriptionConfigs",
+        has: "many",
+        label: "transcriptionRuns",
+      },
     },
 
     /**
@@ -1014,7 +1018,11 @@ const schema = i.schema({
      */
     diarizationRunConfig: {
       forward: { on: "diarizationRuns", has: "one", label: "config" },
-      reverse: { on: "diarizationConfigs", has: "many", label: "diarizationRuns" },
+      reverse: {
+        on: "diarizationConfigs",
+        has: "many",
+        label: "diarizationRuns",
+      },
     },
 
     // =========================================================================
@@ -1047,8 +1055,16 @@ const schema = i.schema({
      *   ]
      */
     diarizationRunSegments: {
-      forward: { on: "diarizationRuns", has: "many", label: "diarizationSegments" },
-      reverse: { on: "diarizationSegments", has: "one", label: "diarizationRun" },
+      forward: {
+        on: "diarizationRuns",
+        has: "many",
+        label: "diarizationSegments",
+      },
+      reverse: {
+        on: "diarizationSegments",
+        has: "one",
+        label: "diarizationRun",
+      },
     },
 
     // =========================================================================
@@ -1067,8 +1083,16 @@ const schema = i.schema({
      *   UI displays: "Matt McCusker" (most recent)
      */
     diarizationSegmentSpeakerAssignments: {
-      forward: { on: "diarizationSegments", has: "many", label: "speakerAssignments" },
-      reverse: { on: "speakerAssignments", has: "one", label: "diarizationSegment" },
+      forward: {
+        on: "diarizationSegments",
+        has: "many",
+        label: "speakerAssignments",
+      },
+      reverse: {
+        on: "speakerAssignments",
+        has: "one",
+        label: "diarizationSegment",
+      },
     },
 
     /**
@@ -1108,7 +1132,11 @@ const schema = i.schema({
      */
     segmentSplitResultingSegments: {
       forward: { on: "segmentSplits", has: "many", label: "resultingSegments" },
-      reverse: { on: "diarizationSegments", has: "one", label: "createdFromSplit" },
+      reverse: {
+        on: "diarizationSegments",
+        has: "one",
+        label: "createdFromSplit",
+      },
     },
 
     // =========================================================================

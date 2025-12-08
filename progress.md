@@ -26,6 +26,21 @@
 
 ---
 
+### December 7th, 2025 at 9:52:44 p.m.
+
+✨ Complete speaker identification workflow
+
+[Commit](https://github.com/technoplato/toolshed/commit/63d6c07)
+
+- NEW: instant_server.ts - TypeScript server for InstantDB
+- NEW: instant_client.py - Python client for TS server
+- NEW: identify_speakers.py - Main identification workflow
+- NEW: pyannote_extractor.py - Embedding extraction module
+- Dry-run and execute modes with intelligent caching
+- Tested: 18/21 segments identified correctly (86% accuracy)
+
+
+
 ### December 7th, 2025 at 3:29:38 p.m.
 
 ✨ Ground truth data ingested into InstantDB
