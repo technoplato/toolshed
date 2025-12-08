@@ -505,12 +505,11 @@ const server = Bun.serve({
         }
 
         if (videoId) {
-          // Query through video
+          // Query through video - get all diarization runs with segments
           const result = await db.query({
             videos: {
               $: { where: { id: videoId } },
               diarizationRuns: {
-                $: { where: { is_preferred: true } },
                 diarizationSegments: {
                   speakerAssignments: {
                     speaker: {},
@@ -528,7 +527,15 @@ const server = Bun.serve({
             );
           }
 
-          let segments = video.diarizationRuns[0]?.diarizationSegments || [];
+          // Select the run with the most segments
+          const runs = video.diarizationRuns || [];
+          const bestRun = runs
+            .filter((r: any) => r.diarizationSegments && r.diarizationSegments.length > 0)
+            .sort((a: any, b: any) => 
+              (b.diarizationSegments?.length || 0) - (a.diarizationSegments?.length || 0)
+            )[0];
+          
+          let segments = bestRun?.diarizationSegments || [];
 
           if (startTime !== null) {
             segments = segments.filter(
@@ -547,7 +554,7 @@ const server = Bun.serve({
             {
               segments,
               video_id: video.id,
-              run_id: video.diarizationRuns[0]?.id,
+              run_id: bestRun?.id,
             },
             { headers }
           );
@@ -566,7 +573,8 @@ const server = Bun.serve({
         const body = await req.json();
         const assignments = body.assignments as Array<{
           segment_id: string;
-          speaker_id: string;
+          speaker_id?: string;
+          speaker_name?: string;  // Alternative to speaker_id - will lookup/create
           source: string;
           confidence: number;
           note: any;
@@ -580,22 +588,63 @@ const server = Bun.serve({
           );
         }
 
-        const transactions = assignments.map((a) => {
+        // Build transactions, finding/creating speakers by name if needed
+        const transactions: any[] = [];
+        const speakerIdCache: Record<string, string> = {};
+        
+        for (const a of assignments) {
+          let speakerId = a.speaker_id;
+          
+          // If no speaker_id but we have speaker_name, find or create speaker
+          if (!speakerId && a.speaker_name) {
+            // Check cache first
+            if (speakerIdCache[a.speaker_name]) {
+              speakerId = speakerIdCache[a.speaker_name];
+            } else {
+              // Query for existing speaker by name
+              const existing = await db.query({
+                speakers: { $: { where: { name: a.speaker_name } } }
+              });
+              
+              if (existing.speakers && existing.speakers.length > 0) {
+                speakerId = existing.speakers[0].id;
+              } else {
+                // Create new speaker
+                speakerId = id();
+                transactions.push(
+                  tx.speakers[speakerId].update({
+                    name: a.speaker_name,
+                    is_human: true,
+                    ingested_at: now(),
+                  })
+                );
+              }
+              speakerIdCache[a.speaker_name] = speakerId;
+            }
+          }
+          
+          if (!speakerId) {
+            console.log(`Skipping assignment - no speaker_id or speaker_name for segment ${a.segment_id}`);
+            continue;
+          }
+          
           const assignmentId = id();
           const noteValue =
             typeof a.note === "object" ? JSON.stringify(a.note) : a.note;
 
-          return tx.speakerAssignments[assignmentId]
-            .update({
-              source: a.source,
-              confidence: a.confidence,
-              note: noteValue,
-              assigned_by: a.assigned_by,
-              assigned_at: now(),
-            })
-            .link({ diarizationSegment: a.segment_id })
-            .link({ speaker: a.speaker_id });
-        });
+          transactions.push(
+            tx.speakerAssignments[assignmentId]
+              .update({
+                source: a.source,
+                confidence: a.confidence,
+                note: noteValue,
+                assigned_by: a.assigned_by,
+                assigned_at: now(),
+              })
+              .link({ diarizationSegment: a.segment_id })
+              .link({ speaker: speakerId })
+          );
+        }
 
         const result = await db.transact(transactions);
         return Response.json(

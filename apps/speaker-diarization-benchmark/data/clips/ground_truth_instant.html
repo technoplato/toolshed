@@ -598,7 +598,61 @@
         const dInfo = diarizationRun
           ? diarizationRun.workflow || "unknown"
           : "none";
-        col.innerHTML = `<div class="col-header">Transcript (${tInfo}) + Diarization (${dInfo})</div>`;
+        
+        // Build config info panel
+        const tConfig = transcriptionRun?.config?.[0] || {};
+        const dConfig = diarizationRun?.config?.[0] || {};
+        const segments = diarizationRun?.diarizationSegments || [];
+        const words = transcriptionRun?.words || [];
+        
+        // Calculate segment stats
+        const segDurations = segments
+          .filter(s => !s.is_invalidated && s.start_time != null && s.end_time != null)
+          .map(s => s.end_time - s.start_time);
+        const avgDuration = segDurations.length > 0 
+          ? (segDurations.reduce((a,b) => a+b, 0) / segDurations.length).toFixed(1) 
+          : 0;
+        const maxDuration = segDurations.length > 0 ? Math.max(...segDurations).toFixed(1) : 0;
+        const longSegments = segDurations.filter(d => d > 15).length;
+        
+        // Count speaker assignments
+        const withAssignment = segments.filter(s => s.speakerAssignments?.length > 0).length;
+        const uniqueSpeakers = new Set(segments.map(s => s.speaker_label)).size;
+        
+        col.innerHTML = `
+          <div class="col-header">Transcript (${tInfo}) + Diarization (${dInfo})</div>
+          <div style="background:#f5f5f5; padding:10px; margin:10px 0; border-radius:4px; font-size:0.85em;">
+            <div style="display:flex; gap:20px; flex-wrap:wrap;">
+              <div style="flex:1; min-width:200px;">
+                <strong>📝 Transcription</strong>
+                <div>Tool: ${transcriptionRun?.tool_version || 'N/A'}</div>
+                <div>Duration: ${transcriptionRun?.input_duration_seconds || 'N/A'}s</div>
+                <div>Words: ${words.length}</div>
+                <div>Model: ${tConfig.model || 'whisper-large-v3-turbo'}</div>
+              </div>
+              <div style="flex:1; min-width:200px;">
+                <strong>🎙️ Diarization</strong>
+                <div>Workflow: ${diarizationRun?.workflow || 'N/A'}</div>
+                <div>Duration: ${diarizationRun?.input_duration_seconds || 'N/A'}s</div>
+                <div>Speakers: ${diarizationRun?.num_speakers_detected || uniqueSpeakers}</div>
+                <div>Embedding: ${dConfig.embedding_model || 'pyannote/wespeaker'}</div>
+              </div>
+              <div style="flex:1; min-width:200px;">
+                <strong>📊 Segment Stats</strong>
+                <div>Total: ${segments.filter(s => !s.is_invalidated).length} segments</div>
+                <div>Avg duration: ${avgDuration}s</div>
+                <div style="color:${maxDuration > 20 ? '#d32f2f' : 'inherit'}">Max duration: ${maxDuration}s ${maxDuration > 20 ? '⚠️' : ''}</div>
+                <div style="color:${longSegments > 0 ? '#f57c00' : 'inherit'}">Long (>15s): ${longSegments} ${longSegments > 0 ? '⚠️' : ''}</div>
+              </div>
+              <div style="flex:1; min-width:200px;">
+                <strong>👤 Speaker ID</strong>
+                <div>Assigned: ${withAssignment}/${segments.filter(s => !s.is_invalidated).length}</div>
+                <div>Threshold: ${dConfig.identification_threshold || '0.5 (default)'}</div>
+                <div>Clustering: ${dConfig.clustering_method || 'AgglomerativeClustering'}</div>
+              </div>
+            </div>
+          </div>
+        `;
 
         const colContent = document.createElement("div");
         colContent.className = "col-content";

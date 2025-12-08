@@ -173,7 +173,7 @@ def run_identify(config: IdentifyConfig) -> None:
     
     # Initialize clients
     instant_client = InstantClient()
-    pg_dsn = os.getenv("POSTGRES_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
+    pg_dsn = os.getenv("SPEAKER_DB_DSN") or os.getenv("POSTGRES_DSN") or "postgresql://postgres:postgres@localhost:5433/postgres"
     pg_client = PgVectorClient(pg_dsn)
     
     # Get audio path if not provided

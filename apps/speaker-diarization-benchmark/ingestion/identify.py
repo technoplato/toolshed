@@ -477,7 +477,8 @@ def print_plan(plan: IdentificationPlan) -> None:
         if r.status == "identified":
             print(f"   ✅ [{time_str}] {r.original_label} → {r.identified_speaker} (dist: {r.distance:.3f})")
         elif r.status == "unknown":
-            print(f"   ❓ [{time_str}] {r.original_label} → UNKNOWN (best dist: {r.distance:.3f if r.distance else 'N/A'})")
+            dist_str = f"{r.distance:.3f}" if r.distance is not None else "N/A"
+            print(f"   ❓ [{time_str}] {r.original_label} → UNKNOWN (best dist: {dist_str})")
         elif r.status == "already_assigned":
             print(f"   ⏭️  [{time_str}] {r.original_label} → {r.identified_speaker} (already assigned)")
         elif r.status == "skipped":
@@ -494,8 +495,8 @@ def execute_plan(
     """Execute the identification plan - save to InstantDB."""
     print("\n🚀 Executing identification plan...")
     
-    # Filter to only identified results
-    to_save = [r for r in plan.results if r.status == "identified" and r.speaker_id]
+    # Filter to only identified results (use speaker name if ID not available)
+    to_save = [r for r in plan.results if r.status == "identified" and (r.speaker_id or r.identified_speaker)]
     
     if not to_save:
         print("   No identifications to save.")
@@ -518,7 +519,8 @@ def execute_plan(
         
         assignments.append({
             "segment_id": r.segment_id,
-            "speaker_id": r.speaker_id,
+            "speaker_id": r.speaker_id,  # May be None - server will lookup by name
+            "speaker_name": r.identified_speaker,  # Speaker name for lookup
             "source": "auto_identify",
             "confidence": 1.0 - (r.distance or 0.5),  # Convert distance to confidence
             "note": note_data,  # Will be serialized by the server if needed
