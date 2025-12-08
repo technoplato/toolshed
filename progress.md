@@ -30,7 +30,7 @@
 
 ✨ Complete speaker identification workflow
 
-[Commit](https://github.com/technoplato/toolshed/commit/63d6c07)
+[Commit](https://github.com/technoplato/toolshed/commit/e28aaee)
 
 - NEW: instant_server.ts - TypeScript server for InstantDB
 - NEW: instant_client.py - Python client for TS server
