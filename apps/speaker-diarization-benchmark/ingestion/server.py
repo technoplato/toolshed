@@ -142,6 +142,79 @@ def make_handler_class(config: ServerConfig):
         print("Warning: POSTGRES_DSN not set. Embeddings will not be saved to Vector DB.")
 
     class InstantDBHandler(http.server.SimpleHTTPRequestHandler):
+        def do_GET(self):
+            """Handle GET requests with support for HTTP Range requests (needed for audio scrubbing)."""
+            # Check if this is a range request for an audio file
+            if self.headers.get('Range') and self.path.endswith(('.wav', '.mp3', '.m4a', '.ogg', '.flac')):
+                self.handle_range_request()
+            else:
+                super().do_GET()
+        
+        def handle_range_request(self):
+            """Handle HTTP Range requests for audio seeking/scrubbing."""
+            try:
+                # Translate path to file path
+                path = self.translate_path(self.path)
+                
+                if not os.path.isfile(path):
+                    self.send_error(404, "File not found")
+                    return
+                
+                file_size = os.path.getsize(path)
+                range_header = self.headers.get('Range')
+                
+                # Parse Range header: "bytes=start-end"
+                if range_header.startswith('bytes='):
+                    range_spec = range_header[6:]
+                    
+                    if '-' in range_spec:
+                        start_str, end_str = range_spec.split('-', 1)
+                        start = int(start_str) if start_str else 0
+                        end = int(end_str) if end_str else file_size - 1
+                    else:
+                        start = int(range_spec)
+                        end = file_size - 1
+                    
+                    # Clamp to valid range
+                    start = max(0, min(start, file_size - 1))
+                    end = max(start, min(end, file_size - 1))
+                    content_length = end - start + 1
+                    
+                    # Send 206 Partial Content
+                    self.send_response(206)
+                    self.send_header('Content-Type', self.guess_type(path))
+                    self.send_header('Content-Length', content_length)
+                    self.send_header('Content-Range', f'bytes {start}-{end}/{file_size}')
+                    self.send_header('Accept-Ranges', 'bytes')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    
+                    # Send the requested byte range
+                    with open(path, 'rb') as f:
+                        f.seek(start)
+                        self.wfile.write(f.read(content_length))
+                else:
+                    # Invalid range format, fall back to normal GET
+                    super().do_GET()
+                    
+            except BrokenPipeError:
+                # Normal when client closes connection during seek - ignore
+                pass
+            except ConnectionResetError:
+                # Normal when client resets connection - ignore
+                pass
+            except Exception as e:
+                print(f"Range request error: {e}")
+                try:
+                    self.send_error(500, str(e))
+                except:
+                    pass
+        
+        def end_headers(self):
+            """Add headers that enable range requests."""
+            self.send_header('Accept-Ranges', 'bytes')
+            super().end_headers()
+        
         def do_POST(self):
             if self.path == '/split_segment':
                 self.handle_split_segment()

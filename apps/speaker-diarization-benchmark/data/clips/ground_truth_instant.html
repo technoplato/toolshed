@@ -715,8 +715,12 @@
           if (e.target.classList.contains("segment-text")) return; // Let text handle its own click
           if (e.target.classList.contains("seg-speaker")) return; // Let speaker handle its own click
           e.stopPropagation();
-          audio.currentTime = seg.start_time;
-          audio.play();
+          
+          // Use dataset.start which is always set, fallback to seg.start_time
+          const startTime = parseFloat(item.dataset.start) || seg.start_time || 0;
+          console.log(`Seeking to ${startTime}s (from dataset: ${item.dataset.start})`);
+          audio.currentTime = startTime;
+          audio.play().catch(err => console.log("Autoplay blocked:", err));
         };
 
         // Click on text = edit mode (for splitting)
@@ -734,6 +738,19 @@
           spkEl.onclick = (e) => {
             e.stopPropagation();
             editSpeaker(item);
+          };
+        }
+
+        // Click on timestamp = seek and play
+        const timestampEl = item.querySelector(".timestamp");
+        if (timestampEl) {
+          timestampEl.style.cursor = "pointer";
+          timestampEl.onclick = (e) => {
+            e.stopPropagation();
+            const startTime = parseFloat(item.dataset.start) || 0;
+            console.log(`Timestamp clicked - seeking to ${startTime}s`);
+            audio.currentTime = startTime;
+            audio.play().catch(err => console.log("Autoplay blocked:", err));
           };
         }
 
@@ -763,11 +780,11 @@
           return;
         }
 
-        // Enter: Edit Speaker (Diarization)
+        // Enter: Edit Speaker (any segment type)
         if (e.code === "Enter" && !e.metaKey && !e.ctrlKey) {
           e.preventDefault();
-          const active = document.querySelector(".segment.active");
-          if (active && active.dataset.type === "diarization") {
+          const active = document.querySelector(".segment.active") || activeSegmentEl;
+          if (active) {
             editSpeaker(active);
           }
           return;
@@ -938,24 +955,9 @@
         document.getElementById("shortcut-list").classList.add("expanded");
       });
 
-      // Global keyboard handler
-      document.addEventListener("keydown", (e) => {
-        // Don't capture when in an input/textarea
-        if (["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
-
-        // Space = play/pause
-        if (e.key === " " && e.target === document.body) {
-          e.preventDefault();
-          if (audio.paused) audio.play();
-          else audio.pause();
-        }
-
-        // Enter on active (playing) segment = edit speaker
-        if (e.key === "Enter" && activeSegmentEl) {
-          e.preventDefault();
-          editSpeaker(activeSegmentEl);
-        }
-      });
+      // NOTE: Main keyboard handler is at line ~762
+      // This second handler was causing conflicts - removed
+      // All keyboard shortcuts now handled in the first handler
 
       function editSpeaker(segEl) {
         const spkEl = segEl.querySelector(".seg-speaker");

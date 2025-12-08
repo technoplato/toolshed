@@ -32,7 +32,7 @@ HOW:
   - --end-time: End time in seconds (default: full file)
   - --dry-run: Show what would happen without executing
   - --verbose: Enable verbose logging
-
+  
   [Outputs]
   - Saves results to InstantDB (via TypeScript server)
   - Caches transcriptions in data/cache/transcriptions
@@ -546,7 +546,7 @@ def run_ingest(config: IngestConfig) -> None:
         print(f"\n   To save, run with --yes:")
         print(f"   uv run audio_ingestion.py ingest \"{config.source}\" --start-time {config.start_time} --end-time {config.end_time or 'full'} --yes")
         return
-    
+        
     # Ask for confirmation (unless --yes is passed)
     if not config.yes:
         try:
@@ -569,14 +569,88 @@ def run_ingest(config: IngestConfig) -> None:
         instant_client = InstantClient()
     
     try:
-        # Save video
-        result = instant_client.transact([
-            ["update", "videos", video_data]
-        ])
-        logger.info(f"   ✅ Video saved: {video_id}")
+        # Prepare metrics
+        trans_metrics = transcription_metrics.to_dict() if hasattr(transcription_metrics, 'to_dict') else {}
+        diar_metrics = diarization_metrics.to_dict() if hasattr(diarization_metrics, 'to_dict') else {}
+        
+        # Save video + runs with metrics in one call
+        # video_id here is the source ID (e.g., YouTube ID), InstantDB generates its own UUIDs
+        result = instant_client.save_ingestion_runs(
+            source_id=video_id,  # e.g., "jAlKYYr1bpY" - stored as attribute
+            video_title=config.title or audio_path.stem,
+            video_filepath=str(audio_path.resolve()),
+            video_url=config.source if config.is_url else None,
+            video_duration=config.end_time or 0,
+            transcription_metrics=trans_metrics,
+            diarization_workflow=config.workflow,
+            diarization_metrics=diar_metrics,
+            num_speakers_detected=len(set(s.get("speaker", "UNKNOWN") for s in segments)),
+        )
+        
+        logger.info(f"   ✅ Video saved: {result.get('video_id', 'N/A')[:8]}... (source: {video_id})")
+        
+        # Save words (individual entities for Ground Truth UI)
+        if result.get("transcription_run_id") and transcription_result:
+            trans_run_id = result["transcription_run_id"]
+            
+            # Flatten words from all segments
+            words_to_save = []
+            for seg_idx, segment in enumerate(transcription_result.segments):
+                seg_words = segment.words if hasattr(segment, 'words') else segment.get('words', [])
+                for word in seg_words:
+                    # Handle both object and dict formats
+                    if hasattr(word, 'word'):
+                        text = word.word.strip()
+                        start = word.start
+                        end = word.end
+                        confidence = getattr(word, 'probability', None)
+                    else:
+                        text = word.get('word', '').strip()
+                        start = word.get('start')
+                        end = word.get('end')
+                        confidence = word.get('probability')
+                    
+                    # Skip words without valid timing
+                    if start is None or end is None:
+                        continue
+                    
+                    words_to_save.append({
+                        "text": text,
+                        "start_time": float(start),
+                        "end_time": float(end),
+                        "confidence": float(confidence) if confidence is not None else None,
+                        "transcription_segment_index": seg_idx,
+                    })
+            
+            if words_to_save:
+                words_result = instant_client.save_words(trans_run_id, words_to_save)
+                logger.info(f"   ✅ Words saved: {words_result.get('count', 0)} words")
+            
+            logger.info(f"   ✅ Transcription run: {trans_run_id[:8]}... (metrics: {trans_metrics.get('processing_time_seconds', 0):.2f}s, {trans_metrics.get('peak_memory_mb', 0):.1f}MB)")
+        
+        # Save diarization segments (individual entities for Ground Truth UI)
+        if result.get("diarization_run_id") and segments:
+            diar_run_id = result["diarization_run_id"]
+            
+            segments_to_save = []
+            for seg in segments:
+                segments_to_save.append({
+                    "start_time": seg.get("start"),
+                    "end_time": seg.get("end"),
+                    "speaker_label": seg.get("speaker", "UNKNOWN"),
+                    "confidence": seg.get("confidence"),
+                })
+            
+            if segments_to_save:
+                segs_result = instant_client.save_diarization_segments(diar_run_id, segments_to_save)
+                logger.info(f"   ✅ Segments saved: {segs_result.get('count', 0)} segments")
+            
+            logger.info(f"   ✅ Diarization run: {diar_run_id[:8]}... (metrics: {diar_metrics.get('processing_time_seconds', 0):.2f}s, {diar_metrics.get('peak_memory_mb', 0):.1f}MB)")
         
     except Exception as e:
         logger.error(f"Failed to save to InstantDB: {e}")
+        import traceback
+        traceback.print_exc()
         return
     
     # Save identification results

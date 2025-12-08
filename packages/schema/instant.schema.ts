@@ -198,6 +198,13 @@ const schema = i.schema({
      */
     videos: i.entity({
       /**
+       * Source platform's identifier for the video.
+       * For YouTube, this is the video ID (e.g., "jAlKYYr1bpY").
+       * Indexed for efficient lookup by source ID.
+       */
+      source_id: i.string().indexed(),
+
+      /**
        * Title of the video as retrieved from the source platform.
        * Example: "Ep 569 - A Derosa Garden (feat. Joe Derosa)"
        */

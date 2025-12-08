@@ -26,6 +26,22 @@
 
 ---
 
+### December 8th, 2025 at 2:55:15 p.m.
+
+✨ Ground Truth UI fixes: audio scrubbing, seek, keyboard navigation
+
+[Commit](https://github.com/technoplato/toolshed/commit/d7a9d3e)
+
+- Added HTTP Range request support to server.py for audio scrubbing/seeking
+- Fixed click-to-seek on segment timestamps
+- Removed duplicate keyboard handler causing conflicts
+- Fixed Enter key to work with unified segment type
+- Refactored instant_server.ts from /transact to REST verbs
+- Added PUT /videos/:id for partial metadata updates
+- Fixed InstantDB ID generation with id() and source_id attribute
+
+
+
 ### December 8th, 2025 at 12:45:06 p.m.
 
 ✨ Added run metrics tracking (duration, memory, cost) to schema and pipeline
