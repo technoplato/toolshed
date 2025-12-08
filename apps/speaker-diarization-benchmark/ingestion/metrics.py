@@ -195,25 +195,42 @@ def estimate_api_cost(
     Returns:
         Estimated cost in USD, or None if pricing unknown
     
-    Note:
-        These are approximate costs as of Dec 2025. 
-        Always verify current pricing with the provider.
+    Pricing Sources (Dec 2025):
+        - PyAnnote AI: https://www.pyannote.ai/pricing
+          Precision-2 Diarization: €0.14/hr (Developer), €0.12/hr (Starter)
+        - Deepgram: https://deepgram.com/pricing
+          Nova-2: $0.0043/min
+        - OpenAI: https://openai.com/api/pricing/
+          Whisper: $0.006/min
     """
-    # Pricing per minute (approximate)
-    PRICING = {
-        # OpenAI Whisper API: $0.006 per minute
-        "openai": 0.006 / 60,
-        # PyAnnote AI API: ~$0.01 per minute (varies)
-        "pyannote_api": 0.01 / 60,
-        # AssemblyAI: $0.00025 per second ($0.015/min)
-        "assemblyai": 0.00025,
-        # Deepgram: $0.0043 per minute (Nova-2)
-        "deepgram": 0.0043 / 60,
+    duration_hours = duration_seconds / 3600
+    duration_minutes = duration_seconds / 60
+    
+    # Pricing per hour/minute with source links
+    PRICING_PER_HOUR = {
+        # PyAnnote AI Precision-2: €0.14/hr (Developer tier)
+        # https://www.pyannote.ai/pricing
+        # Converted: €0.14 * 1.09 = $0.1526/hr
+        "pyannote_api": 0.14 * 1.09,
     }
     
-    per_second_cost = PRICING.get(service.lower())
-    if per_second_cost is not None:
-        return duration_seconds * per_second_cost
+    PRICING_PER_MINUTE = {
+        # OpenAI Whisper API: $0.006/min
+        "openai": 0.006,
+        # Deepgram Nova-2: $0.0043/min
+        # https://deepgram.com/pricing
+        "deepgram": 0.0043,
+        # AssemblyAI: $0.015/min (Best tier)
+        "assemblyai": 0.015,
+    }
+    
+    service_lower = service.lower()
+    
+    if service_lower in PRICING_PER_HOUR:
+        return duration_hours * PRICING_PER_HOUR[service_lower]
+    
+    if service_lower in PRICING_PER_MINUTE:
+        return duration_minutes * PRICING_PER_MINUTE[service_lower]
     
     return None
 

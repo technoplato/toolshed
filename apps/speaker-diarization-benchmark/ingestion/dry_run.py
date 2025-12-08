@@ -96,34 +96,55 @@ def _print_cost_estimate(duration_seconds: float, workflow: str) -> None:
     
     Shows costs for both local processing (free but time-consuming)
     and API alternatives (fast but paid).
+    
+    Pricing sources (Dec 2025):
+    - PyAnnote AI: https://www.pyannote.ai/pricing
+    - Deepgram: https://deepgram.com/pricing
+    - OpenAI Whisper: https://openai.com/api/pricing/
     """
     if duration_seconds <= 0:
         return
     
     duration_min = duration_seconds / 60
+    duration_hr = duration_seconds / 3600
     
     # Estimated processing times (based on empirical measurements)
     # These assume Apple Silicon (M1/M2/M3) with good performance
     local_trans_time = duration_seconds * 0.15  # ~6.7x realtime
     local_diar_time = duration_seconds * 0.1   # ~10x realtime with slicing
     
-    # API costs (approximate, Dec 2025)
-    openai_cost = duration_min * 0.006  # $0.006 per minute
-    pyannote_api_cost = duration_min * 0.01  # ~$0.01 per minute
+    # API costs (Dec 2025, converted to USD where needed)
+    # PyAnnote AI Precision-2 Diarization: €0.14/hr (Developer), €0.12/hr (Starter)
+    # Using Developer tier price, €1 ≈ $1.09
+    pyannote_cost_eur = duration_hr * 0.14  # €0.14 per hour
+    pyannote_cost_usd = pyannote_cost_eur * 1.09  # Convert to USD
+    
+    # Deepgram Nova-2 (STT): $0.0043/minute
+    deepgram_cost = duration_min * 0.0043
+    
+    # OpenAI Whisper API: $0.006/minute
+    openai_cost = duration_min * 0.006
     
     print(f"""
 💰 Cost & Time Estimate
 {LINE_H * 40}
    Input duration: {duration_seconds:.1f}s ({duration_min:.2f} min)
    
-   ┌─────────────────────┬──────────────┬──────────────┐
-   │ Step                │ Local (Free) │ API (Paid)   │
-   ├─────────────────────┼──────────────┼──────────────┤
-   │ Transcription       │ ~{local_trans_time:.1f}s      │ ${openai_cost:.4f} (OpenAI) │
-   │ Diarization         │ ~{local_diar_time:.1f}s       │ ${pyannote_api_cost:.4f} (PyAnnote) │
-   ├─────────────────────┼──────────────┼──────────────┤
-   │ Total               │ ~{local_trans_time + local_diar_time:.1f}s, Free │ ${openai_cost + pyannote_api_cost:.4f}        │
-   └─────────────────────┴──────────────┴──────────────┘
+   ┌─────────────────────┬──────────────┬────────────────────────┐
+   │ Step                │ Local (Free) │ API (Paid)             │
+   ├─────────────────────┼──────────────┼────────────────────────┤
+   │ Transcription       │ ~{local_trans_time:.1f}s       │ ${deepgram_cost:.4f} Deepgram Nova-2  │
+   │                     │              │ ${openai_cost:.4f} OpenAI Whisper   │
+   │ Diarization         │ ~{local_diar_time:.1f}s        │ ${pyannote_cost_usd:.4f} PyAnnote API     │
+   ├─────────────────────┼──────────────┼────────────────────────┤
+   │ Total (Deepgram)    │ ~{local_trans_time + local_diar_time:.1f}s, Free │ ${deepgram_cost + pyannote_cost_usd:.4f}                  │
+   │ Total (OpenAI)      │              │ ${openai_cost + pyannote_cost_usd:.4f}                  │
+   └─────────────────────┴──────────────┴────────────────────────┘
+   
+   API Pricing Sources:
+   • PyAnnote AI: €0.14/hr Precision-2 (pyannote.ai/pricing)
+   • Deepgram: $0.0043/min Nova-2 (deepgram.com/pricing)
+   • OpenAI: $0.006/min Whisper (openai.com/api/pricing)
    
    Current config: {workflow} (local)
    • Transcription: MLX Whisper (local, free)
