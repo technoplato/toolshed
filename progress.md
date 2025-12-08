@@ -30,7 +30,7 @@
 
 ✨ Add caching layer and preview output for audio ingestion
 
-[Commit](https://github.com/technoplato/toolshed/commit/c819677)
+[Commit](https://github.com/technoplato/toolshed/commit/e60fb0a)
 
 - Created ingestion/cache.py with range-based caching for transcription, diarization, identification
 - Cache keys use double underscore separators: {video_id}__{tool}__{model}
