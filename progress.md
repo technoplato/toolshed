@@ -30,7 +30,7 @@
 
 ✨ Preview mode + Ground Truth UI improvements
 
-[Commit](https://github.com/technoplato/toolshed/commit/e70844a)
+[Commit](https://github.com/technoplato/toolshed/commit/e222bf2)
 
 - Fixed identify_speakers to work in preview mode with pre-computed segments
 - Removed unused embedding_centroid_id from speakers schema
