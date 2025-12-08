@@ -30,7 +30,7 @@
 
 ✨ Ground Truth UI fixes: audio scrubbing, seek, keyboard navigation
 
-[Commit](https://github.com/technoplato/toolshed/commit/d7a9d3e)
+[Commit](https://github.com/technoplato/toolshed/commit/84d80c9)
 
 - Added HTTP Range request support to server.py for audio scrubbing/seeking
 - Fixed click-to-seek on segment timestamps
