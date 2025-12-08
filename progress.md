@@ -30,7 +30,7 @@
 
 ✨ Integrate caching into ingest pipeline
 
-[Commit](https://github.com/technoplato/toolshed/commit/4dd5a0d)
+[Commit](https://github.com/technoplato/toolshed/commit/8431d75)
 
 - Integrated TranscriptionCache, DiarizationCache, IdentificationCache into run_ingest()
 - Added preview markdown generation and file saving
