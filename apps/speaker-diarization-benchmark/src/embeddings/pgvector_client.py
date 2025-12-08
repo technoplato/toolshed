@@ -71,6 +71,9 @@ import psycopg
 from typing import List, Tuple, Optional, Dict, Any
 import numpy as np
 
+# Register pgvector types with psycopg
+from pgvector.psycopg import register_vector
+
 
 class PgVectorClient:
     """
@@ -93,8 +96,11 @@ class PgVectorClient:
         self._init_db()
 
     def _get_conn(self):
-        """Get a new database connection."""
-        return psycopg.connect(self.dsn)
+        """Get a new database connection with pgvector support."""
+        conn = psycopg.connect(self.dsn)
+        # Register vector type so embeddings are returned as numpy arrays
+        register_vector(conn)
+        return conn
 
     def _init_db(self):
         """
@@ -345,7 +351,7 @@ class PgVectorClient:
                 return [
                     {
                         "external_id": str(row[0]),
-                        "embedding": list(row[1]) if row[1] else None,
+                        "embedding": list(row[1]) if row[1] is not None else None,
                         "start_time": row[2],
                         "end_time": row[3],
                         "metadata": row[4]
@@ -378,7 +384,7 @@ class PgVectorClient:
                     "external_id": str(row[0]),
                     "speaker_id": row[1],
                     "speaker_label": row[2],
-                    "embedding": list(row[3]) if row[3] else None,
+                    "embedding": list(row[3]) if row[3] is not None else None,
                     "video_id": str(row[4]) if row[4] else None,
                     "diarization_run_id": str(row[5]) if row[5] else None,
                     "start_time": row[6],
