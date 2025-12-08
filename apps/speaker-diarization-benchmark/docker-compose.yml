@@ -1,0 +1,64 @@
+# =============================================================================
+# HOW:
+#   docker compose up -d postgres
+#   # Wait for healthcheck to pass (~5-10 seconds)
+#   docker compose logs postgres
+#
+#   [Inputs]
+#   - Docker Engine running
+#   - Port 5433 available on host
+#
+#   [Outputs]
+#   - PostgreSQL with pgvector running on localhost:5433
+#   - Database: speaker_embeddings
+#   - User: diarization / Password: diarization_dev
+#
+#   [Side Effects]
+#   - Creates Docker volume 'pgdata' for persistent storage
+#   - Runs init-db.sql on first startup
+#
+# WHO:
+#   Claude AI, User
+#   (Context: Setting up pgvector for speaker embedding storage)
+#
+# WHAT:
+#   Docker Compose configuration for PostgreSQL with pgvector extension.
+#   Provides local database for speaker embedding KNN search.
+#
+# WHEN:
+#   2025-12-07
+#
+# WHERE:
+#   apps/speaker-diarization-benchmark/docker-compose.yml
+#
+# WHY:
+#   Enable fast nearest-neighbor search on 512-dimensional speaker embeddings.
+#   Docker provides consistent, reproducible database setup.
+#   pgvector/pgvector:pg16 image has extension pre-installed.
+# =============================================================================
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: speaker-diarization-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: diarization
+      POSTGRES_PASSWORD: diarization_dev
+      POSTGRES_DB: speaker_embeddings
+    ports:
+      # Use 5433 to avoid conflicts with local postgres on 5432
+      - "5433:5432"
+    volumes:
+      # Persistent data storage
+      - pgdata:/var/lib/postgresql/data
+      # Init script runs on first startup
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U diarization -d speaker_embeddings"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

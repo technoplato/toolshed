@@ -1,128 +1,422 @@
 """
 HOW:
-  `client = PgVectorClient("postgresql://user:pass@localhost:5432/db")`
-  `client.add_embedding("speaker_123", [0.1, 0.2, ...])`
+  from src.embeddings.pgvector_client import PgVectorClient
+  
+  client = PgVectorClient("postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings")
+  
+  # Add an embedding
+  client.add_embedding(
+      external_id="uuid-of-segment",
+      embedding=[...512 floats...],
+      speaker_id="Shane Gillis",
+      video_id="uuid-of-video",
+      start_time=10.5,
+      end_time=15.2
+  )
+  
+  # Search for similar speakers
+  results = client.search(embedding, limit=5)
+  # Returns: [("Shane Gillis", 0.05), ("Matt McCusker", 0.12), ...]
 
   [Inputs]
-  - connection_string: standard LibPQ connection string.
+  - dsn: PostgreSQL connection string (LibPQ format)
+  - DATABASE_URL env var as fallback
 
   [Outputs]
-  - Client instance.
+  - Client instance for embedding operations
+  - search() returns list of (speaker_id, cosine_distance) tuples
+
+  [Side Effects]
+  - Connects to PostgreSQL
+  - Creates tables/indexes on first run if they don't exist
 
 WHO:
-  Antigravity, User
-  (Context: Scalable embedding search)
+  Claude AI, User
+  (Context: Speaker identification via KNN on segment embeddings)
 
 WHAT:
-  A wrapper around psycopg (or compatible driver) to handle Vector operations.
-  - Ensures `vector` extension exists.
-  - Manages `speaker_embeddings` table.
-  - Provides `search` using cosine distance (<=> operator).
+  PostgreSQL + pgvector client for speaker embedding storage and search.
+  - Per-segment embeddings (512 dimensions from pyannote/embedding)
+  - KNN search using cosine distance for speaker identification
+  - Links to InstantDB entities via external_id
+  - Supports updating speaker_id when user corrects labels
 
 WHEN:
   2025-12-05
+  Last Modified: 2025-12-07
+  
+  [Change Log]
+  - 2025-12-05: Initial creation
+  - 2025-12-07: Updated for 512-dim, added video_id, timing fields
 
 WHERE:
   apps/speaker-diarization-benchmark/src/embeddings/pgvector_client.py
 
 WHY:
-  To offload dense vector similarity search to a specialized database engine, 
-  avoiding O(N) linear scans in Python.
+  Enable fast nearest-neighbor search on speaker embeddings.
+  Per-segment embeddings (not centroids) allow:
+  - Better handling of speaker variation (mood, mic distance)
+  - Clustering to discover unknown speakers
+  - Comparing new segments to labeled examples
+  
+  PostgreSQL + pgvector provides:
+  - IVFFlat index for approximate KNN (much faster than linear scan)
+  - ACID transactions for data integrity
+  - Easy integration with existing tools (psql, pg_dump, etc.)
 """
 
+import json
+import os
 import psycopg
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 import numpy as np
 
+
 class PgVectorClient:
-    def __init__(self, dsn: str):
-        self.dsn = dsn
+    """
+    Client for storing and searching speaker embeddings in PostgreSQL with pgvector.
+    
+    Embeddings are 512-dimensional vectors from pyannote/embedding model.
+    Uses cosine distance for similarity search.
+    """
+    
+    def __init__(self, dsn: str = None):
+        """
+        Initialize the client.
+        
+        Args:
+            dsn: PostgreSQL connection string. Falls back to DATABASE_URL env var.
+        """
+        self.dsn = dsn or os.environ.get("DATABASE_URL")
+        if not self.dsn:
+            raise ValueError("No database connection string provided. Set DATABASE_URL or pass dsn.")
         self._init_db()
 
     def _get_conn(self):
+        """Get a new database connection."""
         return psycopg.connect(self.dsn)
 
     def _init_db(self):
-        """Ensure extension and table exist."""
+        """
+        Ensure extension and table exist.
+        This is idempotent - safe to call multiple times.
+        """
         with self._get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+                
                 # Check if table exists
                 cur.execute("SELECT to_regclass('public.speaker_embeddings');")
                 exists = cur.fetchone()[0]
                 
                 if not exists:
+                    # Create table with 512-dimensional vectors
                     cur.execute("""
                         CREATE TABLE speaker_embeddings (
                             id SERIAL PRIMARY KEY,
-                            external_id UUID UNIQUE, 
-                            speaker_id TEXT NOT NULL,
-                            embedding vector(512),
+                            external_id UUID UNIQUE NOT NULL,
+                            video_id UUID,
+                            diarization_run_id UUID,
+                            speaker_id TEXT DEFAULT 'UNKNOWN',
+                            speaker_label TEXT,
+                            embedding vector(512) NOT NULL,
+                            start_time FLOAT,
+                            end_time FLOAT,
                             metadata JSONB DEFAULT '{}',
-                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         );
                     """)
-                    cur.execute("CREATE INDEX speaker_embedding_idx ON speaker_embeddings USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);")
+                    
+                    # IVFFlat index for cosine similarity
+                    cur.execute("""
+                        CREATE INDEX speaker_embedding_cosine_idx 
+                        ON speaker_embeddings 
+                        USING ivfflat (embedding vector_cosine_ops) 
+                        WITH (lists = 100);
+                    """)
+                    
+                    # Index for lookups by external_id
                     cur.execute("CREATE INDEX speaker_embedding_ext_id_idx ON speaker_embeddings(external_id);")
+                    
+                    # Index for lookups by video
+                    cur.execute("CREATE INDEX speaker_embedding_video_idx ON speaker_embeddings(video_id);")
+                    
+                    # Index for lookups by speaker
+                    cur.execute("CREATE INDEX speaker_embedding_speaker_idx ON speaker_embeddings(speaker_id);")
                 else:
-                    # Migrate if needed (idempotent columns)
-                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS external_id UUID UNIQUE;")
-                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}';")
+                    # Migrate existing table if needed (add new columns)
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS video_id UUID;")
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS diarization_run_id UUID;")
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS speaker_label TEXT;")
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS start_time FLOAT;")
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS end_time FLOAT;")
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
                     
                 conn.commit()
 
-    def add_embedding(self, external_id: str, embedding: List[float], speaker_id: str = "UNKNOWN", metadata: dict = None):
-        if metadata is None: metadata = {}
+    def add_embedding(
+        self, 
+        external_id: str, 
+        embedding: List[float], 
+        speaker_id: str = "UNKNOWN",
+        speaker_label: str = None,
+        video_id: str = None,
+        diarization_run_id: str = None,
+        start_time: float = None,
+        end_time: float = None,
+        metadata: dict = None
+    ):
+        """
+        Add or update an embedding.
+        
+        Uses upsert - if external_id exists, updates the row.
+        
+        Args:
+            external_id: UUID linking to DiarizationSegment in InstantDB
+            embedding: 512-dimensional vector from pyannote/embedding
+            speaker_id: Current speaker label (can be updated)
+            speaker_label: Original label from diarization model
+            video_id: UUID linking to Video in InstantDB
+            diarization_run_id: UUID linking to DiarizationRun in InstantDB
+            start_time: Segment start time in seconds
+            end_time: Segment end time in seconds
+            metadata: Additional data (JSON)
+        """
+        if metadata is None:
+            metadata = {}
+            
         with self._get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    INSERT INTO speaker_embeddings (external_id, speaker_id, embedding, metadata) 
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO speaker_embeddings 
+                        (external_id, speaker_id, speaker_label, embedding, video_id, 
+                         diarization_run_id, start_time, end_time, metadata) 
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (external_id) DO UPDATE SET
                         speaker_id = EXCLUDED.speaker_id,
+                        speaker_label = EXCLUDED.speaker_label,
                         embedding = EXCLUDED.embedding,
-                        metadata = EXCLUDED.metadata;
+                        video_id = EXCLUDED.video_id,
+                        diarization_run_id = EXCLUDED.diarization_run_id,
+                        start_time = EXCLUDED.start_time,
+                        end_time = EXCLUDED.end_time,
+                        metadata = EXCLUDED.metadata,
+                        updated_at = CURRENT_TIMESTAMP;
                     """,
-                    (external_id, speaker_id, embedding, json.dumps(metadata))
+                    (external_id, speaker_id, speaker_label, embedding, video_id,
+                     diarization_run_id, start_time, end_time, json.dumps(metadata))
                 )
+                conn.commit()
 
     def update_speaker_id(self, external_id: str, new_speaker_id: str):
+        """
+        Update the speaker_id for an embedding.
+        
+        Called when user corrects a speaker label in the UI.
+        
+        Args:
+            external_id: UUID of the segment
+            new_speaker_id: New speaker name
+        """
         with self._get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    "UPDATE speaker_embeddings SET speaker_id = %s WHERE external_id = %s",
+                    "UPDATE speaker_embeddings SET speaker_id = %s, updated_at = CURRENT_TIMESTAMP WHERE external_id = %s",
                     (new_speaker_id, external_id)
                 )
+                conn.commit()
 
     def delete_embedding(self, external_id: str):
+        """
+        Delete an embedding.
+        
+        Called when a segment is deleted or invalidated.
+        
+        Args:
+            external_id: UUID of the segment
+        """
         with self._get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     "DELETE FROM speaker_embeddings WHERE external_id = %s",
                     (external_id,)
                 )
+                conn.commit()
 
-    def search(self, embedding: List[float], limit: int = 5) -> List[Tuple[str, float]]:
+    def search(
+        self, 
+        embedding: List[float], 
+        limit: int = 5,
+        video_id: str = None,
+        exclude_external_id: str = None
+    ) -> List[Tuple[str, str, float]]:
         """
-        Returns list of (speaker_id, distance).
+        Find nearest neighbors to an embedding.
+        
+        Args:
+            embedding: 512-dimensional query vector
+            limit: Max number of results
+            video_id: Optional - only search within this video
+            exclude_external_id: Optional - exclude this segment from results
+            
+        Returns:
+            List of (speaker_id, external_id, cosine_distance) tuples,
+            ordered by distance (closest first).
+        """
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                # Build query with optional filters
+                query = """
+                    SELECT speaker_id, external_id, embedding <=> %s::vector as dist
+                    FROM speaker_embeddings
+                    WHERE 1=1
+                """
+                params = [embedding]
+                
+                if video_id:
+                    query += " AND video_id = %s"
+                    params.append(video_id)
+                    
+                if exclude_external_id:
+                    query += " AND external_id != %s"
+                    params.append(exclude_external_id)
+                
+                query += " ORDER BY dist ASC LIMIT %s"
+                params.append(limit)
+                
+                cur.execute(query, params)
+                return cur.fetchall()
+
+    def search_by_speaker(
+        self, 
+        embedding: List[float], 
+        limit: int = 5
+    ) -> List[Tuple[str, float, int]]:
+        """
+        Find nearest speakers by averaging distance to their embeddings.
+        
+        More robust than single-embedding search for speaker identification.
+        
+        Args:
+            embedding: 512-dimensional query vector
+            limit: Max number of speakers to return
+            
+        Returns:
+            List of (speaker_id, avg_distance, num_embeddings) tuples.
         """
         with self._get_conn() as conn:
             with conn.cursor() as cur:
                 cur.execute("""
-                    SELECT speaker_id, embedding <=> %s::vector as dist
+                    SELECT 
+                        speaker_id, 
+                        AVG(embedding <=> %s::vector) as avg_dist,
+                        COUNT(*) as num_embeddings
                     FROM speaker_embeddings
-                    ORDER BY dist ASC
+                    WHERE speaker_id != 'UNKNOWN'
+                    GROUP BY speaker_id
+                    ORDER BY avg_dist ASC
                     LIMIT %s
                 """, (embedding, limit))
                 return cur.fetchall()
 
-    def get_embeddings_for_speaker(self, speaker_id: str) -> List[List[float]]:
+    def get_embeddings_for_speaker(self, speaker_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all embeddings for a speaker.
+        
+        Useful for computing centroids or analyzing speaker variation.
+        
+        Args:
+            speaker_id: Speaker name
+            
+        Returns:
+            List of dicts with external_id, embedding, start_time, end_time, metadata
+        """
         with self._get_conn() as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT embedding FROM speaker_embeddings WHERE speaker_id = %s", (speaker_id,))
+                cur.execute("""
+                    SELECT external_id, embedding, start_time, end_time, metadata
+                    FROM speaker_embeddings 
+                    WHERE speaker_id = %s
+                    ORDER BY start_time
+                """, (speaker_id,))
                 rows = cur.fetchall()
-                # Assuming automatic conversion or list of strings depending on psycopg version
-                # If rows return strings, we might need to parse, but pgvector-python usually handles it?
-                # We assume correct environment.
-                return [row[0] for row in rows]
+                return [
+                    {
+                        "external_id": str(row[0]),
+                        "embedding": list(row[1]) if row[1] else None,
+                        "start_time": row[2],
+                        "end_time": row[3],
+                        "metadata": row[4]
+                    }
+                    for row in rows
+                ]
+
+    def get_embedding(self, external_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Get a single embedding by external_id.
+        
+        Args:
+            external_id: UUID of the segment
+            
+        Returns:
+            Dict with all fields, or None if not found
+        """
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT external_id, speaker_id, speaker_label, embedding, 
+                           video_id, diarization_run_id, start_time, end_time, metadata
+                    FROM speaker_embeddings 
+                    WHERE external_id = %s
+                """, (external_id,))
+                row = cur.fetchone()
+                if not row:
+                    return None
+                return {
+                    "external_id": str(row[0]),
+                    "speaker_id": row[1],
+                    "speaker_label": row[2],
+                    "embedding": list(row[3]) if row[3] else None,
+                    "video_id": str(row[4]) if row[4] else None,
+                    "diarization_run_id": str(row[5]) if row[5] else None,
+                    "start_time": row[6],
+                    "end_time": row[7],
+                    "metadata": row[8]
+                }
+
+    def count(self, speaker_id: str = None) -> int:
+        """
+        Count embeddings, optionally filtered by speaker.
+        
+        Args:
+            speaker_id: Optional speaker to filter by
+            
+        Returns:
+            Number of embeddings
+        """
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                if speaker_id:
+                    cur.execute("SELECT COUNT(*) FROM speaker_embeddings WHERE speaker_id = %s", (speaker_id,))
+                else:
+                    cur.execute("SELECT COUNT(*) FROM speaker_embeddings")
+                return cur.fetchone()[0]
+
+    def list_speakers(self) -> List[Tuple[str, int]]:
+        """
+        List all speakers and their embedding counts.
+        
+        Returns:
+            List of (speaker_id, count) tuples, ordered by count descending.
+        """
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT speaker_id, COUNT(*) as cnt
+                    FROM speaker_embeddings
+                    GROUP BY speaker_id
+                    ORDER BY cnt DESC
+                """)
+                return cur.fetchall()
