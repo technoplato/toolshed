@@ -26,6 +26,19 @@
 
 ---
 
+### December 9th, 2025 at 2:08:47 a.m.
+
+✨ Audio path resolution and batch embedding extraction
+
+[Commit](https://github.com/technoplato/toolshed/commit/a34b413)
+
+- Added _resolve_audio_path() method to ground_truth_server.py for Docker/local path resolution
+- Created batch_extract_embeddings.py script for backfilling embeddings on whisper_identified segments
+- Fixed duplicate exception handler in ground_truth_server.py
+- Created comprehensive handoff document at docs/handoff-2025-12-09-embedding-extraction.md
+
+
+
 ### December 9th, 2025 at 1:11:11 a.m.
 
 ✨ Dockerized speaker diarization services and fixed speaker re-identification

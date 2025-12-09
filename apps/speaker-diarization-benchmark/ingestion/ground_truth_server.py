@@ -183,6 +183,62 @@ def make_handler_class(config: ServerConfig):
         print("Warning: POSTGRES_DSN not set. Embeddings will not be saved to Vector DB.")
 
     class InstantDBHandler(http.server.SimpleHTTPRequestHandler):
+        
+        def _resolve_audio_path(self, audio_path: str) -> str:
+            """
+            Resolve audio path for the current environment.
+            
+            The filepath stored in InstantDB is typically the host path where the file
+            was originally ingested. When running in Docker, we need to convert this
+            to the container path where files are mounted.
+            
+            Host path examples:
+              - /Users/laptop/Development/.../data/clips/jAlKYYr1bpY.wav
+              - /home/user/projects/.../data/clips/jAlKYYr1bpY.wav
+              
+            Container path:
+              - /app/data/clips/jAlKYYr1bpY.wav
+              
+            Local development (no Docker):
+              - Returns the original path if it exists
+              - Falls back to relative path if original doesn't exist
+            """
+            if not audio_path:
+                return None
+            
+            # If the path exists as-is, use it (local development)
+            if os.path.exists(audio_path):
+                return audio_path
+            
+            # Try to extract the filename and look in known locations
+            filename = os.path.basename(audio_path)
+            
+            # Docker container path
+            docker_path = f"/app/data/clips/{filename}"
+            if os.path.exists(docker_path):
+                print(f"[{time.time():.3f}] 📁 Resolved path: {audio_path} → {docker_path}")
+                return docker_path
+            
+            # Relative path from current working directory
+            relative_path = f"data/clips/{filename}"
+            if os.path.exists(relative_path):
+                print(f"[{time.time():.3f}] 📁 Resolved path: {audio_path} → {relative_path}")
+                return relative_path
+            
+            # Try extracting from common path patterns
+            # Pattern: .../apps/speaker-diarization-benchmark/data/clips/filename.wav
+            if "data/clips/" in audio_path:
+                suffix = audio_path.split("data/clips/")[-1]
+                for base in ["/app/data/clips/", "data/clips/"]:
+                    candidate = base + suffix
+                    if os.path.exists(candidate):
+                        print(f"[{time.time():.3f}] 📁 Resolved path: {audio_path} → {candidate}")
+                        return candidate
+            
+            # Could not resolve - return original (will fail with file not found)
+            print(f"[{time.time():.3f}] ⚠️ Could not resolve audio path: {audio_path}")
+            return audio_path
+        
         def do_GET(self):
             """Handle GET requests with support for HTTP Range requests (needed for audio scrubbing)."""
             # Check if this is a range request for an audio file
@@ -476,18 +532,24 @@ def make_handler_class(config: ServerConfig):
                - assigned_by: user identifier
                - assigned_at: timestamp
             3. Link SpeakerAssignment to the segment and speaker
-            4. If segment has no embedding, extract one and save to PostgreSQL
+            4. If segment has no embedding, extract one and save to PostgreSQL (in background thread)
             5. Update PostgreSQL speaker_id for the embedding
             
             History is preserved - previous assignments remain but UI shows most recent.
+            
+            ARCHITECTURE: Response is sent immediately after InstantDB transaction.
+            Embedding operations run in a background thread to avoid blocking.
             """
             try:
                 import uuid
                 from datetime import datetime
                 
+                # Start timing
+                t_start = time.time()
+                
                 length = int(self.headers['Content-Length'])
                 data = json.loads(self.rfile.read(length))
-                print(f"Received speaker assignment request: {data}")
+                print(f"[{time.time():.3f}] 📥 Received speaker assignment: {data.get('speaker_name')} -> {data.get('segment_id', '')[:8]}...")
                 
                 segment_id = data.get("segment_id")
                 speaker_name = data.get("speaker_name") or data.get("new_speaker_id")
@@ -498,6 +560,9 @@ def make_handler_class(config: ServerConfig):
                 
                 if not segment_id or not speaker_name:
                     raise ValueError("Missing segment_id or speaker_name")
+                
+                t_parse = time.time()
+                print(f"[{t_parse:.3f}] ⏱️ Parse time: {(t_parse - t_start)*1000:.1f}ms")
                 
                 steps = []
                 
@@ -529,9 +594,66 @@ def make_handler_class(config: ServerConfig):
                 # 4. Link assignment to speaker
                 steps.append(["link", "speakerAssignments", assignment_id, {"speaker": speaker_uuid}])
                 
-                repo._transact(steps)
-                print(f"Created speaker assignment: {speaker_name} -> segment {segment_id}")
+                t_before_transact = time.time()
+                print(f"[{t_before_transact:.3f}] 📝 Prepared transaction steps")
                 
+                repo._transact(steps)
+                
+                t_after_transact = time.time()
+                print(f"[{t_after_transact:.3f}] ✅ InstantDB transaction complete: {(t_after_transact - t_before_transact)*1000:.1f}ms")
+                print(f"[{t_after_transact:.3f}] Created speaker assignment: {speaker_name} -> segment {segment_id}")
+                
+                # SEND RESPONSE IMMEDIATELY - don't block on embedding extraction
+                t_response = time.time()
+                print(f"[{t_response:.3f}] ✅ InstantDB done in {(t_response - t_start)*1000:.0f}ms, sending response")
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                response_body = json.dumps({
+                    "success": True,
+                    "assignment_id": assignment_id,
+                    "speaker_id": speaker_uuid,
+                    "speaker_name": speaker_name
+                }).encode()
+                self.wfile.write(response_body)
+                self.wfile.flush()  # Force send the response immediately
+                print(f"[{time.time():.3f}] 📤 Response flushed to client ({len(response_body)} bytes)")
+                
+                # Run embedding operations in a BACKGROUND THREAD
+                # This way the HTTP response is truly non-blocking
+                def background_embedding():
+                    self._handle_embedding_update(segment_id, speaker_name, repo, pg_client)
+                
+                thread = threading.Thread(target=background_embedding, daemon=True)
+                thread.start()
+                print(f"[{time.time():.3f}] 🧵 Started background thread for embedding")
+                
+            except Exception as e:
+                print(f"[{time.time():.3f}] ❌ Error assigning speaker: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(str(e).encode())
+        
+        def _handle_embedding_update(self, segment_id, speaker_name, repo, pg_client):
+            """
+            Handle embedding operations AFTER the HTTP response has been sent.
+            This runs synchronously but doesn't block the client.
+            """
+            import uuid
+            
+            if not pg_client:
+                print(f"[{time.time():.3f}] ⚠️ No pg_client, skipping embedding update")
+                return
+            
+            t_emb_start = time.time()
+            print(f"[{t_emb_start:.3f}] 🔄 Starting embedding update for segment {segment_id}")
+            
+            try:
                 # Fetch segment with video info for embedding operations
                 q_seg = {
                     "diarizationSegments": {
@@ -541,87 +663,98 @@ def make_handler_class(config: ServerConfig):
                         }
                     }
                 }
+                
+                t_before_query = time.time()
                 res = repo._query(q_seg)
+                t_after_query = time.time()
+                print(f"[{t_after_query:.3f}] 📊 Segment query: {(t_after_query - t_before_query)*1000:.1f}ms")
+                
                 segs = res.get("diarizationSegments", [])
                 
-                if segs and pg_client:
-                    seg = segs[0]
-                    emb_id = seg.get("embedding_id")
-                    
-                    if emb_id:
-                        # Embedding exists - just update the speaker_id
-                        try:
-                            pg_client.update_speaker_id(emb_id, speaker_name)
-                            print(f"Updated Postgres speaker for embedding {emb_id}")
-                        except Exception as e:
-                            print(f"Failed to update Postgres: {e}")
-                    else:
-                        # No embedding - extract one and save it
-                        # This happens for segments created from splits
-                        try:
-                            # Get audio path from video
-                            runs = seg.get("diarizationRun", [])
-                            video = runs[0].get("video", []) if runs else []
-                            audio_path = video[0].get("filepath") if video else None
-                            video_id = video[0].get("id") if video else None
-                            run_id = runs[0].get("id") if runs else None
+                if not segs:
+                    print(f"[{time.time():.3f}] ⚠️ Segment not found for embedding update")
+                    return
+                
+                seg = segs[0]
+                emb_id = seg.get("embedding_id")
+                
+                if emb_id:
+                    # Embedding exists - just update the speaker_id
+                    t_before_update = time.time()
+                    try:
+                        pg_client.update_speaker_id(emb_id, speaker_name)
+                        t_after_update = time.time()
+                        print(f"[{t_after_update:.3f}] ✅ Updated Postgres speaker for embedding {emb_id}: {(t_after_update - t_before_update)*1000:.1f}ms")
+                    except Exception as e:
+                        print(f"[{time.time():.3f}] ❌ Failed to update Postgres: {e}")
+                else:
+                    # No embedding - extract one and save it
+                    # This happens for segments created from splits or whisper_identified workflow
+                    try:
+                        # Get audio path from video
+                        runs = seg.get("diarizationRun", [])
+                        video = runs[0].get("video", []) if runs else []
+                        audio_path = video[0].get("filepath") if video else None
+                        video_id = video[0].get("id") if video else None
+                        run_id = runs[0].get("id") if runs else None
+                        
+                        # Resolve audio path for Docker container
+                        # The filepath in InstantDB is the host path, but in Docker
+                        # the files are mounted at /app/data/clips/
+                        audio_path = self._resolve_audio_path(audio_path)
+                        
+                        if audio_path and os.path.exists(audio_path):
+                            start_time = seg.get("start_time")
+                            end_time = seg.get("end_time")
+                            speaker_label = seg.get("speaker_label", "UNKNOWN")
                             
-                            if audio_path and os.path.exists(audio_path):
-                                print(f"Extracting embedding for segment {segment_id}...")
-                                start_time = seg.get("start_time")
-                                end_time = seg.get("end_time")
-                                speaker_label = seg.get("speaker_label", "UNKNOWN")
-                                
-                                # Extract embedding using PyAnnote
-                                embedding = Embedder.extract_embedding(audio_path, start_time, end_time)
-                                
-                                # Generate new embedding ID
-                                new_emb_id = str(uuid.uuid4())
-                                
-                                # Save to PostgreSQL
-                                pg_client.add_embedding(
-                                    external_id=new_emb_id,
-                                    embedding=embedding,
-                                    speaker_id=speaker_name,
-                                    speaker_label=speaker_label,
-                                    video_id=video_id,
-                                    diarization_run_id=run_id,
-                                    start_time=start_time,
-                                    end_time=end_time,
-                                )
-                                print(f"Saved new embedding {new_emb_id} to PostgreSQL")
-                                
-                                # Update segment with embedding_id
-                                repo._transact([
-                                    ["update", "diarizationSegments", segment_id, {"embedding_id": new_emb_id}]
-                                ])
-                                print(f"Updated segment {segment_id} with embedding_id {new_emb_id}")
-                            else:
-                                print(f"Warning: Audio file not found at {audio_path}, skipping embedding extraction")
-                        except Exception as e:
-                            print(f"Failed to extract/save embedding: {e}")
-                            import traceback
-                            traceback.print_exc()
-
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps({
-                    "success": True,
-                    "assignment_id": assignment_id,
-                    "speaker_id": speaker_uuid,
-                    "speaker_name": speaker_name
-                }).encode())
+                            print(f"[{time.time():.3f}] 🎤 Extracting embedding for segment {segment_id} ({start_time:.1f}s - {end_time:.1f}s)...")
+                            
+                            # Extract embedding using PyAnnote
+                            t_before_extract = time.time()
+                            embedding = Embedder.extract_embedding(audio_path, start_time, end_time)
+                            t_after_extract = time.time()
+                            print(f"[{t_after_extract:.3f}] 🎤 Embedding extracted: {(t_after_extract - t_before_extract)*1000:.1f}ms")
+                            
+                            # Generate new embedding ID
+                            new_emb_id = str(uuid.uuid4())
+                            
+                            # Save to PostgreSQL
+                            t_before_save = time.time()
+                            pg_client.add_embedding(
+                                external_id=new_emb_id,
+                                embedding=embedding,
+                                speaker_id=speaker_name,
+                                speaker_label=speaker_label,
+                                video_id=video_id,
+                                diarization_run_id=run_id,
+                                start_time=start_time,
+                                end_time=end_time,
+                            )
+                            t_after_save = time.time()
+                            print(f"[{t_after_save:.3f}] 💾 Saved embedding to PostgreSQL: {(t_after_save - t_before_save)*1000:.1f}ms")
+                            
+                            # Update segment with embedding_id
+                            t_before_link = time.time()
+                            repo._transact([
+                                ["update", "diarizationSegments", segment_id, {"embedding_id": new_emb_id}]
+                            ])
+                            t_after_link = time.time()
+                            print(f"[{t_after_link:.3f}] 🔗 Updated segment with embedding_id: {(t_after_link - t_before_link)*1000:.1f}ms")
+                        else:
+                            print(f"[{time.time():.3f}] ⚠️ Audio file not found at {audio_path}, skipping embedding extraction")
+                    except Exception as e:
+                        print(f"[{time.time():.3f}] ❌ Failed to extract/save embedding: {e}")
+                        import traceback
+                        traceback.print_exc()
+                
+                t_emb_end = time.time()
+                print(f"[{t_emb_end:.3f}] ⏱️ TOTAL embedding update time: {(t_emb_end - t_emb_start)*1000:.1f}ms")
                 
             except Exception as e:
-                print(f"Error assigning speaker: {e}")
+                print(f"[{time.time():.3f}] ❌ Error in embedding update: {e}")
                 import traceback
                 traceback.print_exc()
-                self.send_response(500)
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(str(e).encode())
 
         def handle_delete_segment(self):
             try:
