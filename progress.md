@@ -30,7 +30,7 @@
 
 ✨ Dockerized speaker diarization services and fixed speaker re-identification
 
-[Commit](https://github.com/technoplato/toolshed/commit/28dfd2a)
+[Commit](https://github.com/technoplato/toolshed/commit/b2b8473)
 
 - Renamed server.py → ground_truth_server.py and instant_server.ts → instant_proxy.ts for clarity
 - Created Dockerfiles for ground-truth-server (Python) and instant-proxy (TypeScript)
