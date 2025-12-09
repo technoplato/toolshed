@@ -30,7 +30,7 @@
 
 ✨ Audio path resolution and batch embedding extraction
 
-[Commit](https://github.com/technoplato/toolshed/commit/a34b413)
+[Commit](https://github.com/technoplato/toolshed/commit/d6d939c)
 
 - Added _resolve_audio_path() method to ground_truth_server.py for Docker/local path resolution
 - Created batch_extract_embeddings.py script for backfilling embeddings on whisper_identified segments
