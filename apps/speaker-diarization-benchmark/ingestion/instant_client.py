@@ -133,7 +133,7 @@ class InstantClient:
         except requests.exceptions.ConnectionError:
             raise RuntimeError(
                 f"Cannot connect to InstantDB server at {self.base_url}. "
-                "Start it with: bun run apps/speaker-diarization-benchmark/ingestion/instant_server.ts"
+                "Start it with: bun run apps/speaker-diarization-benchmark/ingestion/instant_proxy.ts"
             )
     
     def get_video(self, video_id: str) -> Dict[str, Any]:

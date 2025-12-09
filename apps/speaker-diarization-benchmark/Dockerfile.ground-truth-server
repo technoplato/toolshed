@@ -1,0 +1,87 @@
+# =============================================================================
+# DOCKERFILE: Ground Truth Server (Python)
+# =============================================================================
+#
+# HOW:
+#   # Build and run via docker compose (recommended)
+#   docker compose up -d ground-truth-server
+#
+#   # Build standalone
+#   docker build -f Dockerfile.ground-truth-server -t ground-truth-server .
+#
+#   # Run standalone
+#   docker run -p 8000:8000 \
+#     -e INSTANT_APP_ID=your-app-id \
+#     -e INSTANT_ADMIN_SECRET=your-secret \
+#     -e POSTGRES_DSN=postgresql://... \
+#     -e HF_TOKEN=your-hf-token \
+#     -v /path/to/audio:/app/data/clips \
+#     ground-truth-server
+#
+# WHO:
+#   Claude AI, User
+#
+# WHAT:
+#   Builds a container for the Ground Truth UI server.
+#   Uses Python with uv for fast dependency management.
+#   Includes PyAnnote for embedding extraction.
+#
+# WHEN:
+#   2025-12-09
+#
+# WHERE:
+#   apps/speaker-diarization-benchmark/Dockerfile.ground-truth-server
+#
+# WHY:
+#   Containerizing the server ensures:
+#   - Consistent runtime environment across machines
+#   - Easy deployment alongside PostgreSQL and InstantDB proxy
+#   - No need for local Python/uv installation
+#   - Healthchecks and restart policies via Docker
+#   - Audio files can be mounted as volumes
+# =============================================================================
+
+FROM python:3.11-slim AS base
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    ffmpeg \
+    libsndfile1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies directly (minimal set for ground-truth-server)
+# Note: We don't use uv sync because the full pyproject.toml includes
+# dependencies like torchcodec that don't have Linux ARM64 wheels.
+# The ground-truth-server only needs these core dependencies:
+# Uses psycopg (v3) + pgvector, not psycopg2-binary
+RUN pip install --no-cache-dir \
+    requests>=2.31.0 \
+    pydantic>=2.0.0 \
+    python-dotenv>=1.0.0 \
+    "psycopg[binary]>=3.1.0" \
+    pgvector>=0.2.0 \
+    numpy>=1.24.0
+
+# Copy source code (only what's needed for the server)
+COPY ingestion/ ./ingestion/
+COPY src/ ./src/
+COPY data/clips/ ./data/clips/
+
+# Environment variables (override via docker-compose or -e flags)
+ENV PORT=8000
+ENV INSTANT_APP_ID=""
+ENV INSTANT_ADMIN_SECRET=""
+ENV POSTGRES_DSN=""
+ENV HF_TOKEN=""
+
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+  CMD curl -f http://localhost:8000/ || exit 1
+
+# Run the server
+CMD ["python", "-m", "ingestion.ground_truth_server", "--port", "8000"]

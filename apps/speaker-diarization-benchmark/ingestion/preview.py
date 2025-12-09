@@ -411,6 +411,11 @@ def print_preview_summary(
     word_count = sum(len(seg.words) for seg in transcription_result.segments) if hasattr(transcription_result, 'segments') else 0
     speaker_labels = set(seg.get('speaker', 'UNKNOWN') for seg in diarization_segments)
     
+    durations = [s.get('end', 0) - s.get('start', 0) for s in diarization_segments]
+    min_dur = min(durations) if durations else 0.0
+    max_dur = max(durations) if durations else 0.0
+    avg_dur = sum(durations) / len(durations) if durations else 0.0
+
     print(f"""
 ┌─ videos ────────────────────────────────────────────────────────────┐
 │  id: {video_data.get('id')}
@@ -428,6 +433,7 @@ def print_preview_summary(
 │  Segments: {len(diarization_segments)}
 │  Speaker labels: {len(speaker_labels)} ({', '.join(sorted(speaker_labels)[:4])})
 │  Workflow: {config.workflow}
+│  Stats: min={min_dur:.2f}s, max={max_dur:.2f}s, avg={avg_dur:.2f}s
 └─────────────────────────────────────────────────────────────────────┘
 """)
     

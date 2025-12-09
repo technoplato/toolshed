@@ -52,8 +52,9 @@ WHAT:
 
 WHEN:
   2025-12-05
-  Last Modified: 2025-12-08
+  Last Modified: 2025-12-09
   Change Log:
+  - 2025-12-09: Added --segment-source whisper for synthetic diarization segments
   - 2025-12-08: Added transcribe, identify, ingest commands
   - 2025-12-08: Added service health checks
   - 2025-12-08: Removed manifest.json support (InstantDB only)
@@ -91,7 +92,7 @@ from ingestion.config import (
     ServerConfig,
 )
 from ingestion.download import download_video
-from ingestion.server import run_server
+from ingestion.ground_truth_server import run_server
 from ingestion.health import check_services
 from ingestion.dry_run import print_dry_run_output
 from ingestion.metrics import RunMetrics, track_run
@@ -338,13 +339,20 @@ def run_ingest(config: IngestConfig) -> None:
     logger.info(f"   📊 Transcription result: {len(transcription_result.segments)} segments, {word_count} words")
     
     # ═══════════════════════════════════════════════════════════════════
-    # STEP 3: Diarize (with caching)
+    # STEP 3: Diarize (with caching) OR Create Synthetic Segments
     # ═══════════════════════════════════════════════════════════════════
-    logger.info(f"Step 3: Running diarization (workflow: {config.workflow})")
+    
+    # Determine the workflow name based on segment source
+    if config.segment_source == "whisper":
+        workflow_name = "whisper_identified"
+        logger.info(f"Step 3: Creating synthetic diarization segments from Whisper transcription")
+    else:
+        workflow_name = config.workflow
+        logger.info(f"Step 3: Running diarization (workflow: {workflow_name})")
     
     diar_cache = DiarizationCache(
         video_id=video_id,
-        workflow=config.workflow,
+        workflow=workflow_name,
     )
     
     # Log cache key and location for debugging
@@ -378,42 +386,52 @@ def run_ingest(config: IngestConfig) -> None:
             logger.info(f"   ⚠️ Cache MISS: no cache file found")
             logger.info(f"   ↳ Will compute diarization [0-{cache_end_time}s]")
         
-        # Slice audio to requested time range for faster diarization
-        # This is critical - full audio file can be 767MB (1+ hr), but we only need 60s
-        from ingestion.audio_utils import slice_audio
-        
-        original_size = audio_path.stat().st_size / (1024 * 1024)
-        logger.info(f"   🔪 Slicing audio ({original_size:.1f}MB) to [0-{cache_end_time}s]...")
-        
-        sliced_audio = slice_audio(
-            audio_path=str(audio_path),
-            start_time=0,  # Always start from 0 for cache consistency
-            end_time=cache_end_time,
-        )
-        sliced_size = sliced_audio.stat().st_size / (1024 * 1024)
-        logger.info(f"   ↳ Sliced: {sliced_audio.name} ({sliced_size:.1f}MB)")
-        
-        # Compute diarization on sliced audio with metrics tracking
-        from ingestion.args import get_workflow
-        from ingestion.config import WorkflowConfig
-        
-        workflow_config = WorkflowConfig(name=config.workflow)
-        workflow = get_workflow(workflow_config)
-        
-        logger.info(f"   🔄 Running PyAnnote diarization on sliced audio...")
-        with track_run(input_duration_seconds=cache_end_time) as diarization_metrics:
-            segments, stats = workflow.run(sliced_audio, transcription_result)
-        
-        logger.info(f"   ⏱️ Diarization completed in {diarization_metrics.processing_time_seconds:.2f}s")
-        if diarization_metrics.peak_memory_mb:
-            logger.info(f"   💾 Peak memory: {diarization_metrics.peak_memory_mb:.1f}MB")
-        if diarization_metrics.realtime_factor:
-            logger.info(f"   ⚡ {diarization_metrics.realtime_factor:.1f}x realtime")
+        # Branch based on segment source
+        if config.segment_source == "whisper":
+            # Create synthetic diarization segments from Whisper transcription
+            logger.info(f"   🔄 Creating synthetic segments from Whisper transcription...")
+            with track_run(input_duration_seconds=cache_end_time) as diarization_metrics:
+                segments, stats = _create_synthetic_diarization_segments(transcription_result)
+            
+            logger.info(f"   ⏱️ Synthetic segments created in {diarization_metrics.processing_time_seconds:.2f}s")
+        else:
+            # Run PyAnnote diarization
+            # Slice audio to requested time range for faster diarization
+            # This is critical - full audio file can be 767MB (1+ hr), but we only need 60s
+            from ingestion.audio_utils import slice_audio
+            
+            original_size = audio_path.stat().st_size / (1024 * 1024)
+            logger.info(f"   🔪 Slicing audio ({original_size:.1f}MB) to [0-{cache_end_time}s]...")
+            
+            sliced_audio = slice_audio(
+                audio_path=str(audio_path),
+                start_time=0,  # Always start from 0 for cache consistency
+                end_time=cache_end_time,
+            )
+            sliced_size = sliced_audio.stat().st_size / (1024 * 1024)
+            logger.info(f"   ↳ Sliced: {sliced_audio.name} ({sliced_size:.1f}MB)")
+            
+            # Compute diarization on sliced audio with metrics tracking
+            from ingestion.args import get_workflow
+            from ingestion.config import WorkflowConfig
+            
+            workflow_config = WorkflowConfig(name=config.workflow)
+            workflow = get_workflow(workflow_config)
+            
+            logger.info(f"   🔄 Running PyAnnote diarization on sliced audio...")
+            with track_run(input_duration_seconds=cache_end_time) as diarization_metrics:
+                segments, stats = workflow.run(sliced_audio, transcription_result)
+            
+            logger.info(f"   ⏱️ Diarization completed in {diarization_metrics.processing_time_seconds:.2f}s")
+            if diarization_metrics.peak_memory_mb:
+                logger.info(f"   💾 Peak memory: {diarization_metrics.peak_memory_mb:.1f}MB")
+            if diarization_metrics.realtime_factor:
+                logger.info(f"   ⚡ {diarization_metrics.realtime_factor:.1f}x realtime")
         
         # Save to cache with metrics
         diar_cache.save(
-            segments=segments, 
-            stats=stats, 
+            segments=segments,
+            stats=stats,
             end_time=cache_end_time,
             metrics=diarization_metrics.to_dict(),
         )
@@ -581,6 +599,9 @@ def run_ingest(config: IngestConfig) -> None:
         
         # Save video + runs with metrics in one call
         # video_id here is the source ID (e.g., YouTube ID), InstantDB generates its own UUIDs
+        # Use the actual workflow name (whisper_identified for synthetic segments)
+        actual_workflow = "whisper_identified" if config.segment_source == "whisper" else config.workflow
+        
         result = instant_client.save_ingestion_runs(
             source_id=video_id,  # e.g., "jAlKYYr1bpY" - stored as attribute
             video_title=config.title or audio_path.stem,
@@ -588,7 +609,7 @@ def run_ingest(config: IngestConfig) -> None:
             video_url=config.source if config.is_url else None,
             video_duration=config.end_time or 0,
             transcription_metrics=trans_metrics,
-            diarization_workflow=config.workflow,
+            diarization_workflow=actual_workflow,
             diarization_metrics=diar_metrics,
             num_speakers_detected=len(set(s.get("speaker", "UNKNOWN") for s in segments)),
         )
@@ -953,6 +974,62 @@ def _get_or_create_transcription(
     except Exception as e:
         logger.error(f"Transcription failed: {e}")
         raise
+
+
+def _create_synthetic_diarization_segments(
+    transcription_result: TranscriptionResult,
+) -> tuple[list[dict], dict]:
+    """
+    Create synthetic diarization segments from Whisper transcription segments.
+    
+    This is useful when Whisper's natural segmentation (based on pauses and
+    punctuation) produces better speaker boundaries than PyAnnote diarization.
+    
+    Each transcription segment becomes a diarization segment with:
+    - speaker_label = "UNKNOWN" (to be identified later)
+    - start_time, end_time from the transcription segment
+    - text from the transcription segment
+    
+    Args:
+        transcription_result: TranscriptionResult from Whisper
+        
+    Returns:
+        Tuple of (segments, stats) where:
+        - segments: List of diarization segment dicts
+        - stats: Dict with statistics about the synthetic segments
+    """
+    segments = []
+    
+    for idx, seg in enumerate(transcription_result.segments):
+        # Get segment timing
+        start = seg.start if hasattr(seg, 'start') else seg.get('start', 0)
+        end = seg.end if hasattr(seg, 'end') else seg.get('end', 0)
+        text = seg.text if hasattr(seg, 'text') else seg.get('text', '')
+        
+        # Create synthetic diarization segment
+        segments.append({
+            "start": float(start),
+            "end": float(end),
+            "speaker": "UNKNOWN",  # All segments start as UNKNOWN
+            "text": text.strip(),
+            "confidence": None,  # No confidence for synthetic segments
+            "source": "whisper_transcription",  # Mark the source
+            "transcription_segment_index": idx,
+        })
+    
+    # Calculate stats
+    total_duration = sum(s["end"] - s["start"] for s in segments)
+    avg_duration = total_duration / len(segments) if segments else 0
+    
+    stats = {
+        "segment_count": len(segments),
+        "total_duration": total_duration,
+        "avg_segment_duration": avg_duration,
+        "source": "whisper_transcription",
+        "workflow": "whisper_identified",
+    }
+    
+    return segments, stats
 
 
 def main():

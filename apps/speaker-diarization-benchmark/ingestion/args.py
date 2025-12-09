@@ -77,6 +77,12 @@ WORKFLOW_CHOICES = [
     "assemblyai"
 ]
 
+# Segment source choices for ingest command
+SEGMENT_SOURCE_CHOICES = [
+    "pyannote",  # Use PyAnnote diarization (default)
+    "whisper",   # Create synthetic segments from Whisper transcription
+]
+
 # Type alias for all config types
 ConfigType = Union[
     TranscribeConfig,
@@ -188,7 +194,14 @@ Run the complete audio ingestion pipeline:
     ingest_parser.add_argument("--end-time", type=float, default=None, help="End time in seconds (default: full file)")
     ingest_parser.add_argument("--title", type=str, default=None, help="Video title for InstantDB (auto-detected if URL)")
     ingest_parser.add_argument("--skip-identify", action="store_true", help="Skip speaker identification step")
-    ingest_parser.add_argument("--workflow", type=str, default="pyannote", choices=WORKFLOW_CHOICES, help="Diarization workflow")
+    ingest_parser.add_argument(
+        "--segment-source",
+        type=str,
+        default="pyannote",
+        choices=SEGMENT_SOURCE_CHOICES,
+        help="Source for diarization segments: 'pyannote' (default) or 'whisper' (synthetic from transcription)"
+    )
+    ingest_parser.add_argument("--workflow", type=str, default="pyannote", choices=WORKFLOW_CHOICES, help="Diarization workflow (when --segment-source=pyannote)")
     ingest_parser.add_argument("--pipeline", type=str, default="pyannote/speaker-diarization-3.1", help="PyAnnote pipeline")
     ingest_parser.add_argument("--threshold", type=float, default=0.5, help="KNN identification threshold")
     ingest_parser.add_argument("--output-dir", type=str, default="data/clips", help="Download output directory")
@@ -284,6 +297,7 @@ Run the complete audio ingestion pipeline:
             end_time=args.end_time,
             title=args.title,
             skip_identify=args.skip_identify,
+            segment_source=args.segment_source,
             workflow=args.workflow,
             pipeline=args.pipeline,
             threshold=args.threshold,

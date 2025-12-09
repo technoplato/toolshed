@@ -151,7 +151,10 @@ class IngestConfig(BaseModel):
         title: Video title for InstantDB (auto-detected if URL)
         skip_download: Skip download step (assumes local file)
         skip_identify: Skip speaker identification step
-        workflow: Diarization workflow to use
+        segment_source: Source for diarization segments
+            - "pyannote": Use PyAnnote diarization (default)
+            - "whisper": Create synthetic segments from Whisper transcription
+        workflow: Diarization workflow to use (when segment_source="pyannote")
         threshold: KNN threshold for identification
         dry_run: Show plan without running any compute
         preview: Run compute and show what would be saved (without saving)
@@ -164,6 +167,7 @@ class IngestConfig(BaseModel):
     title: Optional[str] = None
     skip_download: bool = False
     skip_identify: bool = False
+    segment_source: str = "pyannote"  # "pyannote" or "whisper"
     workflow: str = "pyannote"
     pipeline: str = "pyannote/speaker-diarization-3.1"
     threshold: float = 0.5

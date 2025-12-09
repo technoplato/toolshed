@@ -8,11 +8,12 @@
 #
 #   # Start specific service
 #   docker compose up -d postgres
-#   docker compose up -d instant-server
+#   docker compose up -d instant-proxy
+#   docker compose up -d ground-truth-server
 #
 #   # View logs
 #   docker compose logs -f
-#   docker compose logs -f instant-server
+#   docker compose logs -f instant-proxy
 #
 #   # Stop all
 #   docker compose down
@@ -23,11 +24,12 @@
 #     - INSTANT_APP_ID
 #     - INSTANT_ADMIN_SECRET
 #     - HF_TOKEN (optional, for embedding extraction)
-#   - Ports 5433 and 3001 available
+#   - Ports 5433, 3001, and 8000 available
 #
 #   [Outputs]
 #   - PostgreSQL with pgvector on localhost:5433
-#   - InstantDB TypeScript server on localhost:3001
+#   - InstantDB Proxy (TypeScript) on localhost:3001
+#   - Ground Truth Server (Python) on localhost:8000
 #
 #   [Side Effects]
 #   - Creates Docker volumes for data persistence
@@ -40,11 +42,16 @@
 # WHAT:
 #   Docker Compose stack providing:
 #   1. PostgreSQL + pgvector: Vector database for speaker embeddings
-#   2. instant-server: TypeScript server wrapping InstantDB Admin SDK
+#   2. instant-proxy: TypeScript server wrapping InstantDB Admin SDK
+#   3. ground-truth-server: Python server for Ground Truth UI
 #
 # WHEN:
 #   2025-12-07
-#   Last Modified: 2025-12-08
+#   Last Modified: 2025-12-09
+#   [Change Log:
+#     - 2025-12-09: Renamed instant-server to instant-proxy
+#     - 2025-12-09: Added ground-truth-server service
+#   ]
 #
 # WHERE:
 #   apps/speaker-diarization-benchmark/docker-compose.yml
@@ -64,25 +71,38 @@
 #      - Schema validation and relationships
 #      - Why not just Postgres? We want real-time sync + official SDK
 #
-#   3. TypeScript server wraps InstantDB Admin SDK
+#   3. TypeScript proxy wraps InstantDB Admin SDK
 #      - InstantDB's Python support is unofficial/unreliable
 #      - TypeScript SDK is officially supported + well-documented
 #      - Python scripts call TypeScript server via HTTP
 #      - Why not direct Python calls? Reduces flaky dependencies
 #
+#   4. Ground Truth Server provides labeling UI
+#      - Serves HTML/JS UI for segment labeling
+#      - Handles split/relabel/delete operations
+#      - Coordinates InstantDB and PostgreSQL updates
+#      - Extracts embeddings when assigning speakers
+#
 #   ARCHITECTURE:
 #   ┌─────────────────┐     HTTP      ┌──────────────────┐     Admin SDK   ┌───────────┐
-#   │  Python Scripts │ ◄──────────► │  instant-server  │ ◄─────────────► │ InstantDB │
+#   │  Python Scripts │ ◄──────────► │  instant-proxy   │ ◄─────────────► │ InstantDB │
 #   │  (audio_ingest) │              │   (TypeScript)   │                 │  (cloud)  │
 #   └────────┬────────┘              └──────────────────┘                 └───────────┘
-#            │
-#            │ psycopg
-#            ▼
-#   ┌─────────────────┐
-#   │   PostgreSQL    │
-#   │   (pgvector)    │
-#   │   localhost:5433│
-#   └─────────────────┘
+#            │                                ▲
+#            │ psycopg                        │ HTTP
+#            ▼                                │
+#   ┌─────────────────┐              ┌────────┴─────────┐
+#   │   PostgreSQL    │              │  ground-truth    │
+#   │   (pgvector)    │◄─────────────│     server       │
+#   │   localhost:5433│   psycopg    │  localhost:8000  │
+#   └─────────────────┘              └──────────────────┘
+#                                            │
+#                                            ▼
+#                                    ┌──────────────────┐
+#                                    │   Browser UI     │
+#                                    │ (ground_truth_   │
+#                                    │  instant.html)   │
+#                                    └──────────────────┘
 #
 # =============================================================================
 
@@ -121,7 +141,7 @@ services:
       retries: 5
 
   # ===========================================================================
-  # INSTANTDB TYPESCRIPT SERVER
+  # INSTANTDB PROXY (TypeScript)
   # ===========================================================================
   # Wraps InstantDB Admin SDK in a simple HTTP server.
   # Python scripts call this instead of using unofficial Python clients.
@@ -134,19 +154,23 @@ services:
   #
   # Endpoints:
   # - GET  /health                    Health check
-  # - POST /query                     Execute InstaQL query
-  # - POST /transact                  Execute transaction
+  # - POST /videos                    Create/update video
   # - GET  /videos/:id                Get video with runs/segments
+  # - PUT  /videos/:id                Update video metadata
+  # - POST /ingestion-runs            Save video + runs with metrics
   # - GET  /diarization-segments      Get segments with filters
+  # - POST /diarization-segments      Save segments (batch)
+  # - POST /words                     Save words (batch)
   # - POST /speaker-assignments       Create speaker assignments
   # - GET  /speakers                  List all speakers
   # - POST /speakers                  Get or create speaker
+  # - DELETE /speakers/:id            Delete a speaker
   # ===========================================================================
-  instant-server:
+  instant-proxy:
     build:
       context: ../..
-      dockerfile: apps/speaker-diarization-benchmark/Dockerfile.instant-server
-    container_name: instant-server
+      dockerfile: apps/speaker-diarization-benchmark/Dockerfile.instant-proxy
+    container_name: instant-proxy
     restart: unless-stopped
     ports:
       - "3001:3001"
@@ -165,6 +189,53 @@ services:
       start_period: 30s
     depends_on:
       postgres:
+        condition: service_healthy
+
+  # ===========================================================================
+  # GROUND TRUTH SERVER (Python)
+  # ===========================================================================
+  # Serves the Ground Truth UI for segment labeling.
+  # Handles split/relabel/delete operations with InstantDB + PostgreSQL.
+  #
+  # Why a separate server?
+  # - Serves static HTML/JS/CSS for the labeling UI
+  # - Handles audio file serving with HTTP Range requests
+  # - Coordinates updates between InstantDB and PostgreSQL
+  # - Extracts embeddings when assigning speakers to segments
+  #
+  # Endpoints:
+  # - GET  /                          Static file server (UI, audio)
+  # - POST /split_segment             Split segment into multiple
+  # - POST /assign_speaker            Assign speaker to segment
+  # - POST /delete_segment            Delete segment and embedding
+  # ===========================================================================
+  ground-truth-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.ground-truth-server
+    container_name: ground-truth-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      INSTANT_APP_ID: ${INSTANT_APP_ID}
+      INSTANT_ADMIN_SECRET: ${INSTANT_ADMIN_SECRET}
+      POSTGRES_DSN: postgresql://diarization:diarization_dev@postgres:5432/speaker_embeddings
+      HF_TOKEN: ${HF_TOKEN:-}
+      PORT: "8000"
+    volumes:
+      # Mount audio files directory
+      - ./data/clips:/app/data/clips:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      instant-proxy:
         condition: service_healthy
 
 volumes:

@@ -1,32 +1,36 @@
 # =============================================================================
-# DOCKERFILE: InstantDB TypeScript Server
+# DOCKERFILE: InstantDB Proxy (TypeScript)
 # =============================================================================
 #
 # HOW:
 #   # Build and run via docker compose (recommended)
-#   docker compose up -d instant-server
+#   docker compose up -d instant-proxy
 #
 #   # Build standalone
-#   docker build -f Dockerfile.instant-server -t instant-server ../..
+#   docker build -f Dockerfile.instant-proxy -t instant-proxy ../..
 #
 #   # Run standalone
 #   docker run -p 3001:3001 \
 #     -e INSTANT_APP_ID=your-app-id \
 #     -e INSTANT_ADMIN_SECRET=your-secret \
-#     instant-server
+#     instant-proxy
 #
 # WHO:
 #   Claude AI, User
 #
 # WHAT:
-#   Builds a lightweight container for the InstantDB TypeScript server.
+#   Builds a lightweight container for the InstantDB TypeScript proxy.
 #   Uses Bun runtime for fast startup and low memory footprint.
 #
 # WHEN:
 #   2025-12-08
+#   Last Modified: 2025-12-09
+#   [Change Log:
+#     - 2025-12-09: Renamed from Dockerfile.instant-server to Dockerfile.instant-proxy
+#   ]
 #
 # WHERE:
-#   apps/speaker-diarization-benchmark/Dockerfile.instant-server
+#   apps/speaker-diarization-benchmark/Dockerfile.instant-proxy
 #
 # WHY:
 #   Containerizing the server ensures:
@@ -51,7 +55,7 @@ FROM base AS runtime
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy the server file directly
-COPY apps/speaker-diarization-benchmark/ingestion/instant_server.ts ./instant_server.ts
+COPY apps/speaker-diarization-benchmark/ingestion/instant_proxy.ts ./instant_proxy.ts
 
 # Install curl for healthcheck
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
@@ -68,4 +72,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=3 --start-period=10s \
   CMD curl -f http://localhost:3001/health || exit 1
 
 # Run the server
-CMD ["bun", "run", "instant_server.ts"]
+CMD ["bun", "run", "instant_proxy.ts"]

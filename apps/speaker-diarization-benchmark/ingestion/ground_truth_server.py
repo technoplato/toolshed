@@ -1,28 +1,69 @@
-
 """
+HOW:
+  Start the server:
+    cd apps/speaker-diarization-benchmark
+    uv run python -m ingestion.ground_truth_server --port 8000
+  
+  Or via audio_ingestion.py:
+    uv run audio_ingestion.py server --port 8000
+  
+  Or via Docker:
+    docker compose up -d ground-truth-server
+
+  [Inputs]
+  - INSTANT_APP_ID (env): Required for InstantDB connection
+  - INSTANT_ADMIN_SECRET (env): Required for InstantDB admin access
+  - POSTGRES_DSN (env): PostgreSQL connection string for embeddings
+  - HF_TOKEN (env): HuggingFace token for PyAnnote models
+  - PORT (env or --port): Server port (default: 8000)
+
+  [Outputs]
+  - HTTP server on localhost:{PORT}
+  - Serves Ground Truth UI at /data/clips/ground_truth_instant.html
+
+  [Side Effects]
+  - Reads/writes to InstantDB via Admin SDK
+  - Reads/writes to PostgreSQL for embeddings
+  - Serves audio files for playback
+
 WHO:
-  Antigravity
-  (Context: Audio Ingestion System)
+  Antigravity, Claude AI
+  (Context: Audio Ingestion System - Ground Truth Labeling)
 
 WHAT:
   Server implementation for the Ground Truth UI, backed by InstantDB.
   
   [Endpoints]
-  - GET /: Serves the UI.
-  - POST /split_segment: Splits a segment and updates InstantDB.
-  - POST /relabel_speaker: updates InstantDB + Postgres (metadata).
+  - GET /: Serves static files (UI, audio)
+  - POST /split_segment: Splits a segment into multiple segments
+  - POST /assign_speaker: Creates speaker assignment for a segment
+  - POST /delete_segment: Deletes a segment and its embedding
   
-  [Inputs]
-  - ServerConfig
-  
-  [Outputs]
-  - Running HTTP server
+  [Key Behaviors]
+  - When splitting: Original segment is invalidated, embedding is DELETED from PostgreSQL
+  - When assigning speaker: If no embedding exists, one is extracted and saved
+  - When deleting: Both InstantDB segment and PostgreSQL embedding are removed
   
 WHEN:
   2025-12-06
+  Last Modified: 2025-12-09
+  [Change Log:
+    - 2025-12-09: Fixed embedding deletion on split, added embedding extraction on relabel
+    - 2025-12-09: Renamed from server.py to ground_truth_server.py for clarity
+  ]
 
 WHERE:
-  apps/speaker-diarization-benchmark/ingestion/server.py
+  apps/speaker-diarization-benchmark/ingestion/ground_truth_server.py
+
+WHY:
+  Provides a web interface for:
+  1. Viewing diarization segments with audio playback
+  2. Assigning speakers to segments (with autocomplete)
+  3. Splitting segments that contain multiple speakers
+  4. Deleting incorrectly linked segments
+  
+  The server ensures data consistency between InstantDB (metadata) and
+  PostgreSQL (embeddings) by handling both in each operation.
 """
 
 import http.server
@@ -94,7 +135,7 @@ class Embedder:
 def run_server(config: ServerConfig):
     # ... (rest same, updated port print)
     port = config.port
-    print(f"Starting InstantDB Server on port {port}...")
+    print(f"Starting Ground Truth Server on port {port}...")
     
     Handler = make_handler_class(config)
     
@@ -250,11 +291,15 @@ def make_handler_class(config: ServerConfig):
             from the segment itself.
             
             SCHEMA FLOW:
-            1. Fetch segment to get start_time, end_time, and parent run
-            2. Create SegmentSplit record (audit trail)
-            3. Mark original segment is_invalidated=true (NOT deleted - history preserved)
-            4. Create N new DiarizationSegments with speaker_label="SPLIT_X"
-            5. Link everything together
+            1. Fetch segment to get start_time, end_time, embedding_id, and parent run
+            2. DELETE the original embedding from PostgreSQL (prevents garbage data)
+            3. Create SegmentSplit record (audit trail)
+            4. Mark original segment is_invalidated=true (NOT deleted - history preserved)
+            5. Create N new DiarizationSegments with speaker_label="SPLIT_X"
+            6. Link everything together
+            
+            NOTE: New segments are created WITHOUT embeddings. Embeddings will be
+            extracted when the user assigns a speaker to each new segment.
             """
             try:
                 import uuid
@@ -290,6 +335,7 @@ def make_handler_class(config: ServerConfig):
                 segment = segments[0]
                 start_time = segment.get("start_time")
                 end_time = segment.get("end_time")
+                embedding_id = segment.get("embedding_id")
                 
                 # Get run_id from the linked diarizationRun
                 runs = segment.get("diarizationRun", [])
@@ -298,6 +344,16 @@ def make_handler_class(config: ServerConfig):
                 run_id = runs[0].get("id")
                 
                 print(f"  Segment: {start_time:.2f}s - {end_time:.2f}s, Run: {run_id}")
+                
+                # DELETE the original embedding from PostgreSQL
+                # This is critical - the original embedding spans multiple speakers
+                # and would pollute KNN search results if left in the database
+                if embedding_id and pg_client:
+                    try:
+                        pg_client.delete_embedding(embedding_id)
+                        print(f"  Deleted embedding {embedding_id} from PostgreSQL")
+                    except Exception as e:
+                        print(f"  Warning: Failed to delete embedding {embedding_id}: {e}")
                 
                 # Calculate proportional split times
                 total_chars = sum(len(line) for line in lines)
@@ -379,8 +435,10 @@ def make_handler_class(config: ServerConfig):
                 repo._transact(steps)
                 print(f"Split segment {segment_id} into {len(new_segments)} new segments")
                 
-                # TODO: Background job to extract embeddings for new segments
-                # This requires audio file access and pyannote embedding model
+                # NOTE: Embeddings for new segments will be extracted when the user
+                # assigns a speaker to each segment via handle_assign_speaker().
+                # This is intentional - we don't want to extract embeddings for
+                # segments that might be immediately deleted or re-split.
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -418,6 +476,8 @@ def make_handler_class(config: ServerConfig):
                - assigned_by: user identifier
                - assigned_at: timestamp
             3. Link SpeakerAssignment to the segment and speaker
+            4. If segment has no embedding, extract one and save to PostgreSQL
+            5. Update PostgreSQL speaker_id for the embedding
             
             History is preserved - previous assignments remain but UI shows most recent.
             """
@@ -472,19 +532,76 @@ def make_handler_class(config: ServerConfig):
                 repo._transact(steps)
                 print(f"Created speaker assignment: {speaker_name} -> segment {segment_id}")
                 
-                # Update Postgres if we have embedding
-                q_seg = {"diarizationSegments": {"$": {"where": {"id": segment_id}}}}
+                # Fetch segment with video info for embedding operations
+                q_seg = {
+                    "diarizationSegments": {
+                        "$": {"where": {"id": segment_id}},
+                        "diarizationRun": {
+                            "video": {}
+                        }
+                    }
+                }
                 res = repo._query(q_seg)
                 segs = res.get("diarizationSegments", [])
+                
                 if segs and pg_client:
                     seg = segs[0]
                     emb_id = seg.get("embedding_id")
+                    
                     if emb_id:
+                        # Embedding exists - just update the speaker_id
                         try:
                             pg_client.update_speaker_id(emb_id, speaker_name)
                             print(f"Updated Postgres speaker for embedding {emb_id}")
                         except Exception as e:
                             print(f"Failed to update Postgres: {e}")
+                    else:
+                        # No embedding - extract one and save it
+                        # This happens for segments created from splits
+                        try:
+                            # Get audio path from video
+                            runs = seg.get("diarizationRun", [])
+                            video = runs[0].get("video", []) if runs else []
+                            audio_path = video[0].get("filepath") if video else None
+                            video_id = video[0].get("id") if video else None
+                            run_id = runs[0].get("id") if runs else None
+                            
+                            if audio_path and os.path.exists(audio_path):
+                                print(f"Extracting embedding for segment {segment_id}...")
+                                start_time = seg.get("start_time")
+                                end_time = seg.get("end_time")
+                                speaker_label = seg.get("speaker_label", "UNKNOWN")
+                                
+                                # Extract embedding using PyAnnote
+                                embedding = Embedder.extract_embedding(audio_path, start_time, end_time)
+                                
+                                # Generate new embedding ID
+                                new_emb_id = str(uuid.uuid4())
+                                
+                                # Save to PostgreSQL
+                                pg_client.add_embedding(
+                                    external_id=new_emb_id,
+                                    embedding=embedding,
+                                    speaker_id=speaker_name,
+                                    speaker_label=speaker_label,
+                                    video_id=video_id,
+                                    diarization_run_id=run_id,
+                                    start_time=start_time,
+                                    end_time=end_time,
+                                )
+                                print(f"Saved new embedding {new_emb_id} to PostgreSQL")
+                                
+                                # Update segment with embedding_id
+                                repo._transact([
+                                    ["update", "diarizationSegments", segment_id, {"embedding_id": new_emb_id}]
+                                ])
+                                print(f"Updated segment {segment_id} with embedding_id {new_emb_id}")
+                            else:
+                                print(f"Warning: Audio file not found at {audio_path}, skipping embedding extraction")
+                        except Exception as e:
+                            print(f"Failed to extract/save embedding: {e}")
+                            import traceback
+                            traceback.print_exc()
 
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
@@ -553,6 +670,7 @@ def make_handler_class(config: ServerConfig):
                     
             except Exception as e:
                 print(f"Error deleting: {e}")
+                import traceback
                 traceback.print_exc()
                 self.send_response(500)
                 self.end_headers()
@@ -568,11 +686,18 @@ if __name__ == "__main__":
     import argparse
     from dotenv import load_dotenv
     
-    # Load .env from repo root
-    # server.py is at: apps/speaker-diarization-benchmark/ingestion/server.py
+    # Load .env from repo root (if running locally)
+    # In Docker, environment variables are passed via docker-compose
+    # ground_truth_server.py is at: apps/speaker-diarization-benchmark/ingestion/ground_truth_server.py
     # parents: [0]=ingestion, [1]=speaker-diarization-benchmark, [2]=apps, [3]=toolshed(repo)
-    repo_root = Path(__file__).resolve().parents[3]
-    load_dotenv(repo_root / ".env")
+    try:
+        repo_root = Path(__file__).resolve().parents[3]
+        if (repo_root / ".env").exists():
+            load_dotenv(repo_root / ".env")
+    except IndexError:
+        # In Docker, path is /app/ingestion/ground_truth_server.py
+        # parents[3] doesn't exist, but that's OK - env vars are passed via docker-compose
+        pass
     
     parser = argparse.ArgumentParser(description="Ground Truth UI Server (InstantDB)")
     parser.add_argument("--port", type=int, default=8000, help="Port to run the server on")

@@ -389,6 +389,7 @@
       // --- STATE ---
       let currentVideoId = null;
       let currentData = { transcriptionRuns: [], diarizationRuns: [] };
+      let selectedRunIds = new Set(); // Track which diarization runs to show
 
       const audio = document.getElementById("audio");
       const layout = document.getElementById("layout");
@@ -449,10 +450,11 @@
         document.getElementById("player-section").style.display = "block";
         layout.innerHTML = '<div style="padding:20px;">Loading runs...</div>';
         debugDump.textContent = "Loading debug info...";
+        
+        // Reset selection on new video load
+        selectedRunIds.clear();
 
         // Updated query for new schema:
-        // - words instead of transcriptionSegments
-        // - speakerAssignments instead of direct speaker link
         const query = {
           videos: {
             $: { where: { id: videoId } },
@@ -485,11 +487,9 @@
           let path = video.filepath || "";
 
           // Convert absolute filepath to relative path for server
-          // e.g., /Users/.../apps/speaker-diarization-benchmark/data/clips/file.wav -> /data/clips/file.wav
           if (path.includes("/apps/speaker-diarization-benchmark/")) {
             path = path.split("/apps/speaker-diarization-benchmark")[1];
           } else if (path.includes("data/clips/")) {
-            // Already relative or partially relative
             const match = path.match(/(data\/clips\/.+)/);
             if (match) path = "/" + match[1];
           }
@@ -503,6 +503,7 @@
           // Extract speakers from current video for autocomplete
           currentVideoSpeakers = extractSpeakersFromVideo(video);
 
+          renderRunControls(video);
           renderLayout(video);
         });
       }
@@ -513,7 +514,6 @@
         const diarRuns = video.diarizationRuns || [];
         for (const run of diarRuns) {
           for (const seg of run.diarizationSegments || []) {
-            // Get speaker from assignment if available
             const assignments = seg.speakerAssignments || [];
             if (assignments.length > 0) {
               const mostRecent = assignments.sort(
@@ -523,7 +523,6 @@
               const spk = mostRecent.speaker?.[0];
               if (spk?.name) speakers.add(spk.name);
             }
-            // Also add speaker_label if it looks like a name
             const label = seg.speaker_label || "";
             if (
               label &&
@@ -538,47 +537,121 @@
         return Array.from(speakers).sort();
       }
 
+      function renderRunControls(video) {
+        const diarRuns = video.diarizationRuns || [];
+        const controlsDiv = document.querySelector(".header .controls");
+        
+        // Remove existing run checkboxes if any
+        const existingContainer = document.getElementById("run-checkboxes");
+        if (existingContainer) existingContainer.remove();
+
+        const container = document.createElement("div");
+        container.id = "run-checkboxes";
+        container.style.display = "flex";
+        container.style.gap = "10px";
+        container.style.flexWrap = "wrap";
+        container.style.marginLeft = "20px";
+        container.style.fontSize = "0.9em";
+
+        if (diarRuns.length === 0) {
+            container.innerHTML = "<span style='color:#888'>No diarization runs</span>";
+        } else {
+            // Default selection logic
+            if (selectedRunIds.size === 0) {
+                if (diarRuns.length <= 3) {
+                    diarRuns.forEach(r => selectedRunIds.add(r.id));
+                } else {
+                    const pref = diarRuns.find(r => r.is_preferred) || diarRuns[0];
+                    if (pref) selectedRunIds.add(pref.id);
+                }
+            }
+
+            diarRuns.forEach(run => {
+                const label = document.createElement("label");
+                label.style.display = "flex";
+                label.style.alignItems = "center";
+                label.style.cursor = "pointer";
+                label.style.marginRight = "8px";
+                label.style.border = "1px solid #ddd";
+                label.style.padding = "2px 6px";
+                label.style.borderRadius = "4px";
+                label.title = `Full ID: ${run.id}\nCreated: ${run.created_at || '?'}`;
+
+                const cb = document.createElement("input");
+                cb.type = "checkbox";
+                cb.value = run.id;
+                cb.checked = selectedRunIds.has(run.id);
+                cb.style.marginRight = "6px";
+                
+                cb.onchange = (e) => {
+                    if (e.target.checked) selectedRunIds.add(run.id);
+                    else selectedRunIds.delete(run.id);
+                    renderLayout(video);
+                };
+
+                const name = run.workflow || "Unknown";
+                const count = run.diarizationSegments?.length || 0;
+                const shortId = run.id.substring(0, 8); // Show first 8 chars of ID
+                
+                if (count === 0) {
+                    // Debug logging for 0 count runs
+                    console.warn(`Run ${run.id} (${name}) has 0 segments!`, run);
+                }
+                
+                const span = document.createElement("span");
+                span.innerHTML = `<b>${count}</b> segs &mdash; ${name} <span style="font-family:monospace; color:#666; font-size:0.8em">(${shortId})</span>`;
+                
+                label.appendChild(cb);
+                label.appendChild(span);
+                container.appendChild(label);
+            });
+        }
+        
+        controlsDiv.appendChild(container);
+      }
+
       function renderLayout(video) {
         layout.innerHTML = "";
 
         try {
-          // Find best runs: prioritize runs with actual data, then longest duration
           const transcriptionRuns = video.transcriptionRuns || [];
           const diarizationRuns = video.diarizationRuns || [];
 
-          // For transcription: find run with most words, then longest duration
+          // 1. Find Preferred Transcription (Baseline)
           const preferredTranscription = transcriptionRuns
-            .filter((r) => r.words && r.words.length > 0)
-            .sort((a, b) => {
-              // First by word count (descending)
-              const wordDiff = (b.words?.length || 0) - (a.words?.length || 0);
-              if (wordDiff !== 0) return wordDiff;
-              // Then by duration (descending)
-              return (b.input_duration_seconds || 0) - (a.input_duration_seconds || 0);
-            })[0] || transcriptionRuns.find((r) => r.is_preferred) || transcriptionRuns[0];
+            .sort((a, b) => (b.words?.length || 0) - (a.words?.length || 0))[0] 
+            || transcriptionRuns.find((r) => r.is_preferred) 
+            || transcriptionRuns[0];
 
-          // For diarization: find run with most segments, then longest duration
-          const preferredDiarization = diarizationRuns
-            .filter((r) => r.diarizationSegments && r.diarizationSegments.length > 0)
-            .sort((a, b) => {
-              // First by segment count (descending)
-              const segDiff = (b.diarizationSegments?.length || 0) - (a.diarizationSegments?.length || 0);
-              if (segDiff !== 0) return segDiff;
-              // Then by duration (descending)
-              return (b.input_duration_seconds || 0) - (a.input_duration_seconds || 0);
-            })[0] || diarizationRuns.find((r) => r.is_preferred) || diarizationRuns[0];
+          // 2. Determine which Diarization Runs to show
+          let runsToShow = diarizationRuns.filter(r => selectedRunIds.has(r.id));
           
-          console.log(`Selected transcription run: ${preferredTranscription?.id} (${preferredTranscription?.words?.length || 0} words)`);
-          console.log(`Selected diarization run: ${preferredDiarization?.id} (${preferredDiarization?.diarizationSegments?.length || 0} segments)`);
+          if (runsToShow.length === 0 && diarizationRuns.length > 0) {
+             const fallback = diarizationRuns.find(r => r.is_preferred) || diarizationRuns[0];
+             runsToShow = [fallback];
+          }
 
-          if (!preferredTranscription && !preferredDiarization) {
-            layout.innerHTML =
-              '<div style="padding:20px; color:#999;">No transcription or diarization runs found.</div>';
+          console.log(`Rendering columns for runs:`, runsToShow.map(r => r.id));
+
+          if (!preferredTranscription && runsToShow.length === 0) {
+            layout.innerHTML = '<div style="padding:20px; color:#999;">No data found.</div>';
             return;
           }
 
-          // Render unified view: diarization segments enriched with words
-          renderUnifiedTranscript(preferredTranscription, preferredDiarization);
+          // 3. Render a column for EACH selected diarization run
+          if (runsToShow.length > 0) {
+              // Sort by creation date or ID to keep stable order
+              runsToShow.sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+              
+              runsToShow.forEach(run => {
+                  renderUnifiedTranscript(preferredTranscription, run);
+              });
+          } else {
+             if (preferredTranscription) {
+                 renderUnifiedTranscript(preferredTranscription, null);
+             }
+          }
+
         } catch (err) {
           console.error("Render Error:", err);
           layout.innerHTML += `<div style="color:red; margin:10px;">Error rendering: ${err.message}</div>`;
@@ -588,16 +661,14 @@
       function renderUnifiedTranscript(transcriptionRun, diarizationRun) {
         const col = document.createElement("div");
         col.className = "column";
-        col.style.maxWidth = "800px";
-        col.style.margin = "0 auto";
-
-        // Header with run info
-        const tInfo = transcriptionRun
-          ? transcriptionRun.tool_version || "unknown"
-          : "none";
-        const dInfo = diarizationRun
-          ? diarizationRun.workflow || "unknown"
-          : "none";
+        col.style.minWidth = "400px"; 
+        
+        // Header info
+        const tInfo = transcriptionRun ? (transcriptionRun.tool_version || "unknown") : "none";
+        const tId = transcriptionRun ? transcriptionRun.id.substring(0, 8) : "N/A";
+        
+        const dInfo = diarizationRun ? (diarizationRun.workflow || "unknown") : "none";
+        const dId = diarizationRun ? diarizationRun.id.substring(0, 8) : "N/A";
         
         // Build config info panel
         const tConfig = transcriptionRun?.config?.[0] || {};
@@ -620,35 +691,23 @@
         const uniqueSpeakers = new Set(segments.map(s => s.speaker_label)).size;
         
         col.innerHTML = `
-          <div class="col-header">Transcript (${tInfo}) + Diarization (${dInfo})</div>
+          <div class="col-header">
+            <div><strong>Diarization:</strong> ${dInfo} <span style="font-family:monospace; color:#555">(${dId})</span></div>
+            <div style="font-size:0.9em; color:#666; margin-top:2px;">
+                <strong>Transcript:</strong> ${tInfo} <span style="font-family:monospace">(${tId})</span>
+            </div>
+          </div>
           <div style="background:#f5f5f5; padding:10px; margin:10px 0; border-radius:4px; font-size:0.85em;">
-            <div style="display:flex; gap:20px; flex-wrap:wrap;">
-              <div style="flex:1; min-width:200px;">
-                <strong>📝 Transcription</strong>
-                <div>Tool: ${transcriptionRun?.tool_version || 'N/A'}</div>
-                <div>Duration: ${transcriptionRun?.input_duration_seconds || 'N/A'}s</div>
-                <div>Words: ${words.length}</div>
-                <div>Model: ${tConfig.model || 'whisper-large-v3-turbo'}</div>
+            <div style="display:flex; gap:15px; flex-wrap:wrap;">
+              <div style="flex:1;">
+                <strong>📊 Stats</strong>
+                <div>Segs: ${segments.filter(s => !s.is_invalidated).length} | Spkrs: ${uniqueSpeakers}</div>
+                <div>Avg: ${avgDuration}s | Max: ${maxDuration}s</div>
               </div>
-              <div style="flex:1; min-width:200px;">
-                <strong>🎙️ Diarization</strong>
-                <div>Workflow: ${diarizationRun?.workflow || 'N/A'}</div>
-                <div>Duration: ${diarizationRun?.input_duration_seconds || 'N/A'}s</div>
-                <div>Speakers: ${diarizationRun?.num_speakers_detected || uniqueSpeakers}</div>
-                <div>Embedding: ${dConfig.embedding_model || 'pyannote/wespeaker'}</div>
-              </div>
-              <div style="flex:1; min-width:200px;">
-                <strong>📊 Segment Stats</strong>
-                <div>Total: ${segments.filter(s => !s.is_invalidated).length} segments</div>
-                <div>Avg duration: ${avgDuration}s</div>
-                <div style="color:${maxDuration > 20 ? '#d32f2f' : 'inherit'}">Max duration: ${maxDuration}s ${maxDuration > 20 ? '⚠️' : ''}</div>
-                <div style="color:${longSegments > 0 ? '#f57c00' : 'inherit'}">Long (>15s): ${longSegments} ${longSegments > 0 ? '⚠️' : ''}</div>
-              </div>
-              <div style="flex:1; min-width:200px;">
-                <strong>👤 Speaker ID</strong>
-                <div>Assigned: ${withAssignment}/${segments.filter(s => !s.is_invalidated).length}</div>
-                <div>Threshold: ${dConfig.identification_threshold || '0.5 (default)'}</div>
-                <div>Clustering: ${dConfig.clustering_method || 'AgglomerativeClustering'}</div>
+              <div style="flex:1;">
+                 <strong>🔍 Config</strong>
+                 <div>Workflow: ${diarizationRun?.workflow || 'N/A'}</div>
+                 <div>Model: ${dConfig.embedding_model?.split('/').pop() || 'N/A'}</div>
               </div>
             </div>
           </div>
@@ -656,10 +715,6 @@
 
         const colContent = document.createElement("div");
         colContent.className = "col-content";
-
-        // Get words and segments
-        const words = transcriptionRun?.words || [];
-        const segments = diarizationRun?.diarizationSegments || [];
 
         // Sort words by start time
         words.sort((a, b) => a.start_time - b.start_time);

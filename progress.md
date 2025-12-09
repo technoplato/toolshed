@@ -26,6 +26,24 @@
 
 ---
 
+### December 9th, 2025 at 1:11:11 a.m.
+
+✨ Dockerized speaker diarization services and fixed speaker re-identification
+
+[Commit](https://github.com/technoplato/toolshed/commit/28dfd2a)
+
+- Renamed server.py → ground_truth_server.py and instant_server.ts → instant_proxy.ts for clarity
+- Created Dockerfiles for ground-truth-server (Python) and instant-proxy (TypeScript)
+- Fixed embedding deletion on segment split to prevent garbage data in KNN search
+- Added embedding extraction on speaker relabel for split segments
+- Added --segment-source whisper flag for synthetic diarization segments
+- Created delete_unknown_speakers.py migration script
+- Fixed path resolution for Docker environment
+- Updated start.sh with port conflict detection
+- All three Docker services now running: postgres:5433, instant-proxy:3001, ground-truth-server:8000
+
+
+
 ### December 8th, 2025 at 3:39:00 p.m.
 
 ✨ Preview mode + Ground Truth UI improvements

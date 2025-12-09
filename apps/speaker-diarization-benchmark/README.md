@@ -33,7 +33,7 @@ A comprehensive system for speaker diarization, identification, and transcriptio
 │              │ Admin SDK                          │ psycopg                  │
 │              │                                    │                          │
 │  ┌───────────────────────────────┐               │                          │
-│  │  instant-server (Docker:3001) │               │                          │
+│  │  instant-proxy (Docker:3001)  │               │                          │
 │  │  TypeScript HTTP wrapper      │               │                          │
 │  └───────────────────────────────┘               │                          │
 │              │                                    │                          │
@@ -62,10 +62,10 @@ A comprehensive system for speaker diarization, identification, and transcriptio
 
 ### Why Two Databases?
 
-| Database | Purpose | Why Not Just One? |
-|----------|---------|-------------------|
-| **InstantDB** | Relational data, real-time sync | No vector type support |
-| **PostgreSQL/pgvector** | Vector similarity search | No real-time sync to browser |
+| Database                | Purpose                         | Why Not Just One?            |
+| ----------------------- | ------------------------------- | ---------------------------- |
+| **InstantDB**           | Relational data, real-time sync | No vector type support       |
+| **PostgreSQL/pgvector** | Vector similarity search        | No real-time sync to browser |
 
 InstantDB provides real-time updates to the UI via WebSockets - when you change a speaker label, all connected browsers update instantly. PostgreSQL/pgvector provides O(√n) KNN search on 512-dimensional embeddings via IVFFlat indexing.
 
@@ -91,7 +91,7 @@ InstantDB provides real-time updates to the UI via WebSockets - when you change 
 - **InstantDB's TypeScript SDK** is official, well-documented, and reliable
 - **Python InstantDB clients** are unofficial, poorly maintained, and frequently break
 - **HTTP** is a stable, debuggable interface between Python and TypeScript
-- **Centralization** keeps all InstantDB logic in one file (`instant_server.ts`)
+- **Centralization** keeps all InstantDB logic in one file (`instant_proxy.ts`)
 
 ### Why Docker?
 
@@ -133,7 +133,7 @@ POSTGRES_DSN=postgresql://diarization:diarization_dev@localhost:5433/speaker_emb
 ```bash
 cd apps/speaker-diarization-benchmark
 
-# Start all services (PostgreSQL + instant-server)
+# Start all services (PostgreSQL + instant-proxy + ground-truth-server)
 # IMPORTANT: Use --env-file to load credentials from repo root .env
 docker compose --env-file ../../.env up -d
 
@@ -148,21 +148,27 @@ docker compose logs -f
 ```
 
 Expected output:
+
 ```
 NAME                          STATUS                    PORTS
 speaker-diarization-postgres  Up X seconds (healthy)    0.0.0.0:5433->5432/tcp
-instant-server                Up X seconds (healthy)    0.0.0.0:3001->3001/tcp
+instant-proxy                 Up X seconds (healthy)    0.0.0.0:3001->3001/tcp
+ground-truth-server           Up X seconds (healthy)    0.0.0.0:8000->8000/tcp
 ```
 
-> **Note**: The `--env-file ../../.env` flag is required because InstantDB credentials 
+> **Note**: The `--env-file ../../.env` flag is required because InstantDB credentials
 > are stored in the repo root `.env` file. Without this flag, the instant-server won't start.
 
 ### 3. Verify Services
 
 ```bash
-# Check instant-server health
+# Check instant-proxy health
 curl http://localhost:3001/health
 # Expected: {"status":"ok","appId":"d4802f0a"}
+
+# Check ground-truth-server health
+curl http://localhost:8000/health
+# Expected: {"status":"ok"}
 
 # Check PostgreSQL
 psql postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings -c "SELECT COUNT(*) FROM speaker_embeddings;"
@@ -188,14 +194,15 @@ uv run scripts/one_off/identify_speakers.py \
 
 ```
 apps/speaker-diarization-benchmark/
-├── docker-compose.yml          # PostgreSQL + instant-server
-├── Dockerfile.instant-server   # TypeScript server container
+├── docker-compose.yml          # PostgreSQL + instant-proxy + ground-truth-server
+├── Dockerfile.instant-proxy    # TypeScript server container
+├── Dockerfile.ground-truth-server  # Python server container
 ├── README.md                   # This file
 │
 ├── ingestion/
-│   ├── instant_server.ts       # InstantDB HTTP wrapper (TypeScript)
-│   ├── instant_client.py       # Python client for instant_server
-│   └── server.py               # Legacy Python server (UI actions)
+│   ├── instant_proxy.ts        # InstantDB HTTP wrapper (TypeScript)
+│   ├── instant_client.py       # Python client for instant_proxy
+│   └── ground_truth_server.py  # Python server for Ground Truth UI
 │
 ├── scripts/
 │   ├── init-db.sql             # PostgreSQL schema + indexes
@@ -228,19 +235,21 @@ apps/speaker-diarization-benchmark/
 
 ### PostgreSQL + pgvector (port 5433)
 
-| Setting | Value |
-|---------|-------|
-| Host | `localhost` |
-| Port | `5433` (not 5432 to avoid conflicts) |
-| Database | `speaker_embeddings` |
-| User | `diarization` |
-| Password | `diarization_dev` |
+| Setting           | Value                                                                        |
+| ----------------- | ---------------------------------------------------------------------------- |
+| Host              | `localhost`                                                                  |
+| Port              | `5433` (not 5432 to avoid conflicts)                                         |
+| Database          | `speaker_embeddings`                                                         |
+| User              | `diarization`                                                                |
+| Password          | `diarization_dev`                                                            |
 | Connection String | `postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings` |
 
 **Tables:**
+
 - `speaker_embeddings`: 512-dim vectors with speaker labels, segment metadata
 
 **Key Queries:**
+
 ```sql
 -- Count embeddings per speaker
 SELECT speaker_id, COUNT(*) FROM speaker_embeddings GROUP BY speaker_id;
@@ -252,22 +261,23 @@ ORDER BY distance
 LIMIT 5;
 ```
 
-### instant-server (port 3001)
+### instant-proxy (port 3001)
 
 TypeScript server wrapping InstantDB Admin SDK.
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/health` | GET | Health check |
-| `/query` | POST | Execute InstaQL query |
-| `/transact` | POST | Execute transaction |
-| `/videos/:id` | GET | Get video with runs/segments |
-| `/diarization-segments` | GET | Get segments (with ?video_id, ?start_time, ?end_time) |
-| `/speaker-assignments` | POST | Create speaker assignments (batch) |
-| `/speakers` | GET | List all speakers |
-| `/speakers` | POST | Get or create speaker by name |
+| Endpoint                | Method | Description                                           |
+| ----------------------- | ------ | ----------------------------------------------------- |
+| `/health`               | GET    | Health check                                          |
+| `/query`                | POST   | Execute InstaQL query                                 |
+| `/transact`             | POST   | Execute transaction                                   |
+| `/videos/:id`           | GET    | Get video with runs/segments                          |
+| `/diarization-segments` | GET    | Get segments (with ?video_id, ?start_time, ?end_time) |
+| `/speaker-assignments`  | POST   | Create speaker assignments (batch)                    |
+| `/speakers`             | GET    | List all speakers                                     |
+| `/speakers`             | POST   | Get or create speaker by name                         |
 
 **Example:**
+
 ```bash
 # Get all speakers
 curl http://localhost:3001/speakers
@@ -332,7 +342,7 @@ docker compose up -d
 
 ```bash
 # Check logs
-./start.sh logs instant-server
+./start.sh logs instant-proxy
 
 # Verify .env file exists and has correct values
 cat ../../.env | grep INSTANT
@@ -344,6 +354,7 @@ cat ../../.env | grep INSTANT
 ```
 
 Common issues:
+
 - **Missing `--env-file` flag**: Use `./start.sh` or add `--env-file ../../.env`
 - **Missing credentials**: Ensure `INSTANT_APP_ID` and `INSTANT_ADMIN_SECRET` are in `toolshed/.env`
 - **Wrong .env location**: Must be at repo root (`toolshed/.env`), not in this directory
@@ -361,14 +372,14 @@ lsof -i :5433
 docker compose restart postgres
 ```
 
-### Python script can't connect to instant-server
+### Python script can't connect to instant-proxy
 
 ```bash
 # Verify server is running
 curl http://localhost:3001/health
 
 # If running locally (not in Docker), start it manually:
-bun run ingestion/instant_server.ts
+bun run ingestion/instant_proxy.ts
 ```
 
 ### Embedding extraction fails
@@ -389,10 +400,10 @@ df -h
 
 ## 📝 Environment Variables Reference
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `INSTANT_APP_ID` | ✅ | InstantDB application ID |
-| `INSTANT_ADMIN_SECRET` | ✅ | InstantDB admin token |
-| `HF_TOKEN` | For embeddings | Hugging Face token for pyannote |
-| `POSTGRES_DSN` | Optional | Override PostgreSQL connection string |
-| `PORT` | Optional | instant-server port (default: 3001) |
+| Variable               | Required       | Description                           |
+| ---------------------- | -------------- | ------------------------------------- |
+| `INSTANT_APP_ID`       | ✅             | InstantDB application ID              |
+| `INSTANT_ADMIN_SECRET` | ✅             | InstantDB admin token                 |
+| `HF_TOKEN`             | For embeddings | Hugging Face token for pyannote       |
+| `POSTGRES_DSN`         | Optional       | Override PostgreSQL connection string |
+| `PORT`                 | Optional       | instant-server port (default: 3001)   |

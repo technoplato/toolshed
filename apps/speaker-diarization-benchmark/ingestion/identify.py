@@ -364,17 +364,12 @@ def identify_speakers(
                 )
                 if embedding:
                     # Only save to Postgres if we have a valid InstantDB client
-                    # (not in preview mode where video_id might be a YouTube ID)
-                    if instant_client is not None:
-                        pg_client.add_embedding(
-                            external_id=seg.id,
-                            embedding=embedding,
-                            speaker_id="UNKNOWN",
-                            video_id=video_id,
-                            start_time=seg.start_time,
-                            end_time=seg.end_time,
-                            speaker_label=seg.speaker_label,
-                        )
+                    # AND we actually know who this is (don't pollute DB with UNKNOWNs)
+                    # We don't know the speaker here (this is extraction phase), so we generally
+                    # SHOULD NOT save to Postgres yet. We only save to Postgres after identification
+                    # or if we have a ground truth label.
+                    # The original code saved as UNKNOWN, which is what we want to prevent.
+                    pass
                     embedding_record = {"embedding": embedding}
             
             if not embedding_record or not embedding_record.get("embedding"):

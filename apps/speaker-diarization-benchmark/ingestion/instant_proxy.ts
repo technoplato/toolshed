@@ -1,10 +1,13 @@
 /*
   HOW:
   Start the server:
-    bun run apps/speaker-diarization-benchmark/ingestion/instant_server.ts
+    bun run apps/speaker-diarization-benchmark/ingestion/instant_proxy.ts
   
   Or with specific port:
-    PORT=3001 bun run apps/speaker-diarization-benchmark/ingestion/instant_server.ts
+    PORT=3001 bun run apps/speaker-diarization-benchmark/ingestion/instant_proxy.ts
+
+  Or via Docker:
+    docker compose up -d instant-proxy
 
   [Inputs]
   - INSTANT_APP_ID (env): Required for InstantDB connection
@@ -31,18 +34,27 @@
   - GET  /health                    - Health check
   - GET  /videos/:id                - Get video with runs and segments
   - POST /videos                    - Create or update a video
+  - PUT  /videos/:id                - Update video metadata
   - GET  /diarization-segments      - Get segments for a video/run
+  - POST /diarization-segments      - Save diarization segments (batch)
   - POST /ingestion-runs            - Save video + transcription + diarization runs with metrics
+  - POST /words                     - Save transcription words (batch)
   - POST /speaker-assignments       - Create speaker assignments
   - GET  /speakers                  - List all speakers
   - POST /speakers                  - Create or get speaker by name
+  - DELETE /speakers/:id            - Delete a speaker
 
   WHEN:
   2025-12-07
-  Last Modified: 2025-12-08 (refactored to proper REST verbs)
+  Last Modified: 2025-12-09
+  [Change Log:
+    - 2025-12-08: Refactored to proper REST verbs
+    - 2025-12-09: Added DELETE /speakers/:id endpoint
+    - 2025-12-09: Renamed from instant_server.ts to instant_proxy.ts for clarity
+  ]
 
   WHERE:
-  apps/speaker-diarization-benchmark/ingestion/instant_server.ts
+  apps/speaker-diarization-benchmark/ingestion/instant_proxy.ts
 
   WHY:
   InstantDB's official SDK is TypeScript/JavaScript. The Python client
@@ -83,7 +95,7 @@ const db = init({
   adminToken: ADMIN_TOKEN,
 });
 
-console.log(`🚀 InstantDB Server starting...`);
+console.log(`🚀 InstantDB Proxy starting...`);
 console.log(`   App ID: ${APP_ID.slice(0, 8)}...`);
 
 // Helper to get current ISO timestamp
@@ -530,11 +542,16 @@ const server = Bun.serve({
           // Select the run with the most segments
           const runs = video.diarizationRuns || [];
           const bestRun = runs
-            .filter((r: any) => r.diarizationSegments && r.diarizationSegments.length > 0)
-            .sort((a: any, b: any) => 
-              (b.diarizationSegments?.length || 0) - (a.diarizationSegments?.length || 0)
+            .filter(
+              (r: any) =>
+                r.diarizationSegments && r.diarizationSegments.length > 0
+            )
+            .sort(
+              (a: any, b: any) =>
+                (b.diarizationSegments?.length || 0) -
+                (a.diarizationSegments?.length || 0)
             )[0];
-          
+
           let segments = bestRun?.diarizationSegments || [];
 
           if (startTime !== null) {
@@ -574,7 +591,7 @@ const server = Bun.serve({
         const assignments = body.assignments as Array<{
           segment_id: string;
           speaker_id?: string;
-          speaker_name?: string;  // Alternative to speaker_id - will lookup/create
+          speaker_name?: string; // Alternative to speaker_id - will lookup/create
           source: string;
           confidence: number;
           note: any;
@@ -591,10 +608,10 @@ const server = Bun.serve({
         // Build transactions, finding/creating speakers by name if needed
         const transactions: any[] = [];
         const speakerIdCache: Record<string, string> = {};
-        
+
         for (const a of assignments) {
           let speakerId = a.speaker_id;
-          
+
           // If no speaker_id but we have speaker_name, find or create speaker
           if (!speakerId && a.speaker_name) {
             // Check cache first
@@ -603,9 +620,9 @@ const server = Bun.serve({
             } else {
               // Query for existing speaker by name
               const existing = await db.query({
-                speakers: { $: { where: { name: a.speaker_name } } }
+                speakers: { $: { where: { name: a.speaker_name } } },
               });
-              
+
               if (existing.speakers && existing.speakers.length > 0) {
                 speakerId = existing.speakers[0].id;
               } else {
@@ -622,12 +639,14 @@ const server = Bun.serve({
               speakerIdCache[a.speaker_name] = speakerId;
             }
           }
-          
+
           if (!speakerId) {
-            console.log(`Skipping assignment - no speaker_id or speaker_name for segment ${a.segment_id}`);
+            console.log(
+              `Skipping assignment - no speaker_id or speaker_name for segment ${a.segment_id}`
+            );
             continue;
           }
-          
+
           const assignmentId = id();
           const noteValue =
             typeof a.note === "object" ? JSON.stringify(a.note) : a.note;
@@ -711,6 +730,36 @@ const server = Bun.serve({
         );
       }
 
+      // =========================================================================
+      // DELETE /speakers/:id - Delete a speaker
+      // =========================================================================
+      if (path.startsWith("/speakers/") && method === "DELETE") {
+        const speakerId = path.split("/")[2];
+
+        if (!speakerId) {
+          return Response.json(
+            { error: "speaker_id required" },
+            { status: 400, headers }
+          );
+        }
+
+        try {
+          // Delete the speaker
+          await db.transact(tx.speakers[speakerId].delete());
+
+          return Response.json(
+            { success: true, deleted_id: speakerId },
+            { headers }
+          );
+        } catch (error: any) {
+          console.error(`Failed to delete speaker ${speakerId}:`, error);
+          return Response.json(
+            { error: error.message || "Failed to delete speaker" },
+            { status: 500, headers }
+          );
+        }
+      }
+
       // 404 for unknown routes
       return Response.json(
         { error: "Not found", path },
@@ -726,13 +775,17 @@ const server = Bun.serve({
   },
 });
 
-console.log(`✅ InstantDB Server running on http://localhost:${PORT}`);
+console.log(`✅ InstantDB Proxy running on http://localhost:${PORT}`);
 console.log(`   Endpoints:`);
 console.log(`   - GET  /health`);
 console.log(`   - POST /videos`);
 console.log(`   - GET  /videos/:id`);
+console.log(`   - PUT  /videos/:id`);
 console.log(`   - POST /ingestion-runs`);
 console.log(`   - GET  /diarization-segments`);
+console.log(`   - POST /diarization-segments`);
+console.log(`   - POST /words`);
 console.log(`   - POST /speaker-assignments`);
 console.log(`   - GET  /speakers`);
 console.log(`   - POST /speakers`);
+console.log(`   - DELETE /speakers/:id`);
