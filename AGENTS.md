@@ -262,6 +262,60 @@ When defining database schemas:
 - **React**: Use Vite for new apps.
 - **Typescript**: Use bun when possible. If issues arise, use plain npm.
 
+### Swift Development with SweetPad
+
+For Swift/iOS development, use the **SweetPad** VSCode extension. This enables agents to build, run, and test Swift code without leaving VSCode.
+
+**Key Commands for Agents:**
+
+```bash
+# Build and run
+sweetpad.build.build          # Build without running
+sweetpad.build.launch         # Build & Run (Launch)
+sweetpad.build.run            # Run without building
+
+# Testing
+sweetpad.build.test           # Run tests
+sweetpad.testing.buildForTesting    # Build for testing (without running)
+sweetpad.testing.testWithoutBuilding # Test without building
+
+# Setup
+sweetpad.build.generateBuildServerConfig  # Generate buildServer.json for LSP
+sweetpad.build.selectXcodeWorkspace       # Select workspace
+sweetpad.build.setDefaultScheme           # Set scheme
+sweetpad.destinations.select              # Select simulator/device
+```
+
+**Workflow for Running Swift Tests:**
+
+1. Open the Swift project directory in VSCode
+2. Run `sweetpad.build.generateBuildServerConfig` to set up LSP
+3. Run `sweetpad.build.setDefaultScheme` to select the test scheme
+4. Run `sweetpad.destinations.selectForTesting` to choose a simulator
+5. Run `sweetpad.build.test` to execute tests
+
+**CLI Alternative (xcodebuild):**
+
+Agents can also run tests directly via CLI using `xcodebuild`:
+
+```bash
+# List available schemes
+xcodebuild -list -workspace MyProject.xcworkspace
+
+# Run tests on macOS
+xcodebuild test -workspace MyProject.xcworkspace -scheme MyScheme -destination 'platform=macOS,arch=arm64'
+
+# Run tests on iOS Simulator
+xcodebuild test -workspace MyProject.xcworkspace -scheme MyScheme -destination 'platform=iOS Simulator,name=iPhone 16'
+
+# Run specific test class
+xcodebuild test -workspace MyProject.xcworkspace -scheme MyScheme -destination 'platform=macOS' -only-testing:MyTests/MyTestClass
+```
+
+**Note:** Swift macros require user approval before first use. If tests fail with "Macro must be enabled", the user needs to approve macros in Xcode or via SweetPad.
+
+**Documentation:** See [`docs/apple/sweetpad-for-ios-development.md`](docs/apple/sweetpad-for-ios-development.md) for full command and settings reference.
+
 ## Reference Libraries (Submodules)
 
 The `references/` directory contains git submodules of external libraries that agents can explore for documentation, patterns, and implementation details.
