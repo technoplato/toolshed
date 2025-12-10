@@ -30,7 +30,7 @@
 
 ✨ SpeechRecorderApp Phase 1 Complete - Project Setup & Basic Recording
 
-[Commit](https://github.com/technoplato/toolshed/commit/87d44d0)
+[Commit](https://github.com/technoplato/toolshed/commit/64b96ce)
 
 - Created Xcode project with TCA, Swift Sharing dependencies
 - Implemented AudioRecorderClient with AVAudioRecorder (TDD)
