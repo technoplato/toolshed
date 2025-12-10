@@ -26,6 +26,18 @@
 
 ---
 
+### December 9th, 2025 at 9:23:38 p.m.
+
+📝 Extracted ShazamKit documentation
+
+[Commit](https://github.com/technoplato/toolshed/commit/c5b8356)
+
+- Unzipped and explored ShazamKit API documentation
+- Includes SHSession, SHManagedSession, SHSignature, SHCustomCatalog docs
+- Covers iOS 15.0+ / macOS 12.0+ ShazamKit APIs for audio matching
+
+
+
 ### December 9th, 2025 at 9:20:58 p.m.
 
 📝 Extracted Apple Speech framework documentation
