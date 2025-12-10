@@ -166,4 +166,163 @@ struct PlaybackFeatureTests {
             $0.currentWordIndex = nil
         }
     }
+    
+    // MARK: - Word Tapped Tests
+    
+    @Test("Tap word seeks to word start time")
+    func tapWordSeeksToWordStart() async {
+        let recording = Recording.preview(
+            transcription: Transcription(
+                text: "Hello world test",
+                words: [
+                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5),
+                    .preview(text: "world", startTime: 0.5, endTime: 1.0),
+                    .preview(text: "test", startTime: 1.0, endTime: 1.5)
+                ],
+                isFinal: true
+            )
+        )
+        
+        let store = await TestStore(
+            initialState: PlaybackFeature.State(recording: recording)
+        ) {
+            PlaybackFeature()
+        } withDependencies: {
+            $0.audioPlayer.seek = { _ in }
+        }
+        
+        /// Tap on "world" (index 1) - should seek to 0.5
+        await store.send(.wordTapped(1)) {
+            $0.currentTime = 0.5
+            $0.currentWordIndex = 1
+        }
+        
+        /// Tap on "test" (index 2) - should seek to 1.0
+        await store.send(.wordTapped(2)) {
+            $0.currentTime = 1.0
+            $0.currentWordIndex = 2
+        }
+    }
+    
+    @Test("Tap word with invalid index does nothing")
+    func tapWordInvalidIndexDoesNothing() async {
+        let recording = Recording.preview(
+            transcription: Transcription(
+                text: "Hello",
+                words: [
+                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5)
+                ],
+                isFinal: true
+            )
+        )
+        
+        let store = await TestStore(
+            initialState: PlaybackFeature.State(recording: recording)
+        ) {
+            PlaybackFeature()
+        }
+        
+        /// Tap on invalid index - should not change state
+        await store.send(.wordTapped(5))
+        /// No state change expected
+    }
+    
+    @Test("Tap word with negative index does nothing")
+    func tapWordNegativeIndexDoesNothing() async {
+        let recording = Recording.preview(
+            transcription: Transcription(
+                text: "Hello",
+                words: [
+                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5)
+                ],
+                isFinal: true
+            )
+        )
+        
+        let store = await TestStore(
+            initialState: PlaybackFeature.State(recording: recording)
+        ) {
+            PlaybackFeature()
+        }
+        
+        /// Tap on negative index - should not change state
+        await store.send(.wordTapped(-1))
+        /// No state change expected
+    }
+    
+    // MARK: - Edge Case Tests
+    
+    @Test("Time between words returns nil index")
+    func timeBetweenWordsReturnsNil() async {
+        let recording = Recording.preview(
+            transcription: Transcription(
+                text: "Hello world",
+                words: [
+                    .preview(text: "Hello", startTime: 0.0, endTime: 0.4),
+                    /// Gap from 0.4 to 0.6
+                    .preview(text: "world", startTime: 0.6, endTime: 1.0)
+                ],
+                isFinal: true
+            )
+        )
+        
+        let store = await TestStore(
+            initialState: PlaybackFeature.State(recording: recording)
+        ) {
+            PlaybackFeature()
+        }
+        
+        /// Time 0.5 is in the gap between words
+        await store.send(.timeUpdated(0.5)) {
+            $0.currentTime = 0.5
+            $0.currentWordIndex = nil
+        }
+    }
+    
+    @Test("Time after all words returns nil index")
+    func timeAfterAllWordsReturnsNil() async {
+        let recording = Recording.preview(
+            transcription: Transcription(
+                text: "Hello",
+                words: [
+                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5)
+                ],
+                isFinal: true
+            )
+        )
+        
+        let store = await TestStore(
+            initialState: PlaybackFeature.State(recording: recording)
+        ) {
+            PlaybackFeature()
+        }
+        
+        /// Time 1.0 is after all words
+        await store.send(.timeUpdated(1.0)) {
+            $0.currentTime = 1.0
+            $0.currentWordIndex = nil
+        }
+    }
+    
+    @Test("Empty transcription always returns nil index")
+    func emptyTranscriptionReturnsNil() async {
+        let recording = Recording.preview(
+            transcription: Transcription(
+                text: "",
+                words: [],
+                isFinal: true
+            )
+        )
+        
+        let store = await TestStore(
+            initialState: PlaybackFeature.State(recording: recording)
+        ) {
+            PlaybackFeature()
+        }
+        
+        await store.send(.timeUpdated(0.5)) {
+            $0.currentTime = 0.5
+            $0.currentWordIndex = nil
+        }
+    }
 }

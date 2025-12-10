@@ -76,8 +76,11 @@ struct PlaybackFeature {
         /// User tapped the pause button
         case pauseButtonTapped
         
-        /// User seeked to a specific time
+        /// User seeked to a specific time (scrubbing)
         case seekTo(TimeInterval)
+        
+        /// User tapped on a word to seek to its start time
+        case wordTapped(Int)
         
         /// Playback time was updated
         case timeUpdated(TimeInterval)
@@ -155,6 +158,18 @@ struct PlaybackFeature {
                 
                 return .run { _ in
                     await audioPlayer.seek(time)
+                }
+                
+            case let .wordTapped(index):
+                guard index >= 0 && index < state.recording.transcription.words.count else {
+                    return .none
+                }
+                let word = state.recording.transcription.words[index]
+                state.currentTime = word.startTime
+                state.currentWordIndex = index
+                
+                return .run { [startTime = word.startTime] _ in
+                    await audioPlayer.seek(startTime)
                 }
                 
             case let .timeUpdated(time):
