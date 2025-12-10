@@ -30,7 +30,7 @@
 
 ✨ Phase 2: SpeechAnalyzer integration with live transcription
 
-[Commit](https://github.com/technoplato/toolshed/commit/667057c)
+[Commit](https://github.com/technoplato/toolshed/commit/0e953b5)
 
 - Updated SpeechClient to use AsyncThrowingStream pattern from TCA
 - Implemented LiveSpeechClient with iOS 26.0+ SpeechAnalyzer API
