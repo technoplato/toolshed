@@ -30,7 +30,7 @@
 
 📝 Extracted ShazamKit documentation
 
-[Commit](https://github.com/technoplato/toolshed/commit/c5b8356)
+[Commit](https://github.com/technoplato/toolshed/commit/14fa9a0)
 
 - Unzipped and explored ShazamKit API documentation
 - Includes SHSession, SHManagedSession, SHSignature, SHCustomCatalog docs
