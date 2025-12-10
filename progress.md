@@ -26,6 +26,18 @@
 
 ---
 
+### December 9th, 2025 at 9:20:58 p.m.
+
+📝 Extracted Apple Speech framework documentation
+
+[Commit](https://github.com/technoplato/toolshed/commit/f0ccb5b)
+
+- Unzipped and explored Apple Speech API documentation for iOS 26.0+ / macOS 26.0+
+- Includes SpeechAnalyzer, SpeechTranscriber, DictationTranscriber, SpeechDetector, AssetInventory docs
+- Both JSON and Markdown formats available in docs/apple/speech/
+
+
+
 ### December 9th, 2025 at 9:13:08 p.m.
 
 ✨ Added Apple Speech-to-Text sample code to references
