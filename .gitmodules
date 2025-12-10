@@ -4,3 +4,9 @@
 [submodule "references/swift-sharing"]
 	path = references/swift-sharing
 	url = https://github.com/pointfreeco/swift-sharing
+[submodule "references/swift-dependencies"]
+	path = references/swift-dependencies
+	url = https://github.com/pointfreeco/swift-dependencies
+[submodule "references/isowords"]
+	path = references/isowords
+	url = https://github.com/pointfreeco/isowords

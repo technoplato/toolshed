@@ -268,11 +268,13 @@ The `references/` directory contains git submodules of external libraries that a
 
 ### Available References
 
-| Library                           | Path                                        | Description                                                                                         |
-| --------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **swift-composable-architecture** | `references/swift-composable-architecture/` | Point-Free's TCA library for building Swift applications with composition, testing, and ergonomics. |
-| **swift-sharing**                 | `references/swift-sharing/`                 | Point-Free's library for sharing state across features in a composable way.                         |
-| **apple-speech-to-text-sample**   | `references/apple-speech-to-text-sample/`   | Apple's sample code for "Bringing Advanced Speech-to-Text Capabilities to Your App".                |
+| Library                           | Path                                        | Description                                                                                                   |
+| --------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **swift-composable-architecture** | `references/swift-composable-architecture/` | Point-Free's TCA library for building Swift applications with composition, testing, and ergonomics.           |
+| **swift-sharing**                 | `references/swift-sharing/`                 | Point-Free's library for sharing state across features in a composable way.                                   |
+| **swift-dependencies**            | `references/swift-dependencies/`            | Point-Free's dependency injection library with `@Dependency` macro for live/test/preview environments.        |
+| **isowords**                      | `references/isowords/`                      | Point-Free's open-source word game showcasing TCA, swift-sharing, and swift-dependencies in a production app. |
+| **apple-speech-to-text-sample**   | `references/apple-speech-to-text-sample/`   | Apple's sample code for "Bringing Advanced Speech-to-Text Capabilities to Your App".                          |
 
 ### How to Use
 
@@ -287,6 +289,14 @@ cat references/swift-composable-architecture/README.md
 ls references/swift-sharing/Sources/
 cat references/swift-sharing/README.md
 
+# Explore swift-dependencies
+ls references/swift-dependencies/Sources/
+cat references/swift-dependencies/README.md
+
+# Explore isowords (production TCA app)
+ls references/isowords/Sources/
+cat references/isowords/README.md
+
 # Explore Apple's Speech-to-Text sample
 ls references/apple-speech-to-text-sample/SwiftTranscriptionSampleApp/
 cat references/apple-speech-to-text-sample/README.md
@@ -296,6 +306,8 @@ cat references/apple-speech-to-text-sample/README.md
 
 - **TCA**: `references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/`
 - **Sharing**: `references/swift-sharing/Sources/Sharing/Documentation.docc/`
+- **Dependencies**: `references/swift-dependencies/Sources/Dependencies/Documentation.docc/`
+- **isowords**: `references/isowords/` (full production app with TCA patterns)
 - **Apple Speech Sample**: `references/apple-speech-to-text-sample/SwiftTranscriptionSampleApp/` (source code with inline documentation)
 
 These references are useful when working on Swift projects that use TCA patterns or need state sharing solutions.
