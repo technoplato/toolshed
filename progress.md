@@ -30,7 +30,7 @@
 
 📝 Extracted Apple Speech framework documentation
 
-[Commit](https://github.com/technoplato/toolshed/commit/f0ccb5b)
+[Commit](https://github.com/technoplato/toolshed/commit/2966c2b)
 
 - Unzipped and explored Apple Speech API documentation for iOS 26.0+ / macOS 26.0+
 - Includes SpeechAnalyzer, SpeechTranscriber, DictationTranscriber, SpeechDetector, AssetInventory docs
