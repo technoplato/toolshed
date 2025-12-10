@@ -30,7 +30,7 @@
 
 ✨ Phase 5: Synchronized Playback with Word Highlighting
 
-[Commit](https://github.com/technoplato/toolshed/commit/cf0885a)
+[Commit](https://github.com/technoplato/toolshed/commit/81a31c4)
 
 - Added wordTapped(Int) action to PlaybackFeature for clicking words to seek
 - Added 6 new tests for edge cases (gaps, empty transcription, invalid indices)
