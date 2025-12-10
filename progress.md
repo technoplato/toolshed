@@ -30,7 +30,7 @@
 
 ✨ SpeechRecorderApp: Fix transcription and add segment display
 
-[Commit](https://github.com/technoplato/toolshed/commit/82546c1)
+[Commit](https://github.com/technoplato/toolshed/commit/0d4f92f)
 
 - Fixed LiveSpeechClient to use AsyncThrowingStream.makeStream() pattern matching Apple's sample code
 - Added TranscriptionSegment model for tracking speech segments with timing
