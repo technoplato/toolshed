@@ -109,44 +109,59 @@ private actor Speech {
     
     // MARK: - Availability
     
-    /// Check if SpeechTranscriber is available on this device
-    /// This is a device capability check, not a locale check
+    /// Check if SpeechTranscriber is available on this device and locale is supported
+    /// Following Apple's official documentation pattern
+    /// NOTE: SpeechTranscriber is NOT available on iOS Simulator - only on real devices
     func isAvailable(for locale: Locale) async -> Bool {
         logger.info("🔍 Checking availability for locale: \(locale.identifier)")
         
         /// First check device capability
+        /// IMPORTANT: SpeechTranscriber.isAvailable returns false on iOS Simulator
+        /// The new SpeechAnalyzer API (iOS 26.0+) only works on real devices
         let deviceAvailable = await SpeechTranscriber.isAvailable
         logger.info("📱 Device supports SpeechTranscriber: \(deviceAvailable)")
         
+        #if targetEnvironment(simulator)
+        if !deviceAvailable {
+            logger.warning("⚠️ SpeechTranscriber is NOT available on iOS Simulator. Please test on a real device.")
+            return false
+        }
+        #else
         if !deviceAvailable {
             logger.error("❌ SpeechTranscriber not available on this device")
             return false
         }
+        #endif
         
-        /// Check if locale is supported (following Apple's sample pattern)
-        let supportedLocales = await SpeechTranscriber.supportedLocales
-        logger.info("📋 Supported locales: \(supportedLocales.map { $0.identifier(.bcp47) }.joined(separator: ", "))")
+        /// Check if locale is supported using supportedLocale(equivalentTo:)
+        /// This is the official Apple documentation pattern
+        guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
+            logger.warning("❌ No supported locale found equivalent to: \(locale.identifier)")
+            return false
+        }
         
-        /// Use the locale's BCP47 identifier for comparison (Apple's pattern)
-        let localeId = locale.identifier(.bcp47)
-        let isSupported = supportedLocales.map { $0.identifier(.bcp47) }.contains(localeId)
-        logger.info("🔍 Locale \(localeId) is supported: \(isSupported)")
-        
-        return isSupported
+        logger.info("✅ Found supported locale: \(supportedLocale.identifier(.bcp47)) for input: \(locale.identifier)")
+        return true
     }
     
     /// Check if assets are installed for a locale
-    /// Following Apple's sample pattern from Transcription.swift
+    /// Following Apple's official documentation pattern
     func isAssetInstalled(for locale: Locale) async -> Bool {
         logger.info("🔍 Checking if asset is installed for locale: \(locale.identifier)")
+        
+        /// First get the supported locale equivalent
+        guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
+            logger.warning("❌ No supported locale found equivalent to: \(locale.identifier)")
+            return false
+        }
         
         let installedLocales = await SpeechTranscriber.installedLocales
         logger.info("📋 Installed locales: \(installedLocales.map { $0.identifier(.bcp47) }.joined(separator: ", "))")
         
-        /// Use the locale's BCP47 identifier for comparison (Apple's pattern)
-        let localeId = locale.identifier(.bcp47)
-        let isInstalled = installedLocales.map { $0.identifier(.bcp47) }.contains(localeId)
-        logger.info("🔍 Asset for \(localeId) is installed: \(isInstalled)")
+        /// Check if the supported locale is installed
+        let supportedLocaleId = supportedLocale.identifier(.bcp47)
+        let isInstalled = installedLocales.map { $0.identifier(.bcp47) }.contains(supportedLocaleId)
+        logger.info("🔍 Asset for \(supportedLocaleId) is installed: \(isInstalled)")
         
         return isInstalled
     }
@@ -154,50 +169,31 @@ private actor Speech {
     // MARK: - Asset Management
     
     /// Ensures assets are installed for the given locale.
-    /// This follows the pattern from Apple's sample code (Transcription.swift):
-    /// 1. Check if locale is supported
-    /// 2. Check if already installed
-    /// 3. Create a transcriber and download if needed
+    /// This follows the OFFICIAL Apple documentation pattern:
+    /// 1. Get supported locale using supportedLocale(equivalentTo:)
+    /// 2. Create transcriber with that locale
+    /// 3. Download assets if needed via AssetInventory
     func ensureAssets(for locale: Locale) async throws {
         logger.info("🚀 ensureAssets called for locale: \(locale.identifier)")
         
-        /// Step 1: Check if locale is supported (Apple's pattern)
-        let supportedLocales = await SpeechTranscriber.supportedLocales
-        let localeId = locale.identifier(.bcp47)
-        let isSupported = supportedLocales.map { $0.identifier(.bcp47) }.contains(localeId)
-        
-        logger.info("📋 Supported locales: \(supportedLocales.map { $0.identifier(.bcp47) }.joined(separator: ", "))")
-        logger.info("🔍 Locale \(localeId) is supported: \(isSupported)")
-        
-        guard isSupported else {
-            logger.error("❌ Locale not supported: \(localeId)")
+        /// Step 1: Get supported locale (OFFICIAL Apple documentation pattern)
+        guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
+            logger.error("❌ No supported locale found equivalent to: \(locale.identifier)")
             throw SpeechClient.Failure.localeNotSupported
         }
+        logger.info("✅ Found supported locale: \(supportedLocale.identifier(.bcp47))")
         
-        /// Step 2: Check if already installed (Apple's pattern)
-        let installedLocales = await SpeechTranscriber.installedLocales
-        let isInstalled = installedLocales.map { $0.identifier(.bcp47) }.contains(localeId)
-        
-        logger.info("📋 Installed locales: \(installedLocales.map { $0.identifier(.bcp47) }.joined(separator: ", "))")
-        logger.info("🔍 Asset for \(localeId) is installed: \(isInstalled)")
-        
-        if isInstalled {
-            logger.info("✅ Asset already installed, no download needed")
-            return
-        }
-        
-        /// Step 3: Create transcriber and download (Apple's pattern)
-        /// Note: Apple's sample uses Locale.current directly, not supportedLocale(equivalentTo:)
-        logger.info("📝 Creating transcriber for download...")
+        /// Step 2: Create transcriber with the supported locale (OFFICIAL pattern)
+        logger.info("📝 Creating transcriber with supported locale...")
         let tempTranscriber = SpeechTranscriber(
-            locale: locale,  /// Use the original locale, not a mapped one
+            locale: supportedLocale,  /// Use the SUPPORTED locale from supportedLocale(equivalentTo:)
             transcriptionOptions: [],
             reportingOptions: [.volatileResults],
             attributeOptions: [.audioTimeRange]
         )
-        logger.info("✅ Transcriber created for locale: \(locale.identifier)")
+        logger.info("✅ Transcriber created for locale: \(supportedLocale.identifier(.bcp47))")
         
-        /// Download if needed
+        /// Step 3: Download assets if needed (OFFICIAL pattern)
         logger.info("📥 Checking if asset download is needed...")
         do {
             if let request = try await AssetInventory.assetInstallationRequest(supporting: [tempTranscriber]) {
@@ -218,24 +214,39 @@ private actor Speech {
     // MARK: - Transcription
     
     /// Start transcription for a locale
-    /// Following Apple's sample pattern from Transcription.swift
+    /// Following the OFFICIAL Apple documentation pattern from SpeechAnalyzer docs
     func startTranscription(locale: Locale) async throws -> AsyncThrowingStream<TranscriptionResult, Error> {
         logger.info("🎙️ startTranscription called for locale: \(locale.identifier)")
         
         /// Step 1: Check device capability
+        /// IMPORTANT: SpeechTranscriber.isAvailable returns false on iOS Simulator
+        /// The new SpeechAnalyzer API (iOS 26.0+) only works on real devices
         let deviceAvailable = await SpeechTranscriber.isAvailable
         logger.info("📱 Device supports SpeechTranscriber: \(deviceAvailable)")
         
         guard deviceAvailable else {
+            #if targetEnvironment(simulator)
+            logger.error("❌ SpeechTranscriber is NOT available on iOS Simulator. Please test on a real device.")
+            throw SpeechClient.Failure.transcriptionFailed("SpeechTranscriber is not available on iOS Simulator. Please test on a real device.")
+            #else
             logger.error("❌ SpeechTranscriber not available on this device")
             throw SpeechClient.Failure.notAvailable
+            #endif
         }
         
-        /// Step 2: Create the transcriber with word-level timing
-        /// Note: Apple's sample uses Locale.current directly
-        logger.info("📝 Creating transcriber with word-level timing for locale: \(locale.identifier)")
+        /// Step 2: Get supported locale (OFFICIAL Apple documentation pattern)
+        /// From docs: "guard let locale = SpeechTranscriber.supportedLocale(equivalentTo: Locale.current)"
+        guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
+            logger.error("❌ No supported locale found equivalent to: \(locale.identifier)")
+            throw SpeechClient.Failure.localeNotSupported
+        }
+        logger.info("✅ Found supported locale: \(supportedLocale.identifier(.bcp47)) for input: \(locale.identifier)")
+        
+        /// Step 3: Create the transcriber with the SUPPORTED locale (OFFICIAL pattern)
+        /// From docs: "let transcriber = SpeechTranscriber(locale: locale, preset: .offlineTranscription)"
+        logger.info("📝 Creating transcriber with supported locale: \(supportedLocale.identifier(.bcp47))")
         transcriber = SpeechTranscriber(
-            locale: locale,  /// Use the original locale directly (Apple's pattern)
+            locale: supportedLocale,  /// Use the SUPPORTED locale from supportedLocale(equivalentTo:)
             transcriptionOptions: [],
             reportingOptions: [.volatileResults],
             attributeOptions: [.audioTimeRange]
@@ -247,14 +258,23 @@ private actor Speech {
         }
         logger.info("✅ Transcriber created successfully")
         
-        /// Step 3: Create the analyzer
-        logger.info("🔧 Creating SpeechAnalyzer...")
-        analyzer = SpeechAnalyzer(modules: [transcriber])
-        logger.info("✅ SpeechAnalyzer created")
-        
-        /// Step 4: Ensure model is available (Apple's ensureModel pattern)
-        logger.info("🔍 Ensuring model is available...")
-        try await ensureModel(transcriber: transcriber, locale: locale)
+        /// Step 4: Download assets if needed (OFFICIAL pattern)
+        /// From docs: "if let installationRequest = try await AssetInventory.assetInstallationRequest(supporting: [transcriber])"
+        logger.info("📥 Checking if asset download is needed...")
+        do {
+            if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+                logger.info("📥 Asset download required, starting download...")
+                logger.info("📊 Download progress: \(request.progress.fractionCompleted * 100)%")
+                try await request.downloadAndInstall()
+                logger.info("✅ Asset downloaded and installed successfully")
+            } else {
+                logger.info("ℹ️ No asset installation request returned - asset already available")
+            }
+        } catch {
+            logger.error("❌ Asset download failed: \(error.localizedDescription)")
+            logger.error("❌ Full error: \(String(describing: error))")
+            throw SpeechClient.Failure.assetInstallationFailed
+        }
         
         /// Step 5: Get the best audio format for the transcriber
         logger.info("🎵 Getting best audio format...")
@@ -265,18 +285,23 @@ private actor Speech {
             logger.warning("⚠️ No audio format returned")
         }
         
-        /// Step 6: Create buffer converter
+        /// Step 6: Create the analyzer
+        logger.info("🔧 Creating SpeechAnalyzer...")
+        analyzer = SpeechAnalyzer(modules: [transcriber])
+        logger.info("✅ SpeechAnalyzer created")
+        
+        /// Step 7: Create buffer converter
         logger.info("🔄 Creating buffer converter...")
         converter = BufferConverter()
         logger.info("✅ Buffer converter created")
         
-        /// Step 7: Create the input stream
+        /// Step 8: Create the input stream
         logger.info("📡 Creating input stream...")
         let (inputSequence, inputBuilder) = AsyncStream<AnalyzerInput>.makeStream()
         self.inputBuilder = inputBuilder
         logger.info("✅ Input stream created")
         
-        /// Step 8: Start the analyzer in the background
+        /// Step 9: Start the analyzer in the background
         logger.info("▶️ Starting analyzer...")
         let analyzerRef = analyzer
         Task {
@@ -289,7 +314,7 @@ private actor Speech {
             }
         }
         
-        /// Step 9: Return stream of transcription results
+        /// Step 10: Return stream of transcription results
         logger.info("🎤 Returning transcription result stream...")
         return AsyncThrowingStream { continuation in
             self.recognizerTask = Task {
@@ -311,54 +336,6 @@ private actor Speech {
                     continuation.finish(throwing: error)
                 }
             }
-        }
-    }
-    
-    /// Ensure model is available for transcription
-    /// This follows Apple's ensureModel pattern from Transcription.swift
-    private func ensureModel(transcriber: SpeechTranscriber, locale: Locale) async throws {
-        logger.info("🔍 ensureModel called for locale: \(locale.identifier)")
-        
-        /// Check if locale is supported
-        let supportedLocales = await SpeechTranscriber.supportedLocales
-        let localeId = locale.identifier(.bcp47)
-        let isSupported = supportedLocales.map { $0.identifier(.bcp47) }.contains(localeId)
-        
-        logger.info("📋 Supported locales: \(supportedLocales.map { $0.identifier(.bcp47) }.joined(separator: ", "))")
-        
-        guard isSupported else {
-            logger.error("❌ Locale not supported: \(localeId)")
-            throw SpeechClient.Failure.localeNotSupported
-        }
-        logger.info("✅ Locale \(localeId) is supported")
-        
-        /// Check if already installed
-        let installedLocales = await SpeechTranscriber.installedLocales
-        let isInstalled = installedLocales.map { $0.identifier(.bcp47) }.contains(localeId)
-        
-        logger.info("📋 Installed locales: \(installedLocales.map { $0.identifier(.bcp47) }.joined(separator: ", "))")
-        
-        if isInstalled {
-            logger.info("✅ Asset for \(localeId) is already installed")
-            return
-        }
-        
-        logger.info("📥 Asset not installed, downloading...")
-        
-        /// Download if needed (Apple's downloadIfNeeded pattern)
-        do {
-            if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-                logger.info("📥 Starting asset download...")
-                logger.info("📊 Download progress: \(request.progress.fractionCompleted * 100)%")
-                try await request.downloadAndInstall()
-                logger.info("✅ Asset downloaded and installed successfully")
-            } else {
-                logger.info("ℹ️ No installation request returned - asset may already be available")
-            }
-        } catch {
-            logger.error("❌ Asset download failed: \(error.localizedDescription)")
-            logger.error("❌ Full error: \(String(describing: error))")
-            throw SpeechClient.Failure.assetInstallationFailed
         }
     }
     
