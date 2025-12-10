@@ -26,6 +26,17 @@
 
 ---
 
+### December 9th, 2025 at 9:13:08 p.m.
+
+✨ Added Apple Speech-to-Text sample code to references
+
+[Commit](https://github.com/technoplato/toolshed/commit/89bc519)
+
+- Added apple-speech-to-text-sample from Apple's 'Bringing Advanced Speech-to-Text Capabilities to Your App'
+- Updated README.md and AGENTS.md with documentation for the new reference
+
+
+
 ### December 9th, 2025 at 8:54:15 p.m.
 
 ✨ Added Swift reference submodules

@@ -15,18 +15,20 @@ _See [AGENTS.md](./AGENTS.md) for detailed guidelines._
 - **apps/**
   - `speaker-diarization-benchmark/`: Python-based speaker diarization and transcription benchmarking.
   - `transcriber/`: Python-based video transcription and processing.
-- **references/** (git submodules)
-  - `swift-composable-architecture/`: Point-Free's TCA library for building Swift applications.
-  - `swift-sharing/`: Point-Free's library for sharing state across features.
+- **references/**
+  - `swift-composable-architecture/`: Point-Free's TCA library for building Swift applications (submodule).
+  - `swift-sharing/`: Point-Free's library for sharing state across features (submodule).
+  - `apple-speech-to-text-sample/`: Apple's sample code for advanced speech-to-text capabilities.
 - **packages/**
   - `schema/`: Shared InstantDB schema.
 
-## References (Submodules)
+## References
 
-This repository includes reference implementations as git submodules for agents to explore:
+This repository includes reference implementations for agents to explore:
 
-- **[swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)**: A library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind.
-- **[swift-sharing](https://github.com/pointfreeco/swift-sharing)**: A library for sharing state across features in a composable way.
+- **[swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)** (submodule): A library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind.
+- **[swift-sharing](https://github.com/pointfreeco/swift-sharing)** (submodule): A library for sharing state across features in a composable way.
+- **apple-speech-to-text-sample**: Apple's "Bringing Advanced Speech-to-Text Capabilities to Your App" sample code demonstrating Swift Speech framework usage.
 
 To initialize submodules after cloning:
 
