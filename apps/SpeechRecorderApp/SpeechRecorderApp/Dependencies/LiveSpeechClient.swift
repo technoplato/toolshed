@@ -264,7 +264,22 @@ private actor Speech {
         do {
             if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
                 logger.info("📥 Asset download required, starting download...")
-                logger.info("📊 Download progress: \(request.progress.fractionCompleted * 100)%")
+                
+                /// Track download progress
+                let progress = request.progress
+                logger.info("📊 Initial download progress: \(progress.fractionCompleted * 100)%")
+                logger.info("📊 Total unit count: \(progress.totalUnitCount)")
+                logger.info("📊 Completed unit count: \(progress.completedUnitCount)")
+                
+                /// Observe progress changes
+                let progressObserver = progress.observe(\.fractionCompleted, options: [.new]) { progress, _ in
+                    logger.info("📊 Download progress: \(progress.fractionCompleted * 100)%")
+                }
+                
+                defer {
+                    progressObserver.invalidate()
+                }
+                
                 try await request.downloadAndInstall()
                 logger.info("✅ Asset downloaded and installed successfully")
             } else {
@@ -301,42 +316,51 @@ private actor Speech {
         self.inputBuilder = inputBuilder
         logger.info("✅ Input stream created")
         
-        /// Step 9: Start the analyzer in the background
-        logger.info("▶️ Starting analyzer...")
-        let analyzerRef = analyzer
-        Task {
+        /// Step 9: Create the result stream using AsyncStream.makeStream pattern
+        /// This allows us to yield results from a separate task
+        logger.info("📡 Creating result stream...")
+        let (resultStream, resultContinuation) = AsyncThrowingStream<TranscriptionResult, Error>.makeStream()
+        
+        /// Step 10: Set up the result listener FIRST (following Apple's pattern)
+        /// From Apple's sample: recognizerTask is created FIRST, then analyzer.start is awaited
+        logger.info("👂 Setting up transcription result listener...")
+        let transcriberRef = transcriber
+        
+        recognizerTask = Task {
             do {
-                try await analyzerRef?.start(inputSequence: inputSequence)
-                logger.info("✅ Analyzer started successfully")
+                logger.info("👂 Listening for transcription results...")
+                for try await result in transcriberRef.results {
+                    let transcriptionResult = TranscriptionResult(
+                        text: String(result.text.characters),
+                        words: self.extractWords(from: result),
+                        isFinal: result.isFinal
+                    )
+                    logger.info("📝 Received result: '\(transcriptionResult.text)' (final: \(transcriptionResult.isFinal))")
+                    resultContinuation.yield(transcriptionResult)
+                }
+                logger.info("✅ Transcription stream completed normally")
+                resultContinuation.finish()
             } catch {
-                logger.error("❌ Analyzer failed to start: \(error.localizedDescription)")
-                logger.error("❌ Full error: \(String(describing: error))")
+                logger.error("❌ Transcription error: \(error.localizedDescription)")
+                resultContinuation.finish(throwing: error)
             }
         }
         
-        /// Step 10: Return stream of transcription results
-        logger.info("🎤 Returning transcription result stream...")
-        return AsyncThrowingStream { continuation in
-            self.recognizerTask = Task {
-                do {
-                    logger.info("👂 Listening for transcription results...")
-                    for try await result in transcriber.results {
-                        let transcriptionResult = TranscriptionResult(
-                            text: String(result.text.characters),
-                            words: self.extractWords(from: result),
-                            isFinal: result.isFinal
-                        )
-                        logger.info("📝 Received result: '\(transcriptionResult.text)' (final: \(transcriptionResult.isFinal))")
-                        continuation.yield(transcriptionResult)
-                    }
-                    logger.info("✅ Transcription stream completed normally")
-                    continuation.finish()
-                } catch {
-                    logger.error("❌ Transcription error: \(error.localizedDescription)")
-                    continuation.finish(throwing: error)
-                }
-            }
+        /// Step 11: Start the analyzer AFTER setting up the result listener
+        /// This follows Apple's pattern from Transcription.swift line 81
+        logger.info("▶️ Starting analyzer...")
+        do {
+            try await analyzer?.start(inputSequence: inputSequence)
+            logger.info("✅ Analyzer started successfully")
+        } catch {
+            logger.error("❌ Analyzer failed to start: \(error.localizedDescription)")
+            logger.error("❌ Full error: \(String(describing: error))")
+            resultContinuation.finish(throwing: SpeechClient.Failure.transcriptionFailed("Analyzer failed to start: \(error.localizedDescription)"))
+            throw SpeechClient.Failure.transcriptionFailed("Analyzer failed to start: \(error.localizedDescription)")
         }
+        
+        logger.info("🎤 Returning transcription result stream...")
+        return resultStream
     }
     
     func streamAudio(_ buffer: AVAudioPCMBuffer) {

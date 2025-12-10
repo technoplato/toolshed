@@ -60,9 +60,9 @@ struct RecordingView: View {
                 speechErrorView(error)
             }
             
-            /// Live transcription preview
-            if !store.volatileTranscription.isEmpty {
-                transcriptionPreview
+            /// Live transcription with inline media
+            if !store.fullTranscriptionText.isEmpty || !store.capturedMedia.isEmpty {
+                transcriptionWithMediaPreview
             }
             
             Spacer()
@@ -139,7 +139,7 @@ struct RecordingView: View {
         .cornerRadius(8)
     }
     
-    private var transcriptionPreview: some View {
+    private var transcriptionWithMediaPreview: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Live Transcription")
@@ -148,23 +148,132 @@ struct RecordingView: View {
                 
                 Spacer()
                 
-                /// Show word count
-                Text("\(store.transcription.words.count) words")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+                /// Show word count and media count
+                HStack(spacing: 8) {
+                    if !store.capturedMedia.isEmpty {
+                        Label("\(store.capturedMedia.count)", systemImage: "photo")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    Text("\(store.transcription.words.count) words")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
             
-            ScrollView {
-                Text(store.volatileTranscription)
-                    .font(.body)
-                    .foregroundColor(.purple.opacity(0.8))
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 12) {
+                        /// Show segments with timestamps and inline media
+                        ForEach(store.finalizedSegments) { segment in
+                            segmentView(segment)
+                        }
+                        
+                        /// Show volatile transcription (current in-progress segment)
+                        if !store.volatileTranscription.isEmpty {
+                            HStack(alignment: .top, spacing: 8) {
+                                /// Show the start time of the current segment (after last finalized segment)
+                                Text(formatTimestamp(store.finalizedSegments.last?.endTime ?? 0))
+                                    .font(.caption2.monospacedDigit())
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 40, alignment: .leading)
+                                
+                                Text(store.volatileTranscription.trimmingCharacters(in: .whitespaces))
+                                    .font(.body)
+                                    .foregroundColor(.purple.opacity(0.8))
+                            }
+                            .id("volatile")
+                        }
+                        
+                        /// Show any media captured after the last segment
+                        let lastSegmentEndTime = store.finalizedSegments.last?.endTime ?? 0
+                        let trailingMedia = store.capturedMedia.filter { $0.timestamp > lastSegmentEndTime }
+                        if !trailingMedia.isEmpty {
+                            mediaRow(trailingMedia)
+                        }
+                    }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .onChange(of: store.volatileTranscription) { _, _ in
+                    withAnimation {
+                        proxy.scrollTo("volatile", anchor: .bottom)
+                    }
+                }
             }
-            .frame(maxHeight: 150)
+            .frame(maxHeight: 200)
             .padding()
             .background(Color.purple.opacity(0.1))
             .cornerRadius(8)
         }
+    }
+    
+    private func segmentView(_ segment: TranscriptionSegment) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            /// Show any media captured during this segment
+            let segmentMedia = store.capturedMedia.filter { media in
+                media.timestamp >= segment.startTime && media.timestamp <= segment.endTime
+            }
+            if !segmentMedia.isEmpty {
+                mediaRow(segmentMedia)
+            }
+            
+            /// Segment with timestamp
+            HStack(alignment: .top, spacing: 8) {
+                Text(formatTimestamp(segment.startTime))
+                    .font(.caption2.monospacedDigit())
+                    .foregroundColor(.secondary)
+                    .frame(width: 40, alignment: .leading)
+                
+                Text(segment.text)
+                    .font(.body)
+                    .foregroundColor(.primary)
+            }
+        }
+    }
+    
+    private func mediaRow(_ media: [TimestampedMedia]) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(media) { item in
+                    mediaThumbnail(item)
+                }
+            }
+        }
+        .padding(.leading, 48) /// Align with text after timestamp
+    }
+    
+    private func mediaThumbnail(_ media: TimestampedMedia) -> some View {
+        VStack(spacing: 2) {
+            if let thumbnail = store.mediaThumbnails[media.id] {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 60, height: 60)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(media.mediaType == .screenshot ? Color.blue : Color.green, lineWidth: 2)
+                    )
+            } else {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: media.mediaType == .screenshot ? "camera.viewfinder" : "photo")
+                            .foregroundColor(.gray)
+                    )
+            }
+            
+            Text(formatTimestamp(media.timestamp))
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    private func formatTimestamp(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
     
     private var recordButton: some View {

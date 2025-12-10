@@ -61,7 +61,29 @@ struct AppFeature {
     
     var body: some Reducer<State, Action> {
         Scope(state: \.recordingsList, action: \.recordingsList) {
-            RecordingsListFeature()
+            RecordingsListFeature()._printChanges(.filteredActions)
+        }
+    }
+}
+
+// MARK: - Custom Printer
+
+extension _ReducerPrinter where State == RecordingsListFeature.State, Action == RecordingsListFeature.Action {
+    /// A custom printer that filters out noisy timer tick actions
+    static var filteredActions: Self {
+        Self { receivedAction, oldState, newState in
+            /// Filter out recording timer ticks - they're too noisy
+            if case .recording(.presented(.timerTicked)) = receivedAction {
+                return
+            }
+            
+            /// Filter out playback time updates as well (50ms interval is very noisy)
+            if case .playback(.presented(.timeUpdated)) = receivedAction {
+                return
+            }
+            
+            /// Use the default printer for all other actions
+            _ReducerPrinter.customDump.printChange(receivedAction: receivedAction, oldState: oldState, newState: newState)
         }
     }
 }

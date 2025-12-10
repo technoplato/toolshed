@@ -49,6 +49,7 @@
    providing real implementation in production.
  */
 
+import AVFoundation
 import ComposableArchitecture
 import Foundation
 
@@ -62,7 +63,8 @@ struct AudioRecorderClient: Sendable {
     var requestRecordPermission: @Sendable () async -> Bool = { false }
     
     /// Start recording audio to the specified URL
-    var startRecording: @Sendable (_ url: URL) async throws -> Void
+    /// Returns a stream of audio buffers for transcription
+    var startRecording: @Sendable (_ url: URL) async throws -> AsyncStream<AVAudioPCMBuffer>
     
     /// Stop the current recording
     var stopRecording: @Sendable () async -> Void
@@ -81,9 +83,15 @@ extension AudioRecorderClient: TestDependencyKey {
             requestRecordPermission: { true },
             startRecording: { _ in
                 isRecording.setValue(true)
-                while isRecording.value {
-                    try await Task.sleep(for: .seconds(1))
-                    currentTime.withValue { $0 += 1 }
+                /// Return an empty stream for preview
+                return AsyncStream { continuation in
+                    Task {
+                        while isRecording.value {
+                            try? await Task.sleep(for: .seconds(1))
+                            currentTime.withValue { $0 += 1 }
+                        }
+                        continuation.finish()
+                    }
                 }
             },
             stopRecording: {

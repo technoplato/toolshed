@@ -26,6 +26,23 @@
 
 ---
 
+### December 10th, 2025 at 2:02:06 a.m.
+
+✨ SpeechRecorderApp: Fix transcription and add segment display
+
+[Commit](https://github.com/technoplato/toolshed/commit/82546c1)
+
+- Fixed LiveSpeechClient to use AsyncThrowingStream.makeStream() pattern matching Apple's sample code
+- Added TranscriptionSegment model for tracking speech segments with timing
+- Fixed segment accumulation - finalized segments were being replaced instead of accumulated
+- Show captured media inline during recording and in playback view
+- Display transcription segments with fixed start timestamps (not ticking)
+- Changed to fullScreenCover for iPad full-screen presentation
+- Auto-start recording when record button is tapped from home screen
+- Added custom _printChanges filter to reduce noisy timer tick logs
+
+
+
 ### December 10th, 2025 at 1:09:13 a.m.
 
 ✨ Phase 6: Photo/Screenshot Synchronization Complete

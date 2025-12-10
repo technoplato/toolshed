@@ -36,6 +36,33 @@
 
 import Foundation
 
+/// A segment of transcription with its timing information
+struct TranscriptionSegment: Codable, Equatable, Sendable, Identifiable {
+    /// Unique identifier
+    var id: UUID = UUID()
+    
+    /// The text of this segment
+    var text: String
+    
+    /// Words in this segment with their timing
+    var words: [TimestampedWord]
+    
+    /// Start time of this segment (from first word)
+    var startTime: TimeInterval {
+        words.first?.startTime ?? 0
+    }
+    
+    /// End time of this segment (from last word)
+    var endTime: TimeInterval {
+        words.last?.endTime ?? 0
+    }
+    
+    /// Duration of this segment
+    var duration: TimeInterval {
+        endTime - startTime
+    }
+}
+
 /// The transcription with word-level timing
 struct Transcription: Codable, Equatable, Sendable {
     /// The full transcription text
@@ -44,12 +71,15 @@ struct Transcription: Codable, Equatable, Sendable {
     /// Individual words with their timing information
     var words: [TimestampedWord]
     
+    /// Segments of transcription (separated by pauses)
+    var segments: [TranscriptionSegment]
+    
     /// Whether this transcription is finalized or still in progress (volatile)
     var isFinal: Bool
     
     /// Create an empty transcription
     static var empty: Transcription {
-        Transcription(text: "", words: [], isFinal: false)
+        Transcription(text: "", words: [], segments: [], isFinal: false)
     }
     
     /// Total duration based on the last word's end time
@@ -73,16 +103,32 @@ extension Transcription {
     static func preview(
         text: String = "Hello world",
         words: [TimestampedWord]? = nil,
+        segments: [TranscriptionSegment]? = nil,
         isFinal: Bool = true
     ) -> Transcription {
         let defaultWords = [
             TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5),
             TimestampedWord.preview(text: "world", startTime: 0.6, endTime: 1.0)
         ]
+        let actualWords = words ?? defaultWords
+        let defaultSegments = [
+            TranscriptionSegment(text: text, words: actualWords)
+        ]
         return Transcription(
             text: text,
-            words: words ?? defaultWords,
+            words: actualWords,
+            segments: segments ?? defaultSegments,
             isFinal: isFinal
         )
+    }
+}
+
+extension TranscriptionSegment {
+    /// Create a TranscriptionSegment for testing or previews
+    static func preview(
+        text: String,
+        words: [TimestampedWord]
+    ) -> TranscriptionSegment {
+        TranscriptionSegment(text: text, words: words)
     }
 }

@@ -52,6 +52,7 @@
    Follows TCA patterns for state management and side effects.
  */
 
+import AVFoundation
 import ComposableArchitecture
 import Foundation
 import UIKit
@@ -90,11 +91,34 @@ struct RecordingFeature {
         /// The URL where the recording will be saved
         var recordingURL: URL?
         
-        /// Live transcription text (volatile, in-progress)
+        /// Live transcription text (volatile, in-progress for current segment)
         var volatileTranscription: String = ""
         
-        /// Finalized transcription
+        /// Accumulated finalized text from all completed segments
+        var finalizedText: String = ""
+        
+        /// Accumulated finalized words from all completed segments
+        var finalizedWords: [TimestampedWord] = []
+        
+        /// Accumulated finalized segments
+        var finalizedSegments: [TranscriptionSegment] = []
+        
+        /// Finalized transcription (combines all segments)
         var transcription: Transcription = .empty
+        
+        /// Full transcription text (finalized + volatile)
+        var fullTranscriptionText: String {
+            let trimmedFinalized = finalizedText.trimmingCharacters(in: .whitespaces)
+            let trimmedVolatile = volatileTranscription.trimmingCharacters(in: .whitespaces)
+            
+            if trimmedFinalized.isEmpty {
+                return trimmedVolatile
+            } else if trimmedVolatile.isEmpty {
+                return trimmedFinalized
+            } else {
+                return trimmedFinalized + " " + trimmedVolatile
+            }
+        }
         
         /// Whether speech assets are being downloaded
         var isDownloadingAssets = false
@@ -214,6 +238,7 @@ struct RecordingFeature {
         case timer
         case transcription
         case photoObservation
+        case audioStreaming
     }
     
     // MARK: - Reducer Body
@@ -226,6 +251,9 @@ struct RecordingFeature {
                 state.recordingStartTime = date.now
                 state.mode = .recording
                 state.volatileTranscription = ""
+                state.finalizedText = ""
+                state.finalizedWords = []
+                state.finalizedSegments = []
                 state.transcription = .empty
                 state.speechError = nil
                 state.capturedMedia = []
@@ -273,11 +301,17 @@ struct RecordingFeature {
                                           state.photoLibraryAuthorizationStatus == .limited
                     
                     return .merge(
-                        /// Start recording
+                        /// Start recording and stream audio buffers to speech client
                         .run { send in
                             do {
-                                try await audioRecorder.startRecording(url: recordingURL)
+                                /// Start recording - returns a stream of audio buffers
+                                let bufferStream = try await audioRecorder.startRecording(url: recordingURL)
                                 await send(.recordingStarted)
+                                
+                                /// Stream each buffer to the speech client for transcription
+                                for await buffer in bufferStream {
+                                    await speechClient.streamAudio(buffer)
+                                }
                             } catch {
                                 await send(.recordingFailed(error))
                             }
@@ -331,15 +365,40 @@ struct RecordingFeature {
                 )
                 
             case let .transcriptionResult(result):
-                state.volatileTranscription = result.text
-                
-                /// If this is a final result, update the transcription
                 if result.isFinal {
+                    /// Append finalized segment to accumulated text
+                    let segmentText = result.text.trimmingCharacters(in: .whitespaces)
+                    if !segmentText.isEmpty {
+                        if state.finalizedText.isEmpty {
+                            state.finalizedText = segmentText
+                        } else {
+                            state.finalizedText += " " + segmentText
+                        }
+                        
+                        /// Create a segment for this finalized result
+                        let segment = TranscriptionSegment(
+                            text: segmentText,
+                            words: result.words
+                        )
+                        state.finalizedSegments.append(segment)
+                    }
+                    
+                    /// Append finalized words to accumulated words
+                    state.finalizedWords.append(contentsOf: result.words)
+                    
+                    /// Clear volatile since this segment is now finalized
+                    state.volatileTranscription = ""
+                    
+                    /// Update the transcription with all accumulated data
                     state.transcription = Transcription(
-                        text: result.text,
-                        words: result.words,
+                        text: state.finalizedText,
+                        words: state.finalizedWords,
+                        segments: state.finalizedSegments,
                         isFinal: true
                     )
+                } else {
+                    /// Update volatile transcription for current in-progress segment
+                    state.volatileTranscription = result.text
                 }
                 return .none
                 
@@ -420,6 +479,9 @@ struct RecordingFeature {
                 state.duration = 0
                 state.mode = .idle
                 state.volatileTranscription = ""
+                state.finalizedText = ""
+                state.finalizedWords = []
+                state.finalizedSegments = []
                 state.transcription = .empty
                 state.capturedMedia = []
                 state.mediaThumbnails = [:]

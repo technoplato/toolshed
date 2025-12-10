@@ -55,17 +55,30 @@ struct RecordingsListView: View {
             recordButton
         }
         .navigationTitle("Recordings")
-        .sheet(item: $store.scope(state: \.recording, action: \.recording)) { store in
+        .fullScreenCover(item: $store.scope(state: \.recording, action: \.recording)) { recordingStore in
             NavigationStack {
-                RecordingView(store: store)
+                RecordingView(store: recordingStore)
                     .navigationTitle("New Recording")
                     .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                recordingStore.send(.cancelButtonTapped)
+                            }
+                        }
+                    }
+            }
+            .onAppear {
+                /// Auto-start recording when the view appears
+                if !recordingStore.isRecording {
+                    recordingStore.send(.recordButtonTapped)
+                }
             }
         }
-        .sheet(item: $store.scope(state: \.playback, action: \.playback)) { store in
+        .fullScreenCover(item: $store.scope(state: \.playback, action: \.playback)) { playbackStore in
             NavigationStack {
-                PlaybackView(store: store)
-                    .navigationTitle(store.recording.displayTitle)
+                PlaybackView(store: playbackStore)
+                    .navigationTitle(playbackStore.recording.displayTitle)
                     .navigationBarTitleDisplayMode(.inline)
             }
         }
