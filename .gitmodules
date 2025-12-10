@@ -10,3 +10,6 @@
 [submodule "references/isowords"]
 	path = references/isowords
 	url = https://github.com/pointfreeco/isowords
+[submodule "references/composable-core-location"]
+	path = references/composable-core-location
+	url = https://github.com/pointfreeco/composable-core-location
