@@ -7,23 +7,27 @@
    ```
    
    [Inputs]
-   - User actions: playButtonTapped, pauseButtonTapped, seekTo
+   - User actions: playButtonTapped, pauseButtonTapped, seekTo, mediaTapped
    - System events: timeUpdated, playbackFinished
    
    [Outputs]
    - Playback state for UI updates
    - Current word index for highlighting
+   - Visible media at current time
    
    [Side Effects]
    - Plays audio via AudioPlayerClient
+   - Fetches media thumbnails via PhotoLibraryClient
 
  WHO:
    AI Agent, Developer
    (Context: TCA reducer for playback functionality)
 
  WHAT:
-   TCA reducer for managing audio playback with word highlighting.
-   Syncs current playback time with transcription words.
+   TCA reducer for managing audio playback with word highlighting
+   and synchronized media display.
+   Syncs current playback time with transcription words and shows
+   photos/screenshots at their capture timestamps.
 
  WHEN:
    Created: 2025-12-10
@@ -33,12 +37,14 @@
    apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift
 
  WHY:
-   To provide synchronized playback with word highlighting.
-   Uses the word timestamps to highlight the current word as audio plays.
+   To provide synchronized playback with word highlighting and media display.
+   Uses the word timestamps to highlight the current word as audio plays,
+   and shows photos/screenshots at the times they were captured.
  */
 
 import ComposableArchitecture
 import Foundation
+import UIKit
 
 @Reducer
 struct PlaybackFeature {
@@ -65,6 +71,28 @@ struct PlaybackFeature {
             guard index < recording.transcription.words.count else { return nil }
             return recording.transcription.words[index]
         }
+        
+        /// Thumbnails for media items (keyed by media ID)
+        var mediaThumbnails: [UUID: UIImage] = [:]
+        
+        /// Media items visible at the current time (within a window)
+        var visibleMedia: [TimestampedMedia] {
+            /// Show media that was captured within the last 3 seconds of current time
+            let windowStart = max(0, currentTime - 3.0)
+            return recording.media.filter { media in
+                media.timestamp >= windowStart && media.timestamp <= currentTime
+            }.sorted { $0.timestamp < $1.timestamp }
+        }
+        
+        /// The most recently captured media at current time
+        var currentMedia: TimestampedMedia? {
+            recording.mostRecentMedia(before: currentTime)
+        }
+        
+        /// All media up to current time (for timeline display)
+        var mediaUpToCurrentTime: [TimestampedMedia] {
+            recording.mediaAtTime(currentTime)
+        }
     }
     
     // MARK: - Action
@@ -82,6 +110,9 @@ struct PlaybackFeature {
         /// User tapped on a word to seek to its start time
         case wordTapped(Int)
         
+        /// User tapped on a media item to seek to its timestamp
+        case mediaTapped(UUID)
+        
         /// Playback time was updated
         case timeUpdated(TimeInterval)
         
@@ -90,6 +121,12 @@ struct PlaybackFeature {
         
         /// Close the playback view
         case closeButtonTapped
+        
+        /// View appeared - load thumbnails
+        case onAppear
+        
+        /// Thumbnail loaded for a media item
+        case thumbnailLoaded(UUID, UIImage)
         
         /// Delegate actions for parent feature
         case delegate(Delegate)
@@ -102,6 +139,7 @@ struct PlaybackFeature {
     // MARK: - Dependencies
     
     @Dependency(\.audioPlayer) var audioPlayer
+    @Dependency(\.photoLibrary) var photoLibrary
     @Dependency(\.continuousClock) var clock
     
     // MARK: - Cancellation IDs
@@ -109,6 +147,7 @@ struct PlaybackFeature {
     private enum CancelID {
         case playback
         case timer
+        case thumbnailLoading
     }
     
     // MARK: - Reducer Body
@@ -116,6 +155,27 @@ struct PlaybackFeature {
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
+            case .onAppear:
+                /// Load thumbnails for all media in the recording
+                let mediaItems = state.recording.media
+                guard !mediaItems.isEmpty else { return .none }
+                
+                return .run { send in
+                    for media in mediaItems {
+                        if let thumbnail = await photoLibrary.fetchThumbnail(
+                            media.assetIdentifier,
+                            CGSize(width: 100, height: 100)
+                        ) {
+                            await send(.thumbnailLoaded(media.id, thumbnail))
+                        }
+                    }
+                }
+                .cancellable(id: CancelID.thumbnailLoading)
+                
+            case let .thumbnailLoaded(mediaId, image):
+                state.mediaThumbnails[mediaId] = image
+                return .none
+                
             case .playButtonTapped:
                 state.isPlaying = true
                 
@@ -172,6 +232,17 @@ struct PlaybackFeature {
                     await audioPlayer.seek(startTime)
                 }
                 
+            case let .mediaTapped(mediaId):
+                guard let media = state.recording.media.first(where: { $0.id == mediaId }) else {
+                    return .none
+                }
+                state.currentTime = media.timestamp
+                state.currentWordIndex = findWordIndex(at: media.timestamp, in: state.recording.transcription.words)
+                
+                return .run { [timestamp = media.timestamp] _ in
+                    await audioPlayer.seek(timestamp)
+                }
+                
             case let .timeUpdated(time):
                 state.currentTime = time
                 state.currentWordIndex = findWordIndex(at: time, in: state.recording.transcription.words)
@@ -188,6 +259,7 @@ struct PlaybackFeature {
                 return .merge(
                     .cancel(id: CancelID.playback),
                     .cancel(id: CancelID.timer),
+                    .cancel(id: CancelID.thumbnailLoading),
                     .run { _ in
                         await audioPlayer.stop()
                     },

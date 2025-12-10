@@ -9,6 +9,7 @@
    - duration: Length of the recording in seconds
    - audioURL: File URL where audio is stored
    - transcription: The transcription with word-level timing
+   - media: Array of photos/screenshots captured during recording
    
    [Outputs]
    - Codable struct for persistence with @Shared(.fileStorage)
@@ -21,7 +22,7 @@
    (Context: Building speech recorder app with word-level timestamps)
 
  WHAT:
-   A single recording with its transcription.
+   A single recording with its transcription and synchronized media.
    This is the main entity persisted to disk using Swift Sharing.
 
  WHEN:
@@ -33,7 +34,8 @@
 
  WHY:
    To represent a complete recording that can be persisted and played back.
-   Contains all data needed for synchronized playback with word highlighting.
+   Contains all data needed for synchronized playback with word highlighting
+   and inline photo/screenshot display.
  */
 
 import Foundation
@@ -58,6 +60,9 @@ struct Recording: Codable, Identifiable, Equatable, Sendable {
     /// The transcription with word-level timing
     var transcription: Transcription
     
+    /// Photos and screenshots captured during recording
+    var media: [TimestampedMedia]
+    
     /// Create a new recording with default values
     init(
         id: UUID = UUID(),
@@ -65,7 +70,8 @@ struct Recording: Codable, Identifiable, Equatable, Sendable {
         date: Date = Date(),
         duration: TimeInterval = 0,
         audioURL: URL,
-        transcription: Transcription = .empty
+        transcription: Transcription = .empty,
+        media: [TimestampedMedia] = []
     ) {
         self.id = id
         self.title = title
@@ -73,6 +79,24 @@ struct Recording: Codable, Identifiable, Equatable, Sendable {
         self.duration = duration
         self.audioURL = audioURL
         self.transcription = transcription
+        self.media = media
+    }
+    
+    /// Get media items sorted by timestamp
+    var sortedMedia: [TimestampedMedia] {
+        media.sorted { $0.timestamp < $1.timestamp }
+    }
+    
+    /// Find media at or before the given time
+    func mediaAtTime(_ time: TimeInterval) -> [TimestampedMedia] {
+        media.filter { $0.timestamp <= time }
+    }
+    
+    /// Find the most recent media before the given time
+    func mostRecentMedia(before time: TimeInterval) -> TimestampedMedia? {
+        media
+            .filter { $0.timestamp <= time }
+            .max { $0.timestamp < $1.timestamp }
     }
     
     /// Generate a default title based on the date
@@ -96,7 +120,8 @@ extension Recording {
         title: String = "Test Recording",
         date: Date = Date(),
         duration: TimeInterval = 10.0,
-        transcription: Transcription = .preview()
+        transcription: Transcription = .preview(),
+        media: [TimestampedMedia] = []
     ) -> Recording {
         Recording(
             id: id,
@@ -104,7 +129,25 @@ extension Recording {
             date: date,
             duration: duration,
             audioURL: URL(fileURLWithPath: "/tmp/test.m4a"),
-            transcription: transcription
+            transcription: transcription,
+            media: media
+        )
+    }
+    
+    /// Create a Recording with sample media for previews
+    static func previewWithMedia() -> Recording {
+        Recording(
+            id: UUID(),
+            title: "Recording with Photos",
+            date: Date(),
+            duration: 30.0,
+            audioURL: URL(fileURLWithPath: "/tmp/test.m4a"),
+            transcription: .preview(),
+            media: [
+                .preview(timestamp: 5.0, mediaType: .photo),
+                .preview(timestamp: 12.0, mediaType: .screenshot),
+                .preview(timestamp: 25.0, mediaType: .photo)
+            ]
         )
     }
 }

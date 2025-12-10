@@ -113,18 +113,29 @@ private actor Speech {
     }
     
     func isAssetInstalled(for locale: Locale) async -> Bool {
+        /// First check if locale is supported
+        guard await SpeechTranscriber.supportedLocale(equivalentTo: locale) != nil else {
+            return false
+        }
+        
         let installedLocales = await SpeechTranscriber.installedLocales
         return installedLocales.contains { $0.identifier(.bcp47) == locale.identifier(.bcp47) }
     }
     
     // MARK: - Asset Management
     
+    /// Ensures assets are installed for the given locale.
+    /// This follows the pattern from Apple's sample code:
+    /// 1. Create a transcriber (which subscribes to the asset)
+    /// 2. Check if download is needed via AssetInventory
+    /// 3. Download and install if needed
     func ensureAssets(for locale: Locale) async throws {
         guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
             throw SpeechClient.Failure.localeNotSupported
         }
         
-        /// Create a temporary transcriber to check asset requirements
+        /// Create a transcriber - this subscribes to the transcription asset
+        /// The transcriber must exist when checking asset status
         let tempTranscriber = SpeechTranscriber(
             locale: supportedLocale,
             transcriptionOptions: [],
@@ -132,7 +143,16 @@ private actor Speech {
             attributeOptions: [.audioTimeRange]
         )
         
+        /// Check if assets are already installed for this locale
+        let installedLocales = await SpeechTranscriber.installedLocales
+        let isInstalled = installedLocales.contains { $0.identifier(.bcp47) == supportedLocale.identifier(.bcp47) }
+        
+        if isInstalled {
+            return
+        }
+        
         /// Check if we need to download assets
+        /// This requires the transcriber to be subscribed to the asset
         if let request = try await AssetInventory.assetInstallationRequest(supporting: [tempTranscriber]) {
             try await request.downloadAndInstall()
         }
@@ -155,6 +175,18 @@ private actor Speech {
         
         guard let transcriber else {
             throw SpeechClient.Failure.transcriptionFailed("Failed to create transcriber")
+        }
+        
+        /// Ensure assets are installed before starting
+        /// This is critical - we must check/download assets with the transcriber that will be used
+        let installedLocales = await SpeechTranscriber.installedLocales
+        let isInstalled = installedLocales.contains { $0.identifier(.bcp47) == supportedLocale.identifier(.bcp47) }
+        
+        if !isInstalled {
+            /// Download assets if needed
+            if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
+                try await request.downloadAndInstall()
+            }
         }
         
         /// Create the analyzer

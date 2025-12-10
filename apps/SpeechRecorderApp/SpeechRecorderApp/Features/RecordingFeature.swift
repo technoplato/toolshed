@@ -16,6 +16,7 @@
    [Inputs]
    - User actions: recordButtonTapped, stopButtonTapped, cancelButtonTapped
    - System events: permissionResponse, timerTicked, recordingStopped
+   - Photo events: photoLibraryAuthorizationResponse, newPhotoDetected
    
    [Outputs]
    - State changes for UI updates
@@ -23,9 +24,11 @@
    
    [Side Effects]
    - Requests microphone permission
+   - Requests photo library permission
    - Starts/stops audio recording
    - Runs timer for duration updates
    - Performs live speech transcription
+   - Observes photo library for new photos/screenshots
 
  WHO:
    AI Agent, Developer
@@ -34,7 +37,8 @@
  WHAT:
    TCA reducer for managing audio recording state and actions.
    Handles permission requests, recording lifecycle, timer updates,
-   and live speech transcription with word-level timestamps.
+   live speech transcription with word-level timestamps, and
+   photo/screenshot synchronization.
 
  WHEN:
    Created: 2025-12-10
@@ -50,6 +54,7 @@
 
 import ComposableArchitecture
 import Foundation
+import UIKit
 
 @Reducer
 struct RecordingFeature {
@@ -73,6 +78,9 @@ struct RecordingFeature {
         /// Whether speech recognition is authorized
         var speechAuthorizationStatus: SpeechClient.AuthorizationStatus = .notDetermined
         
+        /// Photo library authorization status
+        var photoLibraryAuthorizationStatus: PhotoLibraryClient.AuthorizationStatus = .notDetermined
+        
         /// Current mode of the recording feature
         var mode: Mode = .idle
         
@@ -93,6 +101,12 @@ struct RecordingFeature {
         
         /// Error message for speech recognition issues
         var speechError: String?
+        
+        /// Photos and screenshots captured during recording
+        var capturedMedia: [TimestampedMedia] = []
+        
+        /// Thumbnails for captured media (keyed by media ID)
+        var mediaThumbnails: [UUID: UIImage] = [:]
         
         enum Mode: Equatable, Sendable {
             case idle
@@ -118,6 +132,9 @@ struct RecordingFeature {
         
         /// Speech authorization response received
         case speechAuthorizationResponse(SpeechClient.AuthorizationStatus)
+        
+        /// Photo library authorization response received
+        case photoLibraryAuthorizationResponse(PhotoLibraryClient.AuthorizationStatus)
         
         /// Timer ticked (1 second interval)
         case timerTicked
@@ -152,6 +169,12 @@ struct RecordingFeature {
         /// Speech assets download failed
         case assetsDownloadFailed(Error)
         
+        /// New photo or screenshot detected during recording
+        case newPhotoDetected(PhotoAsset)
+        
+        /// Thumbnail loaded for a media item
+        case thumbnailLoaded(UUID, UIImage)
+        
         /// Alert actions
         case alert(PresentationAction<Alert>)
         
@@ -179,6 +202,7 @@ struct RecordingFeature {
     
     @Dependency(\.audioRecorder) var audioRecorder
     @Dependency(\.speechClient) var speechClient
+    @Dependency(\.photoLibrary) var photoLibrary
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date) var date
     @Dependency(\.uuid) var uuid
@@ -189,6 +213,7 @@ struct RecordingFeature {
         case recording
         case timer
         case transcription
+        case photoObservation
     }
     
     // MARK: - Reducer Body
@@ -203,6 +228,8 @@ struct RecordingFeature {
                 state.volatileTranscription = ""
                 state.transcription = .empty
                 state.speechError = nil
+                state.capturedMedia = []
+                state.mediaThumbnails = [:]
                 
                 /// Generate recording URL
                 let recordingURL = FileManager.default.temporaryDirectory
@@ -211,19 +238,26 @@ struct RecordingFeature {
                 state.recordingURL = recordingURL
                 
                 return .run { send in
-                    /// Request both microphone and speech permissions
+                    /// Request microphone, speech, and photo library permissions
                     async let micPermission = audioRecorder.requestRecordPermission()
                     async let speechAuth = speechClient.requestAuthorization()
+                    async let photoAuth = photoLibrary.requestAuthorization()
                     
                     let hasMicPermission = await micPermission
                     let speechStatus = await speechAuth
+                    let photoStatus = await photoAuth
                     
                     await send(.speechAuthorizationResponse(speechStatus))
+                    await send(.photoLibraryAuthorizationResponse(photoStatus))
                     await send(.permissionResponse(hasMicPermission))
                 }
                 
             case let .speechAuthorizationResponse(status):
                 state.speechAuthorizationStatus = status
+                return .none
+                
+            case let .photoLibraryAuthorizationResponse(status):
+                state.photoLibraryAuthorizationStatus = status
                 return .none
                 
             case let .permissionResponse(granted):
@@ -235,6 +269,8 @@ struct RecordingFeature {
                     }
                     
                     let speechAuthorized = state.speechAuthorizationStatus == .authorized
+                    let photoAuthorized = state.photoLibraryAuthorizationStatus == .authorized ||
+                                          state.photoLibraryAuthorizationStatus == .limited
                     
                     return .merge(
                         /// Start recording
@@ -257,7 +293,10 @@ struct RecordingFeature {
                         .cancellable(id: CancelID.timer),
                         
                         /// Start transcription if authorized
-                        speechAuthorized ? startTranscription() : .none
+                        speechAuthorized ? startTranscription() : .none,
+                        
+                        /// Start photo observation if authorized
+                        photoAuthorized ? startPhotoObservation() : .none
                     )
                 } else {
                     state.isRecording = false
@@ -284,7 +323,11 @@ struct RecordingFeature {
                 }
                 return .merge(
                     .cancel(id: CancelID.timer),
-                    .cancel(id: CancelID.transcription)
+                    .cancel(id: CancelID.transcription),
+                    .cancel(id: CancelID.photoObservation),
+                    .run { _ in
+                        await photoLibrary.stopObserving()
+                    }
                 )
                 
             case let .transcriptionResult(result):
@@ -337,7 +380,11 @@ struct RecordingFeature {
                     .run { _ in
                         try? await speechClient.finishTranscription()
                     },
-                    .cancel(id: CancelID.transcription)
+                    .run { _ in
+                        await photoLibrary.stopObserving()
+                    },
+                    .cancel(id: CancelID.transcription),
+                    .cancel(id: CancelID.photoObservation)
                 )
                 
             case let .finalRecordingTime(duration):
@@ -348,7 +395,7 @@ struct RecordingFeature {
                 state.isRecording = false
                 state.mode = .idle
                 
-                /// Create the recording
+                /// Create the recording with captured media
                 if let recordingURL = state.recordingURL,
                    let startTime = state.recordingStartTime {
                     let recording = Recording(
@@ -357,7 +404,8 @@ struct RecordingFeature {
                         date: startTime,
                         duration: state.duration,
                         audioURL: recordingURL,
-                        transcription: state.transcription
+                        transcription: state.transcription,
+                        media: state.capturedMedia
                     )
                     return .merge(
                         .cancel(id: CancelID.timer),
@@ -373,19 +421,61 @@ struct RecordingFeature {
                 state.mode = .idle
                 state.volatileTranscription = ""
                 state.transcription = .empty
+                state.capturedMedia = []
+                state.mediaThumbnails = [:]
                 
                 return .merge(
                     .cancel(id: CancelID.recording),
                     .cancel(id: CancelID.timer),
                     .cancel(id: CancelID.transcription),
+                    .cancel(id: CancelID.photoObservation),
                     .run { _ in
                         await audioRecorder.stopRecording()
                         try? await speechClient.finishTranscription()
+                        await photoLibrary.stopObserving()
                     }
                 )
                 
             case .timerTicked:
                 state.duration += 1
+                return .none
+                
+            case let .newPhotoDetected(photoAsset):
+                /// Calculate the timestamp relative to recording start
+                guard let startTime = state.recordingStartTime else {
+                    return .none
+                }
+                
+                let timestamp = photoAsset.creationDate.timeIntervalSince(startTime)
+                
+                /// Only include photos taken after recording started
+                guard timestamp >= 0 else {
+                    return .none
+                }
+                
+                let mediaId = uuid()
+                let media = TimestampedMedia(
+                    id: mediaId,
+                    timestamp: timestamp,
+                    assetIdentifier: photoAsset.localIdentifier,
+                    mediaType: photoAsset.mediaType == .screenshot ? .screenshot : .photo,
+                    creationDate: photoAsset.creationDate
+                )
+                
+                state.capturedMedia.append(media)
+                
+                /// Fetch thumbnail for display
+                return .run { send in
+                    if let thumbnail = await photoLibrary.fetchThumbnail(
+                        photoAsset.localIdentifier,
+                        CGSize(width: 100, height: 100)
+                    ) {
+                        await send(.thumbnailLoaded(mediaId, thumbnail))
+                    }
+                }
+                
+            case let .thumbnailLoaded(mediaId, image):
+                state.mediaThumbnails[mediaId] = image
                 return .none
                 
             case .alert(.dismiss):
@@ -407,18 +497,19 @@ struct RecordingFeature {
     private func startTranscription() -> Effect<Action> {
         .run { send in
             do {
-                /// Ensure assets are installed
+                /// Use the current locale or default to en_US
                 let locale = Locale(identifier: "en_US")
-                let isInstalled = await speechClient.isAssetInstalled(locale)
                 
-                if !isInstalled {
-                    await send(.assetsDownloadStarted)
-                    try await speechClient.ensureAssets(locale)
-                    await send(.assetsDownloadCompleted)
-                    return
-                }
-                
-                /// Start transcription
+                /// Start transcription - the LiveSpeechClient will handle:
+                /// 1. Creating the transcriber (which subscribes to the asset)
+                /// 2. Checking if assets are installed
+                /// 3. Downloading assets if needed
+                /// 4. Starting the transcription stream
+                ///
+                /// Note: We don't check isAssetInstalled separately because
+                /// you cannot check asset status without first having a transcriber
+                /// that subscribes to that asset. The "not subscribed" error occurs
+                /// when trying to check status before creating a transcriber.
                 let stream = try await speechClient.startTranscription(locale)
                 
                 for try await result in stream {
@@ -431,5 +522,16 @@ struct RecordingFeature {
             }
         }
         .cancellable(id: CancelID.transcription)
+    }
+    
+    private func startPhotoObservation() -> Effect<Action> {
+        .run { send in
+            let stream = await photoLibrary.observeNewPhotos()
+            
+            for await photoAsset in stream {
+                await send(.newPhotoDetected(photoAsset))
+            }
+        }
+        .cancellable(id: CancelID.photoObservation)
     }
 }

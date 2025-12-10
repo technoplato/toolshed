@@ -7,56 +7,48 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		/* App Sources */
-		001 /* SpeechRecorderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101; };
-		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102; };
-		003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 103; };
-		
-		/* Models */
-		010 /* Recording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110; };
-		011 /* Transcription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111; };
-		012 /* TimestampedWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112; };
-		
-		/* Features */
-		020 /* RecordingFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120; };
-		021 /* RecordingsListFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121; };
-		022 /* PlaybackFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122; };
-		023 /* AppFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123; };
-		
-		/* Dependencies */
-		030 /* AudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130; };
-		031 /* LiveAudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131; };
-		032 /* SpeechClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132; };
-		033 /* LiveSpeechClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133; };
-		034 /* AudioPlayerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134; };
-		035 /* LiveAudioPlayerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135; };
-		036 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136; };
-		
-		/* Views */
-		040 /* RecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140; };
-		041 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141; };
-		042 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142; };
-		043 /* TranscriptionTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143; };
-		
-		/* Shared Keys */
-		050 /* SharedKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150; };
-		
-		/* Helpers */
-		060 /* BufferConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160; };
-		061 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161; };
-		
-		/* Test Sources */
-		200 /* RecordingFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300; };
-		201 /* RecordingsListFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301; };
-		202 /* PlaybackFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302; };
-		203 /* AudioRecorderClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303; };
-		204 /* SpeechClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304; };
+		001 /* SpeechRecorderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* SpeechRecorderApp.swift */; };
+		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ContentView.swift */; };
+		003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 103 /* Assets.xcassets */; };
+		010 /* Recording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* Recording.swift */; };
+		011 /* Transcription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* Transcription.swift */; };
+		012 /* TimestampedWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112 /* TimestampedWord.swift */; };
+		013 /* TimestampedMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* TimestampedMedia.swift */; };
+		020 /* RecordingFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120 /* RecordingFeature.swift */; };
+		021 /* RecordingsListFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121 /* RecordingsListFeature.swift */; };
+		022 /* PlaybackFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122 /* PlaybackFeature.swift */; };
+		023 /* AppFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123 /* AppFeature.swift */; };
+		030 /* AudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130 /* AudioRecorderClient.swift */; };
+		031 /* LiveAudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131 /* LiveAudioRecorderClient.swift */; };
+		032 /* SpeechClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132 /* SpeechClient.swift */; };
+		033 /* LiveSpeechClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133 /* LiveSpeechClient.swift */; };
+		034 /* AudioPlayerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* AudioPlayerClient.swift */; };
+		035 /* LiveAudioPlayerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135 /* LiveAudioPlayerClient.swift */; };
+		036 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* Dependencies.swift */; };
+		037 /* PhotoLibraryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137 /* PhotoLibraryClient.swift */; };
+		038 /* LivePhotoLibraryClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138 /* LivePhotoLibraryClient.swift */; };
+		040 /* RecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* RecordingView.swift */; };
+		041 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141 /* RecordingsListView.swift */; };
+		042 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* PlaybackView.swift */; };
+		043 /* TranscriptionTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143 /* TranscriptionTextView.swift */; };
+		050 /* SharedKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150 /* SharedKeys.swift */; };
+		060 /* BufferConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160 /* BufferConverter.swift */; };
+		061 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161 /* Helpers.swift */; };
+		200 /* RecordingFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300 /* RecordingFeatureTests.swift */; };
+		201 /* RecordingsListFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301 /* RecordingsListFeatureTests.swift */; };
+		202 /* PlaybackFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302 /* PlaybackFeatureTests.swift */; };
+		203 /* AudioRecorderClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303 /* AudioRecorderClientTests.swift */; };
+		204 /* SpeechClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304 /* SpeechClientTests.swift */; };
+		205 /* PhotoLibraryClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 305 /* PhotoLibraryClientTests.swift */; };
+		206 /* MediaSynchronizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 306 /* MediaSynchronizationTests.swift */; };
+		407AA8832EE9378B00A6B0D0 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 950 /* ComposableArchitecture */; };
+		407AA8842EE9378B00A6B0D0 /* Sharing in Frameworks */ = {isa = PBXBuildFile; productRef = 951 /* Sharing */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		401 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 500;
+			containerPortal = 500 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 900;
 			remoteInfo = SpeechRecorderApp;
@@ -64,23 +56,17 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		/* App Sources */
 		101 /* SpeechRecorderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecorderApp.swift; sourceTree = "<group>"; };
 		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		103 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		
-		/* Models */
 		110 /* Recording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recording.swift; sourceTree = "<group>"; };
 		111 /* Transcription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transcription.swift; sourceTree = "<group>"; };
 		112 /* TimestampedWord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimestampedWord.swift; sourceTree = "<group>"; };
-		
-		/* Features */
+		113 /* TimestampedMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimestampedMedia.swift; sourceTree = "<group>"; };
 		120 /* RecordingFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFeature.swift; sourceTree = "<group>"; };
 		121 /* RecordingsListFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListFeature.swift; sourceTree = "<group>"; };
 		122 /* PlaybackFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackFeature.swift; sourceTree = "<group>"; };
 		123 /* AppFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeature.swift; sourceTree = "<group>"; };
-		
-		/* Dependencies */
 		130 /* AudioRecorderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderClient.swift; sourceTree = "<group>"; };
 		131 /* LiveAudioRecorderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveAudioRecorderClient.swift; sourceTree = "<group>"; };
 		132 /* SpeechClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechClient.swift; sourceTree = "<group>"; };
@@ -88,28 +74,22 @@
 		134 /* AudioPlayerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerClient.swift; sourceTree = "<group>"; };
 		135 /* LiveAudioPlayerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveAudioPlayerClient.swift; sourceTree = "<group>"; };
 		136 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
-		
-		/* Views */
+		137 /* PhotoLibraryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryClient.swift; sourceTree = "<group>"; };
+		138 /* LivePhotoLibraryClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivePhotoLibraryClient.swift; sourceTree = "<group>"; };
 		140 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingView.swift; sourceTree = "<group>"; };
 		141 /* RecordingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListView.swift; sourceTree = "<group>"; };
 		142 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
 		143 /* TranscriptionTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionTextView.swift; sourceTree = "<group>"; };
-		
-		/* Shared Keys */
 		150 /* SharedKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedKeys.swift; sourceTree = "<group>"; };
-		
-		/* Helpers */
 		160 /* BufferConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BufferConverter.swift; sourceTree = "<group>"; };
 		161 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
-		
-		/* Test Sources */
 		300 /* RecordingFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFeatureTests.swift; sourceTree = "<group>"; };
 		301 /* RecordingsListFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListFeatureTests.swift; sourceTree = "<group>"; };
 		302 /* PlaybackFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackFeatureTests.swift; sourceTree = "<group>"; };
 		303 /* AudioRecorderClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderClientTests.swift; sourceTree = "<group>"; };
 		304 /* SpeechClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechClientTests.swift; sourceTree = "<group>"; };
-		
-		/* Products */
+		305 /* PhotoLibraryClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryClientTests.swift; sourceTree = "<group>"; };
+		306 /* MediaSynchronizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSynchronizationTests.swift; sourceTree = "<group>"; };
 		600 /* SpeechRecorderApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpeechRecorderApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		601 /* SpeechRecorderAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeechRecorderAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -119,6 +99,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				407AA8842EE9378B00A6B0D0 /* Sharing in Frameworks */,
+				407AA8832EE9378B00A6B0D0 /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -165,6 +147,8 @@
 				302 /* PlaybackFeatureTests.swift */,
 				303 /* AudioRecorderClientTests.swift */,
 				304 /* SpeechClientTests.swift */,
+				305 /* PhotoLibraryClientTests.swift */,
+				306 /* MediaSynchronizationTests.swift */,
 			);
 			path = SpeechRecorderAppTests;
 			sourceTree = "<group>";
@@ -184,6 +168,7 @@
 				110 /* Recording.swift */,
 				111 /* Transcription.swift */,
 				112 /* TimestampedWord.swift */,
+				113 /* TimestampedMedia.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -209,6 +194,8 @@
 				134 /* AudioPlayerClient.swift */,
 				135 /* LiveAudioPlayerClient.swift */,
 				136 /* Dependencies.swift */,
+				137 /* PhotoLibraryClient.swift */,
+				138 /* LivePhotoLibraryClient.swift */,
 			);
 			path = Dependencies;
 			sourceTree = "<group>";
@@ -246,7 +233,7 @@
 /* Begin PBXNativeTarget section */
 		900 /* SpeechRecorderApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 910;
+			buildConfigurationList = 910 /* Build configuration list for PBXNativeTarget "SpeechRecorderApp" */;
 			buildPhases = (
 				920 /* Sources */,
 				700 /* Frameworks */,
@@ -267,7 +254,7 @@
 		};
 		901 /* SpeechRecorderAppTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 911;
+			buildConfigurationList = 911 /* Build configuration list for PBXNativeTarget "SpeechRecorderAppTests" */;
 			buildPhases = (
 				921 /* Sources */,
 				701 /* Frameworks */,
@@ -301,7 +288,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 501;
+			buildConfigurationList = 501 /* Build configuration list for PBXProject "SpeechRecorderApp" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -345,6 +332,7 @@
 				010 /* Recording.swift in Sources */,
 				011 /* Transcription.swift in Sources */,
 				012 /* TimestampedWord.swift in Sources */,
+				013 /* TimestampedMedia.swift in Sources */,
 				020 /* RecordingFeature.swift in Sources */,
 				021 /* RecordingsListFeature.swift in Sources */,
 				022 /* PlaybackFeature.swift in Sources */,
@@ -356,6 +344,8 @@
 				034 /* AudioPlayerClient.swift in Sources */,
 				035 /* LiveAudioPlayerClient.swift in Sources */,
 				036 /* Dependencies.swift in Sources */,
+				037 /* PhotoLibraryClient.swift in Sources */,
+				038 /* LivePhotoLibraryClient.swift in Sources */,
 				040 /* RecordingView.swift in Sources */,
 				041 /* RecordingsListView.swift in Sources */,
 				042 /* PlaybackView.swift in Sources */,
@@ -375,6 +365,8 @@
 				202 /* PlaybackFeatureTests.swift in Sources */,
 				203 /* AudioRecorderClientTests.swift in Sources */,
 				204 /* SpeechClientTests.swift in Sources */,
+				205 /* PhotoLibraryClientTests.swift in Sources */,
+				206 /* MediaSynchronizationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,7 +381,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		/* Debug - Project */
 		502 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -455,7 +446,6 @@
 			};
 			name = Debug;
 		};
-		/* Release - Project */
 		503 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -514,7 +504,6 @@
 			};
 			name = Release;
 		};
-		/* Debug - App Target */
 		912 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -522,10 +511,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4EC72DECN9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs microphone access to record audio.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to display photos and screenshots taken during recording.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app needs speech recognition access to transcribe audio.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -544,7 +534,6 @@
 			};
 			name = Debug;
 		};
-		/* Release - App Target */
 		913 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -552,10 +541,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 4EC72DECN9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs microphone access to record audio.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs photo library access to display photos and screenshots taken during recording.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app needs speech recognition access to transcribe audio.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -574,7 +564,6 @@
 			};
 			name = Release;
 		};
-		/* Debug - Test Target */
 		914 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -593,7 +582,6 @@
 			};
 			name = Debug;
 		};
-		/* Release - Test Target */
 		915 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -615,7 +603,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		501 /* Build configuration list for PBXProject */ = {
+		501 /* Build configuration list for PBXProject "SpeechRecorderApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				502 /* Debug */,

@@ -56,6 +56,9 @@ struct RecordingFeatureTests {
             $0.speechClient.isAssetInstalled = { _ in true }
             $0.speechClient.startTranscription = { _ in AsyncThrowingStream { _ in } }
             $0.speechClient.finishTranscription = { }
+            $0.photoLibrary.requestAuthorization = { .authorized }
+            $0.photoLibrary.observeNewPhotos = { AsyncStream { _ in } }
+            $0.photoLibrary.stopObserving = { }
             $0.date.now = testDate
             $0.uuid = .constant(testUUID)
             $0.continuousClock = ImmediateClock()
@@ -72,6 +75,8 @@ struct RecordingFeatureTests {
             $0.volatileTranscription = ""
             $0.transcription = .empty
             $0.speechError = nil
+            $0.capturedMedia = []
+            $0.mediaThumbnails = [:]
             $0.recordingURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent(testUUID.uuidString)
                 .appendingPathExtension("m4a")
@@ -79,6 +84,10 @@ struct RecordingFeatureTests {
         
         await store.receive(\.speechAuthorizationResponse) {
             $0.speechAuthorizationStatus = SpeechClient.AuthorizationStatus.authorized
+        }
+        
+        await store.receive(\.photoLibraryAuthorizationResponse) {
+            $0.photoLibraryAuthorizationStatus = PhotoLibraryClient.AuthorizationStatus.authorized
         }
         
         await store.receive(\.permissionResponse) {
@@ -97,6 +106,7 @@ struct RecordingFeatureTests {
         } withDependencies: {
             $0.audioRecorder.requestRecordPermission = { false }
             $0.speechClient.requestAuthorization = { .denied }
+            $0.photoLibrary.requestAuthorization = { .denied }
             $0.date.now = testDate
             $0.uuid = .constant(testUUID)
             $0.continuousClock = ImmediateClock()
@@ -109,6 +119,8 @@ struct RecordingFeatureTests {
             $0.volatileTranscription = ""
             $0.transcription = .empty
             $0.speechError = nil
+            $0.capturedMedia = []
+            $0.mediaThumbnails = [:]
             $0.recordingURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent(testUUID.uuidString)
                 .appendingPathExtension("m4a")
@@ -116,6 +128,10 @@ struct RecordingFeatureTests {
         
         await store.receive(\.speechAuthorizationResponse) {
             $0.speechAuthorizationStatus = SpeechClient.AuthorizationStatus.denied
+        }
+        
+        await store.receive(\.photoLibraryAuthorizationResponse) {
+            $0.photoLibraryAuthorizationStatus = PhotoLibraryClient.AuthorizationStatus.denied
         }
         
         await store.receive(\.permissionResponse) {
@@ -150,6 +166,7 @@ struct RecordingFeatureTests {
             $0.audioRecorder.stopRecording = { }
             $0.audioRecorder.currentTime = { testDuration }
             $0.speechClient.finishTranscription = { }
+            $0.photoLibrary.stopObserving = { }
             $0.uuid = .constant(testUUID)
         }
         
@@ -201,6 +218,7 @@ struct RecordingFeatureTests {
         } withDependencies: {
             $0.audioRecorder.stopRecording = { }
             $0.speechClient.finishTranscription = { }
+            $0.photoLibrary.stopObserving = { }
         }
         
         await store.send(.cancelButtonTapped) {
@@ -209,6 +227,8 @@ struct RecordingFeatureTests {
             $0.mode = .idle
             $0.volatileTranscription = ""
             $0.transcription = .empty
+            $0.capturedMedia = []
+            $0.mediaThumbnails = [:]
         }
     }
     
