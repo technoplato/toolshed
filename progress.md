@@ -30,7 +30,7 @@
 
 ✨ Added Apple Speech-to-Text sample code to references
 
-[Commit](https://github.com/technoplato/toolshed/commit/89bc519)
+[Commit](https://github.com/technoplato/toolshed/commit/e2fa860)
 
 - Added apple-speech-to-text-sample from Apple's 'Bringing Advanced Speech-to-Text Capabilities to Your App'
 - Updated README.md and AGENTS.md with documentation for the new reference
