@@ -1,6 +1,6 @@
 /**
  HOW:
-   Run tests with: `xcodebuild test -scheme SpeechRecorderApp -destination 'platform=iOS Simulator,name=iPhone 16'`
+   Run tests with: `xcodebuild test -scheme SpeechRecorderApp -destination 'platform=iOS Simulator,name=iPhone 17'`
    Or use SweetPad: `sweetpad.build.test`
    
    [Inputs]
@@ -52,6 +52,10 @@ struct RecordingFeatureTests {
             $0.audioRecorder.requestRecordPermission = { true }
             $0.audioRecorder.startRecording = { _ in }
             $0.audioRecorder.currentTime = { nil }
+            $0.speechClient.requestAuthorization = { .authorized }
+            $0.speechClient.isAssetInstalled = { _ in true }
+            $0.speechClient.startTranscription = { _ in AsyncThrowingStream { _ in } }
+            $0.speechClient.finishTranscription = { }
             $0.date.now = testDate
             $0.uuid = .constant(testUUID)
             $0.continuousClock = ImmediateClock()
@@ -65,9 +69,16 @@ struct RecordingFeatureTests {
             $0.isRecording = true
             $0.recordingStartTime = testDate
             $0.mode = .recording
+            $0.volatileTranscription = ""
+            $0.transcription = .empty
+            $0.speechError = nil
             $0.recordingURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent(testUUID.uuidString)
                 .appendingPathExtension("m4a")
+        }
+        
+        await store.receive(\.speechAuthorizationResponse) {
+            $0.speechAuthorizationStatus = SpeechClient.AuthorizationStatus.authorized
         }
         
         await store.receive(\.permissionResponse) {
@@ -85,6 +96,7 @@ struct RecordingFeatureTests {
             RecordingFeature()
         } withDependencies: {
             $0.audioRecorder.requestRecordPermission = { false }
+            $0.speechClient.requestAuthorization = { .denied }
             $0.date.now = testDate
             $0.uuid = .constant(testUUID)
             $0.continuousClock = ImmediateClock()
@@ -94,9 +106,16 @@ struct RecordingFeatureTests {
             $0.isRecording = true
             $0.recordingStartTime = testDate
             $0.mode = .recording
+            $0.volatileTranscription = ""
+            $0.transcription = .empty
+            $0.speechError = nil
             $0.recordingURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent(testUUID.uuidString)
                 .appendingPathExtension("m4a")
+        }
+        
+        await store.receive(\.speechAuthorizationResponse) {
+            $0.speechAuthorizationStatus = SpeechClient.AuthorizationStatus.denied
         }
         
         await store.receive(\.permissionResponse) {
@@ -130,6 +149,7 @@ struct RecordingFeatureTests {
         } withDependencies: {
             $0.audioRecorder.stopRecording = { }
             $0.audioRecorder.currentTime = { testDuration }
+            $0.speechClient.finishTranscription = { }
             $0.uuid = .constant(testUUID)
         }
         
@@ -174,17 +194,21 @@ struct RecordingFeatureTests {
         state.isRecording = true
         state.duration = 5.0
         state.hasPermission = true
+        state.volatileTranscription = "Hello world"
         
         let store = await TestStore(initialState: state) {
             RecordingFeature()
         } withDependencies: {
             $0.audioRecorder.stopRecording = { }
+            $0.speechClient.finishTranscription = { }
         }
         
         await store.send(.cancelButtonTapped) {
             $0.isRecording = false
             $0.duration = 0
             $0.mode = .idle
+            $0.volatileTranscription = ""
+            $0.transcription = .empty
         }
     }
     
@@ -201,6 +225,108 @@ struct RecordingFeatureTests {
         
         await store.send(.alert(.dismiss)) {
             $0.alert = nil
+        }
+    }
+    
+    @Test("Transcription result updates volatile transcription")
+    func transcriptionResultUpdatesVolatileTranscription() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.hasPermission = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        let result = TranscriptionResult(
+            text: "Hello world",
+            words: [
+                TimestampedWord(text: "Hello", startTime: 0.0, endTime: 0.5, confidence: nil),
+                TimestampedWord(text: "world", startTime: 0.5, endTime: 1.0, confidence: nil)
+            ],
+            isFinal: false
+        )
+        
+        await store.send(.transcriptionResult(result)) {
+            $0.volatileTranscription = "Hello world"
+        }
+    }
+    
+    @Test("Final transcription result updates transcription")
+    func finalTranscriptionResultUpdatesTranscription() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.hasPermission = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        let words = [
+            TimestampedWord(text: "Hello", startTime: 0.0, endTime: 0.5, confidence: nil),
+            TimestampedWord(text: "world", startTime: 0.5, endTime: 1.0, confidence: nil)
+        ]
+        
+        let result = TranscriptionResult(
+            text: "Hello world",
+            words: words,
+            isFinal: true
+        )
+        
+        await store.send(.transcriptionResult(result)) {
+            $0.volatileTranscription = "Hello world"
+            $0.transcription = Transcription(text: "Hello world", words: words, isFinal: true)
+        }
+    }
+    
+    @Test("Transcription failure sets error message")
+    func transcriptionFailureSetsError() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.hasPermission = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        let error = SpeechClient.Failure.localeNotSupported
+        
+        await store.send(.transcriptionFailed(error)) {
+            $0.speechError = error.localizedDescription
+        }
+    }
+    
+    @Test("Assets download started sets downloading flag")
+    func assetsDownloadStartedSetsFlag() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        await store.send(.assetsDownloadStarted) {
+            $0.isDownloadingAssets = true
+        }
+    }
+    
+    @Test("Assets download completed clears downloading flag")
+    func assetsDownloadCompletedClearsFlag() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isDownloadingAssets = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        } withDependencies: {
+            $0.speechClient.isAssetInstalled = { _ in true }
+            $0.speechClient.startTranscription = { _ in AsyncThrowingStream { _ in } }
+        }
+        
+        store.exhaustivity = .off
+        
+        await store.send(.assetsDownloadCompleted) {
+            $0.isDownloadingAssets = false
         }
     }
 }

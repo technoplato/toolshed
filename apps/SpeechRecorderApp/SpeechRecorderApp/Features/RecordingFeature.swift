@@ -25,6 +25,7 @@
    - Requests microphone permission
    - Starts/stops audio recording
    - Runs timer for duration updates
+   - Performs live speech transcription
 
  WHO:
    AI Agent, Developer
@@ -32,7 +33,8 @@
 
  WHAT:
    TCA reducer for managing audio recording state and actions.
-   Handles permission requests, recording lifecycle, and timer updates.
+   Handles permission requests, recording lifecycle, timer updates,
+   and live speech transcription with word-level timestamps.
 
  WHEN:
    Created: 2025-12-10
@@ -68,6 +70,9 @@ struct RecordingFeature {
         /// Whether microphone permission has been granted
         var hasPermission: Bool?
         
+        /// Whether speech recognition is authorized
+        var speechAuthorizationStatus: SpeechClient.AuthorizationStatus = .notDetermined
+        
         /// Current mode of the recording feature
         var mode: Mode = .idle
         
@@ -82,6 +87,12 @@ struct RecordingFeature {
         
         /// Finalized transcription
         var transcription: Transcription = .empty
+        
+        /// Whether speech assets are being downloaded
+        var isDownloadingAssets = false
+        
+        /// Error message for speech recognition issues
+        var speechError: String?
         
         enum Mode: Equatable, Sendable {
             case idle
@@ -105,6 +116,9 @@ struct RecordingFeature {
         /// Permission response received
         case permissionResponse(Bool)
         
+        /// Speech authorization response received
+        case speechAuthorizationResponse(SpeechClient.AuthorizationStatus)
+        
         /// Timer ticked (1 second interval)
         case timerTicked
         
@@ -119,6 +133,24 @@ struct RecordingFeature {
         
         /// Recording failed with error
         case recordingFailed(Error)
+        
+        /// Transcription result received
+        case transcriptionResult(TranscriptionResult)
+        
+        /// Transcription stream finished
+        case transcriptionFinished
+        
+        /// Transcription failed with error
+        case transcriptionFailed(Error)
+        
+        /// Speech assets download started
+        case assetsDownloadStarted
+        
+        /// Speech assets download completed
+        case assetsDownloadCompleted
+        
+        /// Speech assets download failed
+        case assetsDownloadFailed(Error)
         
         /// Alert actions
         case alert(PresentationAction<Alert>)
@@ -140,11 +172,13 @@ struct RecordingFeature {
         case permissionDenied
         case recordingFailed
         case cancelled
+        case speechNotAuthorized
     }
     
     // MARK: - Dependencies
     
     @Dependency(\.audioRecorder) var audioRecorder
+    @Dependency(\.speechClient) var speechClient
     @Dependency(\.continuousClock) var clock
     @Dependency(\.date) var date
     @Dependency(\.uuid) var uuid
@@ -154,6 +188,7 @@ struct RecordingFeature {
     private enum CancelID {
         case recording
         case timer
+        case transcription
     }
     
     // MARK: - Reducer Body
@@ -165,6 +200,9 @@ struct RecordingFeature {
                 state.isRecording = true
                 state.recordingStartTime = date.now
                 state.mode = .recording
+                state.volatileTranscription = ""
+                state.transcription = .empty
+                state.speechError = nil
                 
                 /// Generate recording URL
                 let recordingURL = FileManager.default.temporaryDirectory
@@ -173,9 +211,20 @@ struct RecordingFeature {
                 state.recordingURL = recordingURL
                 
                 return .run { send in
-                    let hasPermission = await audioRecorder.requestRecordPermission()
-                    await send(.permissionResponse(hasPermission))
+                    /// Request both microphone and speech permissions
+                    async let micPermission = audioRecorder.requestRecordPermission()
+                    async let speechAuth = speechClient.requestAuthorization()
+                    
+                    let hasMicPermission = await micPermission
+                    let speechStatus = await speechAuth
+                    
+                    await send(.speechAuthorizationResponse(speechStatus))
+                    await send(.permissionResponse(hasMicPermission))
                 }
+                
+            case let .speechAuthorizationResponse(status):
+                state.speechAuthorizationStatus = status
+                return .none
                 
             case let .permissionResponse(granted):
                 state.hasPermission = granted
@@ -184,6 +233,8 @@ struct RecordingFeature {
                     guard let recordingURL = state.recordingURL else {
                         return .none
                     }
+                    
+                    let speechAuthorized = state.speechAuthorizationStatus == .authorized
                     
                     return .merge(
                         /// Start recording
@@ -203,7 +254,10 @@ struct RecordingFeature {
                                 await send(.timerTicked)
                             }
                         }
-                        .cancellable(id: CancelID.timer)
+                        .cancellable(id: CancelID.timer),
+                        
+                        /// Start transcription if authorized
+                        speechAuthorized ? startTranscription() : .none
                     )
                 } else {
                     state.isRecording = false
@@ -228,18 +282,63 @@ struct RecordingFeature {
                 } message: {
                     TextState("An error occurred while recording.")
                 }
-                return .cancel(id: CancelID.timer)
+                return .merge(
+                    .cancel(id: CancelID.timer),
+                    .cancel(id: CancelID.transcription)
+                )
+                
+            case let .transcriptionResult(result):
+                state.volatileTranscription = result.text
+                
+                /// If this is a final result, update the transcription
+                if result.isFinal {
+                    state.transcription = Transcription(
+                        text: result.text,
+                        words: result.words,
+                        isFinal: true
+                    )
+                }
+                return .none
+                
+            case .transcriptionFinished:
+                /// Transcription stream ended normally
+                return .none
+                
+            case let .transcriptionFailed(error):
+                state.speechError = error.localizedDescription
+                /// Continue recording even if transcription fails
+                return .none
+                
+            case .assetsDownloadStarted:
+                state.isDownloadingAssets = true
+                return .none
+                
+            case .assetsDownloadCompleted:
+                state.isDownloadingAssets = false
+                /// Restart transcription after assets are downloaded
+                return startTranscription()
+                
+            case let .assetsDownloadFailed(error):
+                state.isDownloadingAssets = false
+                state.speechError = "Failed to download speech assets: \(error.localizedDescription)"
+                return .none
                 
             case .stopButtonTapped:
                 state.mode = .encoding
                 
-                return .run { send in
-                    if let currentTime = await audioRecorder.currentTime() {
-                        await send(.finalRecordingTime(currentTime))
-                    }
-                    await audioRecorder.stopRecording()
-                    await send(.recordingStopped)
-                }
+                return .merge(
+                    .run { send in
+                        if let currentTime = await audioRecorder.currentTime() {
+                            await send(.finalRecordingTime(currentTime))
+                        }
+                        await audioRecorder.stopRecording()
+                        await send(.recordingStopped)
+                    },
+                    .run { _ in
+                        try? await speechClient.finishTranscription()
+                    },
+                    .cancel(id: CancelID.transcription)
+                )
                 
             case let .finalRecordingTime(duration):
                 state.duration = duration
@@ -278,8 +377,10 @@ struct RecordingFeature {
                 return .merge(
                     .cancel(id: CancelID.recording),
                     .cancel(id: CancelID.timer),
+                    .cancel(id: CancelID.transcription),
                     .run { _ in
                         await audioRecorder.stopRecording()
+                        try? await speechClient.finishTranscription()
                     }
                 )
                 
@@ -299,5 +400,36 @@ struct RecordingFeature {
             }
         }
         .ifLet(\.$alert, action: \.alert)
+    }
+    
+    // MARK: - Private Helpers
+    
+    private func startTranscription() -> Effect<Action> {
+        .run { send in
+            do {
+                /// Ensure assets are installed
+                let locale = Locale(identifier: "en_US")
+                let isInstalled = await speechClient.isAssetInstalled(locale)
+                
+                if !isInstalled {
+                    await send(.assetsDownloadStarted)
+                    try await speechClient.ensureAssets(locale)
+                    await send(.assetsDownloadCompleted)
+                    return
+                }
+                
+                /// Start transcription
+                let stream = try await speechClient.startTranscription(locale)
+                
+                for try await result in stream {
+                    await send(.transcriptionResult(result))
+                }
+                
+                await send(.transcriptionFinished)
+            } catch {
+                await send(.transcriptionFailed(error))
+            }
+        }
+        .cancellable(id: CancelID.transcription)
     }
 }

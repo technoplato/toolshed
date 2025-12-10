@@ -21,7 +21,8 @@
 
  WHAT:
    SwiftUI view for the recording interface.
-   Shows record/stop button, duration, and live transcription.
+   Shows record/stop button, duration, live transcription,
+   asset download status, and speech recognition errors.
 
  WHEN:
    Created: 2025-12-10
@@ -49,10 +50,22 @@ struct RecordingView: View {
             /// Duration display
             durationDisplay
             
+            /// Asset download indicator
+            if store.isDownloadingAssets {
+                assetDownloadIndicator
+            }
+            
+            /// Speech error message
+            if let error = store.speechError {
+                speechErrorView(error)
+            }
+            
             /// Live transcription preview
             if !store.volatileTranscription.isEmpty {
                 transcriptionPreview
             }
+            
+            Spacer()
             
             /// Record/Stop button
             recordButton
@@ -76,9 +89,19 @@ struct RecordingView: View {
                 .opacity(store.isRecording ? (Int(store.duration).isMultiple(of: 2) ? 1 : 0.3) : 1)
                 .animation(.easeInOut(duration: 0.5), value: store.duration)
             
-            Text(store.isRecording ? "Recording" : "Ready")
+            Text(statusText)
                 .font(.headline)
                 .foregroundColor(store.isRecording ? .red : .secondary)
+        }
+    }
+    
+    private var statusText: String {
+        if store.mode == .encoding {
+            return "Processing..."
+        } else if store.isRecording {
+            return "Recording"
+        } else {
+            return "Ready"
         }
     }
     
@@ -88,19 +111,59 @@ struct RecordingView: View {
             .foregroundColor(.primary)
     }
     
-    private var transcriptionPreview: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Live Transcription")
+    private var assetDownloadIndicator: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle())
+            
+            Text("Downloading speech recognition assets...")
                 .font(.caption)
                 .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color.blue.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private func speechErrorView(_ error: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundColor(.orange)
             
-            Text(store.volatileTranscription)
-                .font(.body)
-                .foregroundColor(.purple.opacity(0.8))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(Color.purple.opacity(0.1))
-                .cornerRadius(8)
+            Text(error)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color.orange.opacity(0.1))
+        .cornerRadius(8)
+    }
+    
+    private var transcriptionPreview: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Live Transcription")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
+                /// Show word count
+                Text("\(store.transcription.words.count) words")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            
+            ScrollView {
+                Text(store.volatileTranscription)
+                    .font(.body)
+                    .foregroundColor(.purple.opacity(0.8))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 150)
+            .padding()
+            .background(Color.purple.opacity(0.1))
+            .cornerRadius(8)
         }
     }
     
@@ -164,7 +227,33 @@ struct RecordingView: View {
     var state = RecordingFeature.State()
     state.isRecording = true
     state.duration = 65
-    state.volatileTranscription = "Hello, this is a test recording..."
+    state.volatileTranscription = "Hello, this is a test recording with live transcription. The words appear as you speak them."
+    
+    return RecordingView(
+        store: Store(initialState: state) {
+            RecordingFeature()
+        }
+    )
+}
+
+#Preview("Downloading Assets") {
+    var state = RecordingFeature.State()
+    state.isRecording = true
+    state.isDownloadingAssets = true
+    state.duration = 5
+    
+    return RecordingView(
+        store: Store(initialState: state) {
+            RecordingFeature()
+        }
+    )
+}
+
+#Preview("Speech Error") {
+    var state = RecordingFeature.State()
+    state.isRecording = true
+    state.duration = 10
+    state.speechError = "Speech recognition not available for this locale"
     
     return RecordingView(
         store: Store(initialState: state) {

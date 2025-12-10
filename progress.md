@@ -26,6 +26,20 @@
 
 ---
 
+### December 9th, 2025 at 11:08:17 p.m.
+
+✨ Phase 2: SpeechAnalyzer integration with live transcription
+
+[Commit](https://github.com/technoplato/toolshed/commit/667057c)
+
+- Updated SpeechClient to use AsyncThrowingStream pattern from TCA
+- Implemented LiveSpeechClient with iOS 26.0+ SpeechAnalyzer API
+- Added word-level timestamp extraction from AttributedString
+- Integrated SpeechClient into RecordingFeature
+- Added 17 new SpeechClient tests (43 total tests passing)
+
+
+
 ### December 9th, 2025 at 10:42:37 p.m.
 
 ✨ SpeechRecorderApp Phase 1 Complete - Project Setup & Basic Recording
