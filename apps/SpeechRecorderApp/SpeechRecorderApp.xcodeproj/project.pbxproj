@@ -1,0 +1,680 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		/* App Sources */
+		001 /* SpeechRecorderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101; };
+		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102; };
+		003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 103; };
+		
+		/* Models */
+		010 /* Recording.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110; };
+		011 /* Transcription.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111; };
+		012 /* TimestampedWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112; };
+		
+		/* Features */
+		020 /* RecordingFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120; };
+		021 /* RecordingsListFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121; };
+		022 /* PlaybackFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122; };
+		023 /* AppFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123; };
+		
+		/* Dependencies */
+		030 /* AudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130; };
+		031 /* LiveAudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131; };
+		032 /* SpeechClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132; };
+		033 /* LiveSpeechClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133; };
+		034 /* AudioPlayerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134; };
+		035 /* LiveAudioPlayerClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135; };
+		036 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136; };
+		
+		/* Views */
+		040 /* RecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140; };
+		041 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141; };
+		042 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142; };
+		043 /* TranscriptionTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143; };
+		
+		/* Shared Keys */
+		050 /* SharedKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150; };
+		
+		/* Helpers */
+		060 /* BufferConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160; };
+		061 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161; };
+		
+		/* Test Sources */
+		200 /* RecordingFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 300; };
+		201 /* RecordingsListFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301; };
+		202 /* PlaybackFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 302; };
+		203 /* AudioRecorderClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 303; };
+		204 /* SpeechClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		401 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 500;
+			proxyType = 1;
+			remoteGlobalIDString = 900;
+			remoteInfo = SpeechRecorderApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		/* App Sources */
+		101 /* SpeechRecorderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecorderApp.swift; sourceTree = "<group>"; };
+		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		103 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		
+		/* Models */
+		110 /* Recording.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Recording.swift; sourceTree = "<group>"; };
+		111 /* Transcription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Transcription.swift; sourceTree = "<group>"; };
+		112 /* TimestampedWord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimestampedWord.swift; sourceTree = "<group>"; };
+		
+		/* Features */
+		120 /* RecordingFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFeature.swift; sourceTree = "<group>"; };
+		121 /* RecordingsListFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListFeature.swift; sourceTree = "<group>"; };
+		122 /* PlaybackFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackFeature.swift; sourceTree = "<group>"; };
+		123 /* AppFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeature.swift; sourceTree = "<group>"; };
+		
+		/* Dependencies */
+		130 /* AudioRecorderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderClient.swift; sourceTree = "<group>"; };
+		131 /* LiveAudioRecorderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveAudioRecorderClient.swift; sourceTree = "<group>"; };
+		132 /* SpeechClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechClient.swift; sourceTree = "<group>"; };
+		133 /* LiveSpeechClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveSpeechClient.swift; sourceTree = "<group>"; };
+		134 /* AudioPlayerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerClient.swift; sourceTree = "<group>"; };
+		135 /* LiveAudioPlayerClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveAudioPlayerClient.swift; sourceTree = "<group>"; };
+		136 /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
+		
+		/* Views */
+		140 /* RecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingView.swift; sourceTree = "<group>"; };
+		141 /* RecordingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListView.swift; sourceTree = "<group>"; };
+		142 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
+		143 /* TranscriptionTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionTextView.swift; sourceTree = "<group>"; };
+		
+		/* Shared Keys */
+		150 /* SharedKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedKeys.swift; sourceTree = "<group>"; };
+		
+		/* Helpers */
+		160 /* BufferConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BufferConverter.swift; sourceTree = "<group>"; };
+		161 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
+		
+		/* Test Sources */
+		300 /* RecordingFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingFeatureTests.swift; sourceTree = "<group>"; };
+		301 /* RecordingsListFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListFeatureTests.swift; sourceTree = "<group>"; };
+		302 /* PlaybackFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackFeatureTests.swift; sourceTree = "<group>"; };
+		303 /* AudioRecorderClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderClientTests.swift; sourceTree = "<group>"; };
+		304 /* SpeechClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechClientTests.swift; sourceTree = "<group>"; };
+		
+		/* Products */
+		600 /* SpeechRecorderApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpeechRecorderApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		601 /* SpeechRecorderAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeechRecorderAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		700 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		701 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		800 = {
+			isa = PBXGroup;
+			children = (
+				801 /* SpeechRecorderApp */,
+				802 /* SpeechRecorderAppTests */,
+				803 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		801 /* SpeechRecorderApp */ = {
+			isa = PBXGroup;
+			children = (
+				101 /* SpeechRecorderApp.swift */,
+				102 /* ContentView.swift */,
+				103 /* Assets.xcassets */,
+				810 /* Models */,
+				811 /* Features */,
+				812 /* Dependencies */,
+				813 /* Views */,
+				814 /* SharedKeys */,
+				815 /* Helpers */,
+			);
+			path = SpeechRecorderApp;
+			sourceTree = "<group>";
+		};
+		802 /* SpeechRecorderAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				300 /* RecordingFeatureTests.swift */,
+				301 /* RecordingsListFeatureTests.swift */,
+				302 /* PlaybackFeatureTests.swift */,
+				303 /* AudioRecorderClientTests.swift */,
+				304 /* SpeechClientTests.swift */,
+			);
+			path = SpeechRecorderAppTests;
+			sourceTree = "<group>";
+		};
+		803 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				600 /* SpeechRecorderApp.app */,
+				601 /* SpeechRecorderAppTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		810 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				110 /* Recording.swift */,
+				111 /* Transcription.swift */,
+				112 /* TimestampedWord.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		811 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				120 /* RecordingFeature.swift */,
+				121 /* RecordingsListFeature.swift */,
+				122 /* PlaybackFeature.swift */,
+				123 /* AppFeature.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		812 /* Dependencies */ = {
+			isa = PBXGroup;
+			children = (
+				130 /* AudioRecorderClient.swift */,
+				131 /* LiveAudioRecorderClient.swift */,
+				132 /* SpeechClient.swift */,
+				133 /* LiveSpeechClient.swift */,
+				134 /* AudioPlayerClient.swift */,
+				135 /* LiveAudioPlayerClient.swift */,
+				136 /* Dependencies.swift */,
+			);
+			path = Dependencies;
+			sourceTree = "<group>";
+		};
+		813 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				140 /* RecordingView.swift */,
+				141 /* RecordingsListView.swift */,
+				142 /* PlaybackView.swift */,
+				143 /* TranscriptionTextView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		814 /* SharedKeys */ = {
+			isa = PBXGroup;
+			children = (
+				150 /* SharedKeys.swift */,
+			);
+			path = SharedKeys;
+			sourceTree = "<group>";
+		};
+		815 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				160 /* BufferConverter.swift */,
+				161 /* Helpers.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		900 /* SpeechRecorderApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 910;
+			buildPhases = (
+				920 /* Sources */,
+				700 /* Frameworks */,
+				930 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SpeechRecorderApp;
+			packageProductDependencies = (
+				950 /* ComposableArchitecture */,
+				951 /* Sharing */,
+			);
+			productName = SpeechRecorderApp;
+			productReference = 600 /* SpeechRecorderApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		901 /* SpeechRecorderAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 911;
+			buildPhases = (
+				921 /* Sources */,
+				701 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				402 /* PBXTargetDependency */,
+			);
+			name = SpeechRecorderAppTests;
+			productName = SpeechRecorderAppTests;
+			productReference = 601 /* SpeechRecorderAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		500 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					900 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					901 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 900;
+					};
+				};
+			};
+			buildConfigurationList = 501;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 800;
+			packageReferences = (
+				940 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				941 /* XCRemoteSwiftPackageReference "swift-sharing" */,
+			);
+			productRefGroup = 803 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				900 /* SpeechRecorderApp */,
+				901 /* SpeechRecorderAppTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		930 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				003 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		920 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				001 /* SpeechRecorderApp.swift in Sources */,
+				002 /* ContentView.swift in Sources */,
+				010 /* Recording.swift in Sources */,
+				011 /* Transcription.swift in Sources */,
+				012 /* TimestampedWord.swift in Sources */,
+				020 /* RecordingFeature.swift in Sources */,
+				021 /* RecordingsListFeature.swift in Sources */,
+				022 /* PlaybackFeature.swift in Sources */,
+				023 /* AppFeature.swift in Sources */,
+				030 /* AudioRecorderClient.swift in Sources */,
+				031 /* LiveAudioRecorderClient.swift in Sources */,
+				032 /* SpeechClient.swift in Sources */,
+				033 /* LiveSpeechClient.swift in Sources */,
+				034 /* AudioPlayerClient.swift in Sources */,
+				035 /* LiveAudioPlayerClient.swift in Sources */,
+				036 /* Dependencies.swift in Sources */,
+				040 /* RecordingView.swift in Sources */,
+				041 /* RecordingsListView.swift in Sources */,
+				042 /* PlaybackView.swift in Sources */,
+				043 /* TranscriptionTextView.swift in Sources */,
+				050 /* SharedKeys.swift in Sources */,
+				060 /* BufferConverter.swift in Sources */,
+				061 /* Helpers.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		921 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				200 /* RecordingFeatureTests.swift in Sources */,
+				201 /* RecordingsListFeatureTests.swift in Sources */,
+				202 /* PlaybackFeatureTests.swift in Sources */,
+				203 /* AudioRecorderClientTests.swift in Sources */,
+				204 /* SpeechClientTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		402 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 900 /* SpeechRecorderApp */;
+			targetProxy = 401 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		/* Debug - Project */
+		502 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		/* Release - Project */
+		503 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		/* Debug - App Target */
+		912 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs microphone access to record audio.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app needs speech recognition access to transcribe audio.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SpeechRecorderApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		/* Release - App Target */
+		913 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs microphone access to record audio.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "This app needs speech recognition access to transcribe audio.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SpeechRecorderApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		/* Debug - Test Target */
+		914 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SpeechRecorderAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SpeechRecorderApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SpeechRecorderApp";
+			};
+			name = Debug;
+		};
+		/* Release - Test Target */
+		915 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.SpeechRecorderAppTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SpeechRecorderApp.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SpeechRecorderApp";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		501 /* Build configuration list for PBXProject */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				502 /* Debug */,
+				503 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		910 /* Build configuration list for PBXNativeTarget "SpeechRecorderApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				912 /* Debug */,
+				913 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		911 /* Build configuration list for PBXNativeTarget "SpeechRecorderAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				914 /* Debug */,
+				915 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		940 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.17.0;
+			};
+		};
+		941 /* XCRemoteSwiftPackageReference "swift-sharing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-sharing";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		950 /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 940 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+		951 /* Sharing */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 941 /* XCRemoteSwiftPackageReference "swift-sharing" */;
+			productName = Sharing;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 500 /* Project object */;
+}
