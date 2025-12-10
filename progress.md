@@ -26,6 +26,18 @@
 
 ---
 
+### December 9th, 2025 at 8:54:15 p.m.
+
+✨ Added Swift reference submodules
+
+[Commit](https://github.com/technoplato/toolshed/commit/414792b)
+
+- Added swift-composable-architecture and swift-sharing as git submodules in references/
+- Updated README.md with project structure and submodule documentation
+- Updated AGENTS.md with reference library section for agents to explore
+
+
+
 ### December 9th, 2025 at 2:08:47 a.m.
 
 ✨ Audio path resolution and batch embedding extraction

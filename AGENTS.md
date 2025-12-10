@@ -17,7 +17,7 @@ Every source code file (Python, TypeScript, React, Scripts, etc.) MUST start wit
 
 **Format:**
 
-```text
+````text
 HOW:
   [Quick Start / Usage command]
   (e.g., `uv run my_script.py --arg value`)
@@ -62,9 +62,10 @@ WHAT: Uploads a file.
 WHEN: 2025-12-05
 WHERE: utils/upload.py
 WHY:  To upload things.
-```
+````
 
 **❌ The Ugly (Incomplete):**
+
 ```text
 WHO:  Antigravity, User
 WHAT: Helper for S3.
@@ -76,6 +77,7 @@ WHY:  Need S3 support.
 ```
 
 **✅ The Good (Gold Standard):**
+
 ```text
 HOW:
   `uv run utils/s3_uploader.py --bucket my-bucket data/image.png`
@@ -141,7 +143,6 @@ WHY:
 **What Happens When You Run It:**
 
 1. **Without `--push` flag:**
-
    - Updates `progress.md` with a new entry at the top
    - Updates `~/.agents/progress.md` with the same entry (includes project context)
    - Prints confirmation messages
@@ -222,12 +223,14 @@ Comments MUST be placed **ABOVE** the code they describe, **NEVER to the right**
 Use multi-line `/** */` style comments for detailed explanations. Include examples where helpful.
 
 **❌ BAD (Comments to the right):**
+
 ```typescript
 start_time: i.number().indexed(),  // For range queries
 embedding_id: i.string().optional(), // Links to Postgres
 ```
 
 **✅ GOOD (Comments above):**
+
 ```typescript
 /**
  * Start time of the segment in seconds.
@@ -246,6 +249,7 @@ embedding_id: i.string().optional(),
 ### Schema Documentation
 
 When defining database schemas:
+
 1. Add a header section explaining design principles and entity relationships
 2. Document each entity with its relationships inline
 3. Include business logic explanations where relevant
@@ -257,3 +261,35 @@ When defining database schemas:
 - **Database**: InstantDB for everything possible.
 - **React**: Use Vite for new apps.
 - **Typescript**: Use bun when possible. If issues arise, use plain npm.
+
+## Reference Libraries (Submodules)
+
+The `references/` directory contains git submodules of external libraries that agents can explore for documentation, patterns, and implementation details.
+
+### Available References
+
+| Library                           | Path                                        | Description                                                                                         |
+| --------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **swift-composable-architecture** | `references/swift-composable-architecture/` | Point-Free's TCA library for building Swift applications with composition, testing, and ergonomics. |
+| **swift-sharing**                 | `references/swift-sharing/`                 | Point-Free's library for sharing state across features in a composable way.                         |
+
+### How to Use
+
+Agents can read local documentation and source code from these submodules:
+
+```bash
+# Explore TCA documentation
+ls references/swift-composable-architecture/Sources/
+cat references/swift-composable-architecture/README.md
+
+# Explore swift-sharing
+ls references/swift-sharing/Sources/
+cat references/swift-sharing/README.md
+```
+
+### Key Documentation Locations
+
+- **TCA**: `references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/`
+- **Sharing**: `references/swift-sharing/Sources/Sharing/Documentation.docc/`
+
+These references are useful when working on Swift projects that use TCA patterns or need state sharing solutions.

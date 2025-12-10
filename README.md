@@ -3,7 +3,8 @@
 A monorepo for various tools, experiments, and applications.
 
 ## Guiding Principles
-*See [AGENTS.md](./AGENTS.md) for detailed guidelines.*
+
+_See [AGENTS.md](./AGENTS.md) for detailed guidelines._
 
 - **Instant Feedback**: We value rapid iteration and verification.
 - **Agent-First**: This repository is structured to be friendly to AI agents.
@@ -12,11 +13,26 @@ A monorepo for various tools, experiments, and applications.
 ## Project Structure
 
 - **apps/**
-    - `transcriber/`: Python-based video transcription and processing.
-    - `swiss-army-knife/`: React application for general utilities (Coming Soon).
-    - `log-watcher/`: TypeScript utility to tail InstantDB logs (Coming Soon).
+  - `speaker-diarization-benchmark/`: Python-based speaker diarization and transcription benchmarking.
+  - `transcriber/`: Python-based video transcription and processing.
+- **references/** (git submodules)
+  - `swift-composable-architecture/`: Point-Free's TCA library for building Swift applications.
+  - `swift-sharing/`: Point-Free's library for sharing state across features.
 - **packages/**
-    - `schema/`: Shared InstantDB schema.
+  - `schema/`: Shared InstantDB schema.
+
+## References (Submodules)
+
+This repository includes reference implementations as git submodules for agents to explore:
+
+- **[swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)**: A library for building applications in a consistent and understandable way, with composition, testing, and ergonomics in mind.
+- **[swift-sharing](https://github.com/pointfreeco/swift-sharing)**: A library for sharing state across features in a composable way.
+
+To initialize submodules after cloning:
+
+```bash
+git submodule update --init --recursive
+```
 
 ## Getting Started
 
@@ -27,4 +43,4 @@ A monorepo for various tools, experiments, and applications.
 2.  **Documentation**:
     - Read [AGENTS.md](./AGENTS.md) for coding standards.
     - Check [TASKS.md](./TASKS.md) for current objectives.
-    - Check [PROGRESS.md](./PROGRESS.md) for recent updates.
+    - Check [progress.md](./progress.md) for recent updates.

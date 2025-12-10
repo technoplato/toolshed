@@ -1,0 +1,6 @@
+[submodule "references/swift-composable-architecture"]
+	path = references/swift-composable-architecture
+	url = https://github.com/pointfreeco/swift-composable-architecture
+[submodule "references/swift-sharing"]
+	path = references/swift-sharing
+	url = https://github.com/pointfreeco/swift-sharing
