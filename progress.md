@@ -30,7 +30,7 @@
 
 ✨ Phase 6: Photo/Screenshot Synchronization Complete
 
-[Commit](https://github.com/technoplato/toolshed/commit/268be73)
+[Commit](https://github.com/technoplato/toolshed/commit/b93adbe)
 
 - Added PhotoLibraryClient dependency with @DependencyClient pattern
 - Added LivePhotoLibraryClient using PHPhotoLibrary for photo observation
