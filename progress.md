@@ -30,7 +30,7 @@
 
 ✨ Added Swift reference submodules
 
-[Commit](https://github.com/technoplato/toolshed/commit/414792b)
+[Commit](https://github.com/technoplato/toolshed/commit/4c5c56a)
 
 - Added swift-composable-architecture and swift-sharing as git submodules in references/
 - Updated README.md with project structure and submodule documentation
