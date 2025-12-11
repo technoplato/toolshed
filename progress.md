@@ -26,6 +26,20 @@
 
 ---
 
+### December 11th, 2025 at 5:49:44 a.m.
+
+📝 Comprehensive TCA and Swift Sharing guide updated
+
+[Commit](https://github.com/technoplato/toolshed/commit/224fa59)
+
+- Added Part 1: Dependencies & Effects with testing/preview examples
+- Added Part 2: Navigation with StackState, CasePath syntax explanations
+- Added Part 4: isowords Modularization patterns
+- Integrated Swift Sharing content as Part 3
+- All sections include GitHub links to source files
+
+
+
 ### December 11th, 2025 at 12:30:33 a.m.
 
 📝 Added first-principles guide to TCA action case paths with destinations

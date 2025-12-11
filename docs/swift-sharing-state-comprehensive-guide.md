@@ -1,107 +1,1080 @@
-# Comprehensive Guide to Sharing State in Swift Composable Architecture
+# Comprehensive Guide to Swift Composable Architecture & State Sharing
 
-This guide provides a complete reference for sharing state in Swift applications using Point-Free's `swift-sharing` library and the Swift Composable Architecture (TCA). It covers best practices, patterns, testing strategies, and includes 7 practical recipes from official documentation and examples.
+This guide provides a complete reference for building applications with Point-Free's Swift Composable Architecture (TCA) and `swift-sharing` library. It covers dependencies with testing/preview patterns, navigation with deep linking, state sharing, and includes practical examples from official documentation and production apps like isowords.
 
-> **📚 Source References**
+> **🔗 GitHub Repository Links**
 >
-> This guide is compiled from the official Point-Free documentation and examples. All code examples include references to both:
->
-> - **Local paths**: Files in our `references/` submodules for offline exploration
-> - **External links**: Official GitHub repositories for the latest versions
->
-> **Reference Repositories:**
->
-> - Swift Sharing: [`references/swift-sharing/`](../references/swift-sharing/) | [GitHub](https://github.com/pointfreeco/swift-sharing)
-> - Swift Composable Architecture: [`references/swift-composable-architecture/`](../references/swift-composable-architecture/) | [GitHub](https://github.com/pointfreeco/swift-composable-architecture)
-> - isowords (production example): [`references/isowords/`](../references/isowords/) | [GitHub](https://github.com/pointfreeco/isowords)
+> All code examples include links to the original source files in Point-Free's repositories:
+> - [swift-composable-architecture](https://github.com/pointfreeco/swift-composable-architecture)
+> - [swift-sharing](https://github.com/pointfreeco/swift-sharing)
+> - [isowords](https://github.com/pointfreeco/isowords)
 
 ## Table of Contents
 
-- [Comprehensive Guide to Sharing State in Swift Composable Architecture](#comprehensive-guide-to-sharing-state-in-swift-composable-architecture)
-  - [Table of Contents](#table-of-contents)
-  - [Overview](#overview)
-    - [Key Benefits](#key-benefits)
-  - [Core Concepts](#core-concepts)
-    - [The @Shared Property Wrapper](#the-shared-property-wrapper)
-    - [@SharedReader for Read-Only Access](#sharedreader-for-read-only-access)
-  - [Persistence Strategies](#persistence-strategies)
-    - [1. App Storage (UserDefaults)](#1-app-storage-userdefaults)
-    - [2. File Storage](#2-file-storage)
-    - [3. In-Memory](#3-in-memory)
-    - [Comparison Table](#comparison-table)
-  - [Mutating Shared State](#mutating-shared-state)
-    - [Why withLock is Required](#why-withlock-is-required)
-  - [Deriving Shared State](#deriving-shared-state)
-    - [Basic Derivation](#basic-derivation)
-    - [Optional Unwrapping](#optional-unwrapping)
-    - [Collection Iteration](#collection-iteration)
-    - [Subscript Access](#subscript-access)
-  - [Type-Safe Keys](#type-safe-keys)
-    - [Basic Type-Safe Key](#basic-type-safe-key)
-    - [With Default Value](#with-default-value)
-    - [App Storage Key](#app-storage-key)
-    - [In-Memory Key](#in-memory-key)
-  - [Testing Shared State](#testing-shared-state)
-    - [Automatic Test Isolation](#automatic-test-isolation)
-    - [Overriding Initial Values](#overriding-initial-values)
-    - [Repeated/Parameterized Tests](#repeatedparameterized-tests)
-    - [Preventing App Entry Point Execution](#preventing-app-entry-point-execution)
-    - [UI Testing Setup](#ui-testing-setup)
-  - [Navigation Patterns](#navigation-patterns)
-    - [Stack-Based Navigation with Shared State](#stack-based-navigation-with-shared-state)
-    - [Passing Shared State to Child Features](#passing-shared-state-to-child-features)
-    - [Child Feature with Shared State](#child-feature-with-shared-state)
-  - [Recipes](#recipes)
-    - [Recipe 1: Sharing State Across Tabs with File Storage](#recipe-1-sharing-state-across-tabs-with-file-storage)
-    - [Recipe 2: Multi-Step Onboarding Flow with Derived State](#recipe-2-multi-step-onboarding-flow-with-derived-state)
-    - [Recipe 3: Global Router with Persisted Navigation Path](#recipe-3-global-router-with-persisted-navigation-path)
-    - [Recipe 4: Sharing State Between Parent and Child Features](#recipe-4-sharing-state-between-parent-and-child-features)
-    - [Recipe 5: Using @Shared in Observable Models](#recipe-5-using-shared-in-observable-models)
-    - [Recipe 6: Custom Notification-Based Shared State](#recipe-6-custom-notification-based-shared-state)
-    - [Recipe 7: Testing Shared State in TCA](#recipe-7-testing-shared-state-in-tca)
-  - [Gotchas and Best Practices](#gotchas-and-best-practices)
-    - [1. Always Use @ObservationIgnored in @Observable Models](#1-always-use-observationignored-in-observable-models)
-    - [2. Shared State is Not Hashable](#2-shared-state-is-not-hashable)
-    - [3. Shared State is Not Codable](#3-shared-state-is-not-codable)
-    - [4. Dynamic Keys in SwiftUI Views](#4-dynamic-keys-in-swiftui-views)
-    - [5. Prefer Type-Safe Keys](#5-prefer-type-safe-keys)
-    - [6. Use withLock for All Mutations](#6-use-withlock-for-all-mutations)
-    - [7. Derive State for Child Features](#7-derive-state-for-child-features)
-  - [Migration Guide: From Dependencies to @Shared](#migration-guide-from-dependencies-to-shared)
-    - [Overview of Changes](#overview-of-changes)
-    - [Migration Pattern 1: FileClient to @Shared with File Storage](#migration-pattern-1-fileclient-to-shared-with-file-storage)
-    - [Migration Pattern 2: UserDefaultsClient to @Shared with App Storage](#migration-pattern-2-userdefaultsclient-to-shared-with-app-storage)
-    - [Migration Pattern 3: UserSettingsClient to @Shared with File Storage](#migration-pattern-3-usersettingsclient-to-shared-with-file-storage)
-    - [Migration Pattern 4: ServerConfigClient to Custom @SharedReader Key](#migration-pattern-4-serverconfigclient-to-custom-sharedreader-key)
-    - [Migration Pattern 5: Eliminating LowPowerModeClient](#migration-pattern-5-eliminating-lowpowermodeclient)
-    - [Migration Pattern 6: Build Dependency to @Shared](#migration-pattern-6-build-dependency-to-shared)
-    - [Migration Pattern 7: Removing onChange Reducers](#migration-pattern-7-removing-onchange-reducers)
-    - [Migration Pattern 8: Simplifying State Initialization](#migration-pattern-8-simplifying-state-initialization)
-    - [Migration Checklist](#migration-checklist)
-    - [Benefits of Migration](#benefits-of-migration)
-  - [Summary](#summary)
-  - [Reference Quick Links](#reference-quick-links)
-    - [Local Repository References](#local-repository-references)
-    - [External Documentation Links](#external-documentation-links)
-    - [Key Documentation Files](#key-documentation-files)
-  - [Appendix A: SpeechRecorderApp Migration Guide](#appendix-a-speechrecorderapp-migration-guide)
-    - [Overview of Required Changes](#overview-of-required-changes)
-    - [File Change 1: SharedKeys.swift](#file-change-1-sharedkeysswift)
-    - [File Change 2: Recording.swift - Add Identifiable Conformance](#file-change-2-recordingswift---add-identifiable-conformance)
-    - [File Change 3: RecordingsListFeature.swift](#file-change-3-recordingslistfeatureswift)
-    - [File Change 4: PlaybackFeature.swift - Use Derived Shared State](#file-change-4-playbackfeatureswift---use-derived-shared-state)
-    - [File Change 5: RecordingsListFeatureTests.swift - Add @MainActor](#file-change-5-recordingslistfeaturetestsswift---add-mainactor)
-    - [File Change 6: PlaybackFeatureTests.swift - Add @MainActor](#file-change-6-playbackfeaturetestsswift---add-mainactor)
-    - [File Change 7: Add Delete Test with Shared State Pattern](#file-change-7-add-delete-test-with-shared-state-pattern)
-    - [File Change 8: Add Playback Test with Shared State](#file-change-8-add-playback-test-with-shared-state)
-    - [New Tests to Add](#new-tests-to-add)
-      - [Test: Edit Recording Title During Playback](#test-edit-recording-title-during-playback)
-      - [Test: Playback with Pre-populated Shared State](#test-playback-with-pre-populated-shared-state)
-    - [Summary of Changes](#summary-of-changes)
-    - [Reference Files for Each Pattern](#reference-files-for-each-pattern)
-    - [Implementation Order](#implementation-order)
+### Part 1: Dependencies & Effects
+- [Dependencies Overview](#dependencies-overview)
+- [Audio Recording Dependency](#audio-recording-dependency)
+- [Speech Recognition Dependency](#speech-recognition-dependency)
+- [Time Control with Clocks](#time-control-with-clocks)
+- [Effect Cancellation](#effect-cancellation)
+- [Network Requests (FactClient)](#network-requests-factclient)
+
+### Part 2: Navigation
+- [NavigationStack Deep Dive](#navigationstack-deep-dive)
+- [StackState and StackElementID](#stackstate-and-stackelementid)
+- [The @Reducer enum Path Pattern](#the-reducer-enum-path-pattern)
+- [Deep Linking](#deep-linking)
+- [Decoupled Navigation](#decoupled-navigation)
+
+### Part 3: State Sharing
+
+- [Overview](#overview)
+- [Core Concepts](#core-concepts)
+- [Persistence Strategies](#persistence-strategies)
+- [Mutating Shared State](#mutating-shared-state)
+- [Deriving Shared State](#deriving-shared-state)
+- [Type-Safe Keys](#type-safe-keys)
+- [Testing Shared State](#testing-shared-state)
+
+### Part 4: isowords Modularization
+- [Hyper-Modularization Pattern](#hyper-modularization-pattern)
+- [Package Structure](#package-structure)
+- [Feature Module Pattern](#feature-module-pattern)
+
+### Part 5: Appendices
+- [Appendix A: SpeechRecorderApp Migration Guide](#appendix-a-speechrecorderapp-migration-guide)
+- [Reference Quick Links](#reference-quick-links)
 
 ---
+
+# Part 1: Dependencies & Effects
+
+## Dependencies Overview
+
+Dependencies in TCA are external services that your features need to interact with the outside world. The `@DependencyClient` macro makes defining dependencies ergonomic, and the pattern of providing `liveValue`, `testValue`, and `previewValue` enables testing and SwiftUI previews.
+
+> **📖 Source**: [swift-dependencies](https://github.com/pointfreeco/swift-dependencies)
+
+### The @DependencyClient Macro
+
+The `@DependencyClient` macro automatically generates unimplemented versions of your dependency's endpoints for testing:
+
+```swift
+// Source: FactClient.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/FactClient.swift
+
+import ComposableArchitecture
+import Foundation
+
+/// A dependency client for fetching number facts from an API.
+/// The @DependencyClient macro generates testValue automatically.
+@DependencyClient
+struct FactClient {
+  /// Fetches a trivia fact about the given number.
+  /// In tests, this will fail if called without being overridden.
+  var fetch: @Sendable (Int) async throws -> String
+}
+
+extension DependencyValues {
+  var factClient: FactClient {
+    get { self[FactClient.self] }
+    set { self[FactClient.self] = newValue }
+  }
+}
+
+extension FactClient: DependencyKey {
+  /// The live implementation that makes real network requests.
+  static let liveValue = Self(
+    fetch: { number in
+      // Simulate network delay
+      try await Task.sleep(for: .seconds(1))
+      let (data, _) = try await URLSession.shared
+        .data(from: URL(string: "http://numbersapi.com/\(number)/trivia")!)
+      return String(decoding: data, as: UTF8.self)
+    }
+  )
+
+  /// testValue is auto-generated by @DependencyClient - it fails if called.
+  /// This ensures tests explicitly override dependencies they use.
+  static let testValue = Self()
+}
+```
+
+**Key Points:**
+- `@DependencyClient` generates `testValue` that fails if any endpoint is called
+- This catches tests that accidentally use real implementations
+- You must explicitly override dependencies in tests
+
+---
+
+## Audio Recording Dependency
+
+> **📖 Source**: [VoiceMemos/AudioRecorderClient](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/VoiceMemos/VoiceMemos/AudioRecorderClient/AudioRecorderClient.swift)
+
+This example shows a complete dependency with live, preview, and test implementations.
+
+### Dependency Definition
+
+```swift
+// Source: AudioRecorderClient.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/VoiceMemos/VoiceMemos/AudioRecorderClient/AudioRecorderClient.swift
+
+import ComposableArchitecture
+import Foundation
+
+/// Client for recording audio. Demonstrates the full dependency pattern
+/// with live, preview, and test implementations.
+@DependencyClient
+struct AudioRecorderClient {
+  /// Returns the current recording time in seconds.
+  var currentTime: @Sendable () async -> TimeInterval = { 0 }
+  
+  /// Requests microphone permission. Returns true if granted.
+  var requestRecordPermission: @Sendable () async -> Bool = { false }
+  
+  /// Starts recording to the given URL. Returns true on success.
+  var startRecording: @Sendable (URL) async throws -> Bool
+  
+  /// Stops the current recording.
+  var stopRecording: @Sendable () async -> Void
+}
+
+extension DependencyValues {
+  var audioRecorder: AudioRecorderClient {
+    get { self[AudioRecorderClient.self] }
+    set { self[AudioRecorderClient.self] = newValue }
+  }
+}
+```
+
+### Preview Implementation with LockIsolated
+
+The preview implementation uses `LockIsolated` for thread-safe state tracking:
+
+```swift
+// Source: AudioRecorderClient.swift (previewValue)
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/VoiceMemos/VoiceMemos/AudioRecorderClient/AudioRecorderClient.swift
+
+extension AudioRecorderClient: DependencyKey {
+  /// Preview implementation that simulates recording behavior.
+  /// Uses LockIsolated for thread-safe state tracking.
+  static var previewValue: Self {
+    // LockIsolated provides thread-safe access to mutable state
+    let isRecording = LockIsolated(false)
+    let currentTime = LockIsolated(0.0)
+
+    return Self(
+      currentTime: { currentTime.value },
+      requestRecordPermission: { true },
+      startRecording: { _ in
+        isRecording.setValue(true)
+        // Simulate recording by incrementing time every second
+        while isRecording.value {
+          try await Task.sleep(for: .seconds(1))
+          currentTime.withValue { $0 += 1 }
+        }
+        return true
+      },
+      stopRecording: {
+        isRecording.setValue(false)
+        currentTime.setValue(0)
+      }
+    )
+  }
+}
+```
+
+**Why LockIsolated?**
+- `LockIsolated` wraps a value with a lock for thread-safe access
+- `.value` reads the current value
+- `.setValue(_:)` sets a new value
+- `.withValue { }` mutates the value in place
+- Essential for preview implementations that track state across async calls
+
+### Testing Audio Recording
+
+```swift
+// Source: VoiceMemosTests.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/VoiceMemos/VoiceMemosTests/VoiceMemosTests.swift
+
+import ComposableArchitecture
+import Testing
+
+@MainActor
+struct VoiceMemosTests {
+  /// Tests the recording flow with controlled async streams.
+  @Test
+  func recordMemo() async {
+    // Create a controllable stream for testing
+    let stream = AsyncThrowingStream.makeStream(of: Void.self)
+    
+    let store = TestStore(initialState: VoiceMemos.State()) {
+      VoiceMemos()
+    } withDependencies: {
+      // Override the audio recorder for testing
+      $0.audioRecorder.requestRecordPermission = { true }
+      $0.audioRecorder.startRecording = { _ in
+        // Wait for test to signal completion
+        try await stream.stream.first { _ in true }
+        return true
+      }
+      $0.audioRecorder.stopRecording = {}
+      $0.audioRecorder.currentTime = { 2.5 }
+      
+      // Control time for deterministic testing
+      $0.continuousClock = ImmediateClock()
+      $0.uuid = .incrementing
+      $0.date = .constant(Date(timeIntervalSinceReferenceDate: 0))
+    }
+
+    // Start recording
+    await store.send(.recordButtonTapped) {
+      $0.audioRecorderPermission = .allowed
+      $0.recordingMemo = RecordingMemo.State(
+        date: Date(timeIntervalSinceReferenceDate: 0),
+        mode: .recording,
+        url: URL(/* ... */)
+      )
+    }
+
+    // Simulate recording completion
+    stream.continuation.yield()
+    stream.continuation.finish()
+
+    // Stop recording
+    await store.send(.recordingMemo(.presented(.stopButtonTapped))) {
+      $0.recordingMemo?.mode = .encoding
+    }
+  }
+  
+  /// Tests permission denied flow.
+  @Test
+  func permissionDenied() async {
+    let store = TestStore(initialState: VoiceMemos.State()) {
+      VoiceMemos()
+    } withDependencies: {
+      // Simulate permission denied
+      $0.audioRecorder.requestRecordPermission = { false }
+    }
+
+    await store.send(.recordButtonTapped) {
+      $0.audioRecorderPermission = .denied
+    }
+  }
+}
+```
+
+**Testing Patterns:**
+- `AsyncThrowingStream.makeStream()` creates controllable streams
+- `stream.continuation.yield()` signals events
+- `stream.continuation.finish()` completes the stream
+- Override only the endpoints your test uses
+
+---
+
+## Speech Recognition Dependency
+
+> **📖 Source**: [SpeechRecognition/SpeechClient](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/SpeechRecognition/SpeechRecognition/SpeechClient/Client.swift)
+
+This example shows a dynamic preview that simulates realistic speech recognition.
+
+### Dependency Definition
+
+```swift
+// Source: SpeechClient/Client.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/SpeechRecognition/SpeechRecognition/SpeechClient/Client.swift
+
+import ComposableArchitecture
+import Speech
+
+/// Client for speech recognition with authorization and transcription.
+@DependencyClient
+struct SpeechClient {
+  /// Returns the current authorization status.
+  var authorizationStatus: @Sendable () -> SFSpeechRecognizerAuthorizationStatus = { .notDetermined }
+  
+  /// Requests speech recognition authorization.
+  var requestAuthorization: @Sendable () async -> SFSpeechRecognizerAuthorizationStatus = {
+    .notDetermined
+  }
+  
+  /// Starts a speech recognition task, returning a stream of transcription results.
+  var startTask: @Sendable (SFSpeechAudioBufferRecognitionRequest) async -> AsyncThrowingStream<
+    SpeechRecognitionResult, Error
+  > = { _ in .finished() }
+}
+```
+
+### Dynamic Preview with Realistic Timing
+
+The preview simulates word-by-word transcription with realistic timing:
+
+```swift
+// Source: SpeechClient/Client.swift (previewValue)
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/SpeechRecognition/SpeechRecognition/SpeechClient/Client.swift
+
+extension SpeechClient: DependencyKey {
+  /// Preview that simulates realistic speech recognition.
+  /// Words appear one at a time with timing based on word length.
+  static var previewValue: Self {
+    let isRecording = LockIsolated(false)
+    
+    return Self(
+      authorizationStatus: { .authorized },
+      requestAuthorization: { .authorized },
+      startTask: { _ in
+        AsyncThrowingStream { continuation in
+          Task {
+            isRecording.setValue(true)
+            var transcript = ""
+            
+            // Sample text to "transcribe"
+            var finalText = """
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod \
+              tempor incididunt ut labore et dolore magna aliqua.
+              """
+            
+            // Yield words one at a time with realistic timing
+            while isRecording.value, !finalText.isEmpty {
+              // Extract next word
+              let word = finalText.prefix { $0 != " " }
+              
+              // Timing based on word length (longer words = more time)
+              // Plus random variation for realism
+              let delay = word.count * 50 + .random(in: 0...200)
+              try await Task.sleep(for: .milliseconds(delay))
+              
+              guard isRecording.value else { break }
+              
+              // Add word to transcript
+              transcript += word
+              if finalText.count > word.count {
+                transcript += " "
+                finalText.removeFirst(word.count + 1)
+              } else {
+                finalText.removeFirst(word.count)
+              }
+              
+              // Yield the current transcript
+              continuation.yield(
+                SpeechRecognitionResult(
+                  bestTranscription: Transcription(formattedString: transcript),
+                  isFinal: finalText.isEmpty
+                )
+              )
+            }
+            
+            continuation.finish()
+          }
+        }
+      }
+    )
+  }
+}
+```
+
+**Preview Strategy:**
+- Words appear with timing proportional to their length
+- Random variation adds realism
+- `LockIsolated` tracks recording state
+- Stream yields partial results like real speech recognition
+
+### Testing Speech Recognition
+
+```swift
+// Source: SpeechRecognitionTests.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/SpeechRecognition/SpeechRecognitionTests/SpeechRecognitionTests.swift
+
+@MainActor
+struct SpeechRecognitionTests {
+  @Test
+  func transcription() async {
+    let store = TestStore(initialState: SpeechRecognition.State()) {
+      SpeechRecognition()
+    } withDependencies: {
+      $0.speechClient.authorizationStatus = { .authorized }
+      $0.speechClient.startTask = { _ in
+        AsyncThrowingStream { continuation in
+          continuation.yield(
+            SpeechRecognitionResult(
+              bestTranscription: Transcription(formattedString: "Hello"),
+              isFinal: false
+            )
+          )
+          continuation.yield(
+            SpeechRecognitionResult(
+              bestTranscription: Transcription(formattedString: "Hello world"),
+              isFinal: true
+            )
+          )
+          continuation.finish()
+        }
+      }
+    }
+
+    await store.send(.recordButtonTapped) {
+      $0.isRecording = true
+    }
+    
+    await store.receive(\.speechRecognizerResult) {
+      $0.transcribedText = "Hello"
+    }
+    
+    await store.receive(\.speechRecognizerResult) {
+      $0.transcribedText = "Hello world"
+      $0.isRecording = false
+    }
+  }
+}
+```
+
+---
+
+## Time Control with Clocks
+
+> **📖 Source**: [CaseStudies/03-Effects-Timers.swift](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/03-Effects-Timers.swift)
+
+TCA provides clock dependencies for controlling time in tests.
+
+### Using continuousClock
+
+```swift
+// Source: 03-Effects-Timers.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/03-Effects-Timers.swift
+
+import ComposableArchitecture
+import SwiftUI
+
+@Reducer
+struct Timers {
+  @ObservableState
+  struct State: Equatable {
+    var isTimerActive = false
+    var secondsElapsed = 0
+  }
+
+  enum Action {
+    case onDisappear
+    case timerTicked
+    case toggleTimerButtonTapped
+  }
+
+  /// The clock dependency - use continuousClock for real time,
+  /// TestClock or ImmediateClock for testing.
+  @Dependency(\.continuousClock) var clock
+  
+  /// Cancel ID for the timer effect
+  private enum CancelID { case timer }
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .onDisappear:
+        // Cancel timer when view disappears
+        return .cancel(id: CancelID.timer)
+
+      case .timerTicked:
+        state.secondsElapsed += 1
+        return .none
+
+      case .toggleTimerButtonTapped:
+        state.isTimerActive.toggle()
+        return .run { [isTimerActive = state.isTimerActive] send in
+          guard isTimerActive else { return }
+          // Use clock.timer for testable time-based effects
+          for await _ in self.clock.timer(interval: .seconds(1)) {
+            await send(.timerTicked, animation: .interpolatingSpring(stiffness: 3000, damping: 40))
+          }
+        }
+        .cancellable(id: CancelID.timer, cancelInFlight: true)
+      }
+    }
+  }
+}
+```
+
+### Using mainQueue (Alternative)
+
+```swift
+// Source: 04-NavigationStack.swift (ScreenC)
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift
+
+@Reducer
+struct ScreenC {
+  @ObservableState
+  struct State: Equatable {
+    var count = 0
+    var isTimerRunning = false
+  }
+
+  enum Action {
+    case startButtonTapped
+    case stopButtonTapped
+    case timerTick
+  }
+
+  /// mainQueue is another clock dependency option
+  @Dependency(\.mainQueue) var mainQueue
+  enum CancelID { case timer }
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .startButtonTapped:
+        state.isTimerRunning = true
+        return .run { send in
+          // mainQueue.timer works like continuousClock.timer
+          for await _ in self.mainQueue.timer(interval: 1) {
+            await send(.timerTick)
+          }
+        }
+        .cancellable(id: CancelID.timer)
+        .concatenate(with: .send(.stopButtonTapped))
+
+      case .stopButtonTapped:
+        state.isTimerRunning = false
+        return .cancel(id: CancelID.timer)
+
+      case .timerTick:
+        state.count += 1
+        return .none
+      }
+    }
+  }
+}
+```
+
+### Testing with TestClock
+
+```swift
+@MainActor
+struct TimersTests {
+  @Test
+  func timer() async {
+    // TestClock gives you complete control over time
+    let clock = TestClock()
+    
+    let store = TestStore(initialState: Timers.State()) {
+      Timers()
+    } withDependencies: {
+      $0.continuousClock = clock
+    }
+
+    // Start timer
+    await store.send(.toggleTimerButtonTapped) {
+      $0.isTimerActive = true
+    }
+
+    // Advance time by 1 second
+    await clock.advance(by: .seconds(1))
+    await store.receive(\.timerTicked) {
+      $0.secondsElapsed = 1
+    }
+
+    // Advance by 2 more seconds
+    await clock.advance(by: .seconds(2))
+    await store.receive(\.timerTicked) {
+      $0.secondsElapsed = 2
+    }
+    await store.receive(\.timerTicked) {
+      $0.secondsElapsed = 3
+    }
+
+    // Stop timer
+    await store.send(.toggleTimerButtonTapped) {
+      $0.isTimerActive = false
+    }
+  }
+}
+```
+
+**Clock Types:**
+- `ContinuousClock` - Real time (live)
+- `TestClock` - Manual time control for tests
+- `ImmediateClock` - Instant execution (no waiting)
+
+---
+
+## Effect Cancellation
+
+> **📖 Source**: [CaseStudies/03-Effects-Cancellation.swift](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/03-Effects-Cancellation.swift)
+
+```swift
+// Source: 03-Effects-Cancellation.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/03-Effects-Cancellation.swift
+
+@Reducer
+struct EffectsCancellation {
+  @ObservableState
+  struct State: Equatable {
+    var count = 0
+    var currentFact: String?
+    var isFactRequestInFlight = false
+  }
+
+  enum Action {
+    case cancelButtonTapped
+    case stepperChanged(Int)
+    case factButtonTapped
+    case factResponse(Result<String, any Error>)
+  }
+
+  @Dependency(\.factClient) var factClient
+  
+  /// Use an enum for cancel IDs - clearer than strings
+  private enum CancelID { case factRequest }
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .cancelButtonTapped:
+        state.isFactRequestInFlight = false
+        // Cancel the in-flight request
+        return .cancel(id: CancelID.factRequest)
+
+      case let .stepperChanged(value):
+        state.count = value
+        state.currentFact = nil
+        state.isFactRequestInFlight = false
+        // Cancel any pending request when count changes
+        return .cancel(id: CancelID.factRequest)
+
+      case .factButtonTapped:
+        state.currentFact = nil
+        state.isFactRequestInFlight = true
+        return .run { [count = state.count] send in
+          await send(.factResponse(Result { try await self.factClient.fetch(count) }))
+        }
+        // Mark as cancellable with the ID
+        .cancellable(id: CancelID.factRequest)
+
+      case let .factResponse(.success(response)):
+        state.isFactRequestInFlight = false
+        state.currentFact = response
+        return .none
+
+      case .factResponse(.failure):
+        state.isFactRequestInFlight = false
+        return .none
+      }
+    }
+  }
+}
+```
+
+**Cancellation Patterns:**
+- Use `private enum CancelID { case ... }` for type-safe IDs
+- `.cancellable(id:)` marks an effect as cancellable
+- `.cancel(id:)` cancels effects with that ID
+- `cancelInFlight: true` cancels previous effects with same ID
+
+---
+
+## Network Requests (FactClient)
+
+> **📖 Source**: [CaseStudies/FactClient.swift](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/FactClient.swift)
+
+A simple example of a network dependency:
+
+```swift
+// Source: FactClient.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/FactClient.swift
+
+@DependencyClient
+struct FactClient {
+  var fetch: @Sendable (Int) async throws -> String
+}
+
+extension DependencyValues {
+  var factClient: FactClient {
+    get { self[FactClient.self] }
+    set { self[FactClient.self] = newValue }
+  }
+}
+
+extension FactClient: DependencyKey {
+  static let liveValue = Self(
+    fetch: { number in
+      try await Task.sleep(for: .seconds(1))
+      let (data, _) = try await URLSession.shared
+        .data(from: URL(string: "http://numbersapi.com/\(number)/trivia")!)
+      return String(decoding: data, as: UTF8.self)
+    }
+  )
+
+  // testValue is auto-generated by @DependencyClient
+  static let testValue = Self()
+}
+```
+
+---
+
+# Part 2: Navigation
+
+## NavigationStack Deep Dive
+
+> **📖 Source**: [CaseStudies/04-NavigationStack.swift](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift)
+
+TCA provides powerful tools for state-driven navigation that enables deep linking and testing.
+
+### The @Reducer enum Path Pattern
+
+The `@Reducer enum Path` pattern defines all possible navigation destinations:
+
+```swift
+// Source: 04-NavigationStack.swift
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift
+
+@Reducer
+struct NavigationDemo {
+  /// @Reducer enum defines all possible navigation destinations.
+  /// Each case wraps a child reducer.
+  @Reducer
+  enum Path {
+    case screenA(ScreenA)  // ScreenA is a @Reducer
+    case screenB(ScreenB)
+    case screenC(ScreenC)
+  }
+
+  @ObservableState
+  struct State: Equatable {
+    /// StackState holds the navigation stack.
+    /// Path.State is auto-generated from @Reducer enum Path.
+    var path = StackState<Path.State>()
+  }
+
+  enum Action {
+    case goBackToScreen(id: StackElementID)
+    case goToABCButtonTapped
+    /// StackActionOf<Path> handles all path-related actions.
+    case path(StackActionOf<Path>)
+    case popToRoot
+  }
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case let .goBackToScreen(id):
+        // Pop to a specific screen by ID
+        state.path.pop(to: id)
+        return .none
+
+      case .goToABCButtonTapped:
+        // Push multiple screens at once (deep link)
+        state.path.append(.screenA(ScreenA.State()))
+        state.path.append(.screenB(ScreenB.State()))
+        state.path.append(.screenC(ScreenC.State()))
+        return .none
+
+      case let .path(action):
+        // Handle child actions - this is where you intercept
+        // actions from child features
+        switch action {
+        /// .element(id:action:) pattern matches actions from specific screens.
+        /// The underscore (_) ignores the ID when you don't need it.
+        case .element(id: _, action: .screenB(.screenAButtonTapped)):
+          state.path.append(.screenA(ScreenA.State()))
+          return .none
+
+        case .element(id: _, action: .screenB(.screenBButtonTapped)):
+          state.path.append(.screenB(ScreenB.State()))
+          return .none
+
+        case .element(id: _, action: .screenB(.screenCButtonTapped)):
+          state.path.append(.screenC(ScreenC.State()))
+          return .none
+
+        default:
+          return .none
+        }
+
+      case .popToRoot:
+        state.path.removeAll()
+        return .none
+      }
+    }
+    /// .forEach composes the Path reducer for each element in the stack.
+    /// \.path is the key path to the StackState.
+    /// \.path (action) is the case path to the path action.
+    .forEach(\.path, action: \.path)
+  }
+}
+
+/// Make Path.State Equatable for testing
+extension NavigationDemo.Path.State: Equatable {}
+```
+
+### Understanding the Syntax
+
+Let's break down the esoteric syntax:
+
+```swift
+// StackState<Path.State>
+// - StackState is a collection type for navigation stacks
+// - Path.State is auto-generated from @Reducer enum Path
+// - It contains cases like .screenA(ScreenA.State), .screenB(ScreenB.State), etc.
+
+// StackActionOf<Path>
+// - This is a type alias for StackAction<Path.State, Path.Action>
+// - Path.Action is auto-generated with cases like .screenA(ScreenA.Action)
+
+// .element(id: _, action: .screenB(.screenAButtonTapped))
+// - .element(id:action:) is a case of StackAction
+// - id is the StackElementID of the screen in the stack
+// - action is the Path.Action that occurred
+// - .screenB(.screenAButtonTapped) means: in screenB, the screenAButtonTapped action
+
+// .forEach(\.path, action: \.path)
+// - \.path (first) is a KeyPath to the StackState property
+// - \.path (second) is a CasePath to the path action case
+// - This composes the Path reducer for each element in the stack
+```
+
+### StackState and StackElementID
+
+```swift
+/// StackState is like an array but with stable IDs for each element.
+var path = StackState<Path.State>()
+
+// Append screens
+path.append(.screenA(ScreenA.State()))
+
+// Access by index
+let first = path[0]
+
+// Access by ID (stable across mutations)
+let id: StackElementID = path.ids[0]
+let screen = path[id: id]
+
+// Pop to a specific ID
+path.pop(to: id)
+
+// Remove all
+path.removeAll()
+
+// Iterate with IDs
+for (id, element) in zip(path.ids, path) {
+  // id is StackElementID
+  // element is Path.State
+}
+```
+
+### SwiftUI Integration
+
+```swift
+// Source: 04-NavigationStack.swift (View)
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift
+
+struct NavigationDemoView: View {
+  @Bindable var store: StoreOf<NavigationDemo>
+
+  var body: some View {
+    /// NavigationStack with TCA binding.
+    /// $store.scope creates a binding to the scoped store.
+    NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+      Form {
+        Section {
+          /// NavigationLink with state parameter.
+          /// Pushing state onto the path triggers navigation.
+          NavigationLink(
+            "Go to screen A",
+            state: NavigationDemo.Path.State.screenA(ScreenA.State())
+          )
+          NavigationLink(
+            "Go to screen B",
+            state: NavigationDemo.Path.State.screenB(ScreenB.State())
+          )
+          NavigationLink(
+            "Go to screen C",
+            state: NavigationDemo.Path.State.screenC(ScreenC.State())
+          )
+        }
+
+        Section {
+          Button("Go to A → B → C") {
+            store.send(.goToABCButtonTapped)
+          }
+        }
+      }
+      .navigationTitle("Root")
+    } destination: { store in
+      /// store.case switches on the destination type.
+      /// Each case provides a scoped store for that screen.
+      switch store.case {
+      case let .screenA(store):
+        ScreenAView(store: store)
+      case let .screenB(store):
+        ScreenBView(store: store)
+      case let .screenC(store):
+        ScreenCView(store: store)
+      }
+    }
+  }
+}
+```
+
+### Understanding store.case
+
+```swift
+// store.case is a computed property that returns an enum
+// matching the current destination type.
+
+// The pattern:
+switch store.case {
+case let .screenA(store):
+  // store is StoreOf<ScreenA>
+  ScreenAView(store: store)
+case let .screenB(store):
+  // store is StoreOf<ScreenB>
+  ScreenBView(store: store)
+}
+
+// This is type-safe - the compiler ensures you handle all cases.
+// The scoped store is automatically created for each case.
+```
+
+---
+
+## Deep Linking
+
+Deep linking is automatic with state-driven navigation:
+
+```swift
+// To deep link to A → B → C:
+store.send(.goToABCButtonTapped)
+
+// Or directly manipulate state:
+state.path.append(.screenA(ScreenA.State()))
+state.path.append(.screenB(ScreenB.State()))
+state.path.append(.screenC(ScreenC.State(count: 42)))
+
+// You can even pass data through the stack:
+state.path.append(.screenA(ScreenA.State(count: 10)))
+state.path.append(.screenC(ScreenC.State(count: 10)))  // Pass count forward
+```
+
+---
+
+## Decoupled Navigation
+
+> **📖 Source**: [04-NavigationStack.swift (ScreenB)](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift)
+
+Child features can request navigation without knowing about the navigation stack:
+
+```swift
+// Source: 04-NavigationStack.swift (ScreenB)
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift
+
+@Reducer
+struct ScreenB {
+  @ObservableState
+  struct State: Equatable {}
+
+  enum Action {
+    /// These actions request navigation without knowing about the stack.
+    case screenAButtonTapped
+    case screenBButtonTapped
+    case screenCButtonTapped
+  }
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .screenAButtonTapped:
+        return .none  // Parent handles navigation
+      case .screenBButtonTapped:
+        return .none
+      case .screenCButtonTapped:
+        return .none
+      }
+    }
+  }
+}
+
+struct ScreenBView: View {
+  let store: StoreOf<ScreenB>
+
+  var body: some View {
+    Form {
+      Text("This screen demonstrates decoupled navigation...")
+      
+      /// These buttons send actions that the parent intercepts.
+      Button("Decoupled navigation to screen A") {
+        store.send(.screenAButtonTapped)
+      }
+      Button("Decoupled navigation to screen B") {
+        store.send(.screenBButtonTapped)
+      }
+      Button("Decoupled navigation to screen C") {
+        store.send(.screenCButtonTapped)
+      }
+    }
+    .navigationTitle("Screen B")
+  }
+}
+```
+
+The parent intercepts these actions:
+
+```swift
+case let .path(action):
+  switch action {
+  case .element(id: _, action: .screenB(.screenAButtonTapped)):
+    state.path.append(.screenA(ScreenA.State()))
+    return .none
+  // ...
+  }
+```
+
+---
+
+## Self-Dismissal with @Dependency(\.dismiss)
+
+> **📖 Source**: [04-NavigationStack.swift (ScreenA)](https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift)
+
+```swift
+// Source: 04-NavigationStack.swift (ScreenA)
+// https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/CaseStudies/SwiftUICaseStudies/04-NavigationStack.swift
+
+@Reducer
+struct ScreenA {
+  @ObservableState
+  struct State: Equatable {
+    var count = 0
+    var fact: String?
+    var isLoading = false
+  }
+
+  enum Action {
+    case decrementButtonTapped
+    case dismissButtonTapped
+    case incrementButtonTapped
+    case factButtonTapped
+    case factResponse(Result<String, any Error>)
+  }
+
+  /// The dismiss dependency allows a feature to dismiss itself.
+  @Dependency(\.dismiss) var dismiss
+  @Dependency(\.factClient) var factClient
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .dismissButtonTapped:
+        /// Call dismiss to pop this screen from the stack.
+        return .run { _ in
+          await self.dismiss()
+        }
+      // ...
+      }
+    }
+  }
+}
+```
+
+---
+
+# Part 3: State Sharing
 
 ## Overview
 
@@ -2191,17 +3164,199 @@ The isowords PR demonstrates significant benefits:
 
 ---
 
+# Part 4: isowords Modularization
+
+## Hyper-Modularization Pattern
+
+> **📖 Source**: [isowords Package.swift](https://github.com/pointfreeco/isowords/blob/main/Package.swift)
+
+isowords demonstrates "hyper-modularization" with 86+ modules. This enables:
+- Faster compile times (only rebuild changed modules)
+- Stable SwiftUI previews (smaller compilation units)
+- Easy App Clip creation (pick minimal modules)
+- Clear dependency boundaries
+
+### Package Structure
+
+```swift
+// Source: Package.swift
+// https://github.com/pointfreeco/isowords/blob/main/Package.swift
+
+// MARK: - shared (client + server)
+var package = Package(
+  name: "isowords",
+  platforms: [.iOS(.v17), .macOS(.v14)],
+  products: [
+    // Shared modules used by both client and server
+    .library(name: "Build", targets: ["Build"]),
+    .library(name: "SharedModels", targets: ["SharedModels"]),
+    .library(name: "ServerRouter", targets: ["ServerRouter"]),
+    // ...
+  ],
+  dependencies: [
+    .package(url: "https://github.com/pointfreeco/swift-composable-architecture", from: "1.12.0"),
+    .package(url: "https://github.com/pointfreeco/swift-dependencies", from: "1.1.0"),
+    // ...
+  ],
+  targets: [
+    .target(
+      name: "SharedModels",
+      dependencies: [
+        "Build",
+        "FirstPartyMocks",
+        .product(name: "CasePaths", package: "swift-case-paths"),
+        .product(name: "Tagged", package: "swift-tagged"),
+      ]
+    ),
+    // ...
+  ]
+)
+
+// MARK: - client (iOS app)
+if ProcessInfo.processInfo.environment["TEST_SERVER"] == nil {
+  package.products.append(contentsOf: [
+    // Feature modules
+    .library(name: "AppFeature", targets: ["AppFeature"]),
+    .library(name: "HomeFeature", targets: ["HomeFeature"]),
+    .library(name: "GameCore", targets: ["GameCore"]),
+    .library(name: "SettingsFeature", targets: ["SettingsFeature"]),
+    // ...
+    
+    // Dependency clients
+    .library(name: "ApiClient", targets: ["ApiClient"]),
+    .library(name: "AudioPlayerClient", targets: ["AudioPlayerClient"]),
+    .library(name: "FileClient", targets: ["FileClient"]),
+    // ...
+    
+    // UI components
+    .library(name: "Styleguide", targets: ["Styleguide"]),
+    .library(name: "CubeCore", targets: ["CubeCore"]),
+    // ...
+  ])
+}
+```
+
+### Feature Module Pattern
+
+Each feature is a self-contained module:
+
+```swift
+// Source: Package.swift (HomeFeature target)
+// https://github.com/pointfreeco/isowords/blob/main/Package.swift
+
+.target(
+  name: "HomeFeature",
+  dependencies: [
+    // Other features this feature can navigate to
+    "ActiveGamesFeature",
+    "ChangelogFeature",
+    "DailyChallengeFeature",
+    "LeaderboardFeature",
+    "MultiplayerFeature",
+    "SettingsFeature",
+    "SoloFeature",
+    
+    // Dependency clients
+    "ApiClient",
+    "AudioPlayerClient",
+    "Build",
+    "ComposableStoreKit",
+    "FileClient",
+    "ServerConfigClient",
+    
+    // Shared modules
+    "ClientModels",
+    "SharedModels",
+    "Styleguide",
+    
+    // TCA
+    .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+  ]
+)
+```
+
+### Dependency Client Module Pattern
+
+```swift
+// Source: Package.swift (AudioPlayerClient target)
+// https://github.com/pointfreeco/isowords/blob/main/Package.swift
+
+.target(
+  name: "AudioPlayerClient",
+  dependencies: [
+    .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
+    .product(name: "IssueReporting", package: "xctest-dynamic-overlay"),
+  ]
+)
+```
+
+### Preview Apps
+
+isowords creates mini-apps for testing features in isolation:
+
+```
+App/Previews/
+├── CubeCorePreview/
+├── CubePreviewPreview/
+├── GameOverPreview/
+├── HomeFeaturePreview/
+├── LeaderboardsPreview/
+├── OnboardingPreview/
+├── SettingsPreview/
+└── UpgradeInterstitialPreview/
+```
+
+Each preview app imports only the modules it needs:
+
+```swift
+// Source: OnboardingPreviewApp.swift
+// https://github.com/pointfreeco/isowords/blob/main/App/Previews/OnboardingPreview/OnboardingPreviewApp.swift
+
+import OnboardingFeature
+import SwiftUI
+
+@main
+struct OnboardingPreviewApp: App {
+  var body: some Scene {
+    WindowGroup {
+      OnboardingView(
+        store: Store(initialState: Onboarding.State(presentationStyle: .firstLaunch)) {
+          Onboarding()
+        }
+      )
+    }
+  }
+}
+```
+
+---
+
 ## Summary
 
 The `@Shared` property wrapper and Swift Sharing library provide a powerful, type-safe, and testable way to share state across your application. Key takeaways:
 
-1. **Choose the right persistence strategy** for your data type and persistence needs
-2. **Always use `withLock`** for thread-safe mutations
-3. **Derive shared state** to give child features only what they need
-4. **Define type-safe keys** for reusability and compile-time safety
-5. **Tests are automatically isolated** - no special setup needed for most cases
-6. **Use `@ObservationIgnored`** when using `@Shared` in `@Observable` models
-7. **Migrate from dependency clients** to eliminate boilerplate and simplify your codebase
+### Dependencies
+1. **Use `@DependencyClient`** for automatic test value generation
+2. **Provide `previewValue`** with `LockIsolated` for realistic previews
+3. **Use `AsyncThrowingStream.makeStream()`** for controllable test streams
+4. **Control time with `TestClock`** or `ImmediateClock`
+
+### Navigation
+5. **Use `@Reducer enum Path`** for type-safe navigation destinations
+6. **`StackState<Path.State>`** holds the navigation stack
+7. **`.forEach(\.path, action: \.path)`** composes child reducers
+8. **`store.case`** switches on destination types in views
+
+### State Sharing
+9. **Choose the right persistence strategy** for your data type
+10. **Always use `withLock`** for thread-safe mutations
+11. **Derive shared state** to give child features only what they need
+12. **Define type-safe keys** for reusability and compile-time safety
+
+### Modularization
+13. **Split features into modules** for faster builds
+14. **Create preview apps** for isolated testing
+15. **Share code between client and server** with shared modules
 
 ---
 
