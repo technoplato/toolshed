@@ -449,11 +449,109 @@ struct LongLivingEffectsView: View {
 }
 ```
 
+**Understanding the Pattern:**
+
+This pattern ties an effect's lifetime to the view's lifetime using three key components:
+
+1. **SwiftUI's `.task` modifier**: A built-in modifier that starts an async task when the view appears and automatically cancels it when the view disappears.
+
+2. **`store.send(.task)`**: Sends the `.task` action to the store, which returns a `StoreTask` representing the effect. This is the handle to the running effect.
+
+3. **`.finish()`**: Awaits the completion of the effect. This is the crucial piece that keeps the task alive.
+
+**Why `.finish()` is Critical:**
+
+Without `.finish()`, the task would return immediately after sending the action, and the effect would be orphaned:
+
+```swift
+// ❌ BAD - Effect is orphaned, may not be cancelled properly
+.task { store.send(.task) }
+
+// ✅ GOOD - Effect lifetime is tied to view lifetime
+.task { await store.send(.task).finish() }
+```
+
+By awaiting `.finish()`, you ensure:
+- The effect runs for the entire lifetime of the view
+- The effect is properly cancelled when the view disappears (SwiftUI cancels the `.task` modifier's async context, which in turn cancels the TCA effect)
+- No memory leaks or zombie effects
+
 **Key Points:**
 - Use `.task` action triggered by SwiftUI's `.task` modifier
 - Use `await store.send(.task).finish()` to wait for effect completion
 - The effect is automatically cancelled when the view disappears
 - Use `for await` for async sequences
+- The `.finish()` method is essential for proper lifecycle management
+
+**Common Use Cases:**
+- Listening to NotificationCenter notifications
+- Observing system state changes (low power mode, network status)
+- WebSocket connections
+- Real-time data streams
+- Timer-based updates
+
+**How `.finish()` Works with Infinite AsyncSequences:**
+
+A common question is: "If the effect is listening to an AsyncSequence that never ends (like NotificationCenter), how does `.finish()` ever complete?"
+
+The answer is: **it doesn't complete naturally - it gets cancelled**. Here's the lifecycle:
+
+```swift
+// The effect runs an infinite loop
+return .run { send in
+  for await _ in await self.screenshots() {  // This loop never ends naturally
+    await send(.userDidTakeScreenshotNotification)
+  }
+  // This line is never reached unless cancelled
+}
+```
+
+**The Cancellation Flow:**
+
+1. **View appears** → SwiftUI's `.task` modifier starts
+2. **`.task` sends action** → `store.send(.task)` returns a `StoreTask`
+3. **`.finish()` awaits** → The task is now "held" by the `.task` modifier
+4. **Effect runs** → The `for await` loop listens to the AsyncSequence
+5. **View disappears** → SwiftUI cancels the `.task` modifier's async context
+6. **Cancellation propagates** → Swift's structured concurrency cancels the `StoreTask`
+7. **Effect is cancelled** → The `for await` loop throws `CancellationError` and exits
+8. **`.finish()` returns** → The await completes (via cancellation, not natural completion)
+
+**Key Insight:** The `.finish()` method doesn't wait for the effect to "succeed" - it waits for the effect to **terminate**, whether by completion, error, or cancellation. For long-living effects, cancellation is the expected termination path.
+
+**What Happens Without `.finish()`:**
+
+```swift
+// ❌ BAD - The task returns immediately
+.task {
+  store.send(.task)  // Fire and forget - returns immediately
+  // The .task modifier's async context ends here
+  // But the effect is still running somewhere!
+}
+```
+
+Without `.finish()`:
+- The `.task` modifier's async context ends immediately after `send()` returns
+- The effect is now "orphaned" - it's running but not tied to the view's lifecycle
+- When the view disappears, SwiftUI has nothing to cancel
+- The effect may continue running indefinitely (memory leak, zombie effect)
+
+**With `.finish()`:**
+
+```swift
+// ✅ GOOD - The task is held until cancelled
+.task {
+  await store.send(.task).finish()  // Awaits until effect terminates
+  // This line is reached when the view disappears and the effect is cancelled
+}
+```
+
+With `.finish()`:
+- The `.task` modifier's async context is held open by the `await`
+- When the view disappears, SwiftUI cancels this context
+- The cancellation propagates to the `StoreTask`, which cancels the effect
+- The `for await` loop receives `CancellationError` and exits
+- `.finish()` returns, and the `.task` modifier completes cleanly
 
 ### Debouncing Effects
 
@@ -829,6 +927,302 @@ struct AppFeature {
 - Use `@CasePathable` for pattern matching
 - Parent handles delegate actions in its reducer
 - Enables loose coupling between features
+
+### Understanding Action Case Paths: A First-Principles Guide
+
+When working with TCA navigation and destinations, action case paths can seem confusing at first. This section breaks down exactly how actions flow through nested reducers and how to read complex action paths like `.destination(.presented(.alert(.confirmDelete)))`.
+
+#### The Fundamental Problem: Nested Enums
+
+In TCA, actions are enums. When you have parent-child relationships, you end up with **nested enums**. Consider this hierarchy:
+
+```
+AppFeature
+  └── destination (optional child)
+        └── alert (one possible destination)
+              └── confirmDelete (one possible alert action)
+```
+
+Each level of nesting adds another layer to the action path.
+
+#### Building Blocks: How Actions Are Structured
+
+**Step 1: A Simple Feature's Actions**
+
+```swift
+/// A simple feature with no children
+@Reducer
+struct SimpleFeature {
+  enum Action {
+    case buttonTapped
+    case textChanged(String)
+  }
+}
+```
+
+Actions are flat - just `buttonTapped` or `textChanged("hello")`.
+
+**Step 2: Adding a Child Feature**
+
+When you embed a child feature, you need to wrap its actions:
+
+```swift
+@Reducer
+struct ParentFeature {
+  enum Action {
+    case buttonTapped
+    /// Child's actions are wrapped in a case
+    case child(ChildFeature.Action)
+  }
+}
+```
+
+Now to reference the child's `buttonTapped`, you write: `.child(.buttonTapped)`
+
+**Step 3: Adding Navigation Destinations**
+
+TCA provides `PresentationAction` to wrap destination actions with additional semantics:
+
+```swift
+@Reducer
+struct ParentFeature {
+  @Reducer
+  enum Destination {
+    case detail(DetailFeature)
+    case alert(AlertState<Alert>)
+    
+    enum Alert {
+      case confirmDelete
+      case cancel
+    }
+  }
+  
+  enum Action {
+    /// PresentationAction wraps Destination.Action
+    case destination(PresentationAction<Destination.Action>)
+  }
+}
+```
+
+#### Anatomy of PresentationAction
+
+`PresentationAction` is an enum with two cases:
+
+```swift
+public enum PresentationAction<Action> {
+  /// The destination was dismissed (user swiped away, tapped outside, etc.)
+  case dismiss
+  
+  /// The destination sent an action while presented
+  case presented(Action)
+}
+```
+
+This is why you see `.destination(.presented(...))` - you're saying:
+1. `.destination` - This is a destination action
+2. `.presented(...)` - The destination is currently presented and sent this action
+3. `(...)` - The actual action from the destination
+
+#### Reading Complex Action Paths
+
+Let's decode `.destination(.presented(.alert(.confirmDelete)))`:
+
+```
+.destination(.presented(.alert(.confirmDelete)))
+     │              │        │         │
+     │              │        │         └── The alert button that was tapped
+     │              │        └── Which destination case (alert vs detail vs sheet)
+     │              └── The destination is presented (not dismissed)
+     └── This is a destination-related action
+```
+
+**Visual Breakdown:**
+
+```
+Action
+  └── destination: PresentationAction<Destination.Action>
+        ├── .dismiss                    → User dismissed the destination
+        └── .presented(Destination.Action)
+              ├── .detail(DetailFeature.Action)
+              │     ├── .buttonTapped
+              │     └── .delegate(Delegate)
+              │           └── .startMeeting(syncUp:)
+              └── .alert(Alert)
+                    ├── .confirmDelete  ← This is our target!
+                    └── .cancel
+```
+
+#### Pattern Matching in Reducers
+
+When handling these nested actions, you pattern match from outside-in:
+
+```swift
+var body: some ReducerOf<Self> {
+  Reduce { state, action in
+    switch action {
+    /// Match the full path
+    case .destination(.presented(.alert(.confirmDelete))):
+      /// Handle delete confirmation
+      state.items.removeAll()
+      return .none
+      
+    /// Match any alert action
+    case .destination(.presented(.alert)):
+      /// Handle any other alert action
+      return .none
+      
+    /// Match any presented destination
+    case .destination(.presented):
+      /// Handle any destination action
+      return .none
+      
+    /// Match dismiss
+    case .destination(.dismiss):
+      /// Destination was dismissed
+      return .none
+      
+    /// Catch-all for destination
+    case .destination:
+      return .none
+      
+    /// Other actions...
+    case .buttonTapped:
+      return .none
+    }
+  }
+}
+```
+
+**Important:** Swift matches patterns top-to-bottom, so put specific cases before general ones.
+
+#### Stack Navigation Action Paths
+
+For `NavigationStack` with `StackState`, the pattern is slightly different:
+
+```swift
+/// Stack action includes element ID
+case .path(.element(id: let id, action: .detail(.delegate(.startMeeting(let syncUp))))):
+  /// Handle delegate from a specific stack element
+  state.path.append(.record(RecordMeeting.State(syncUp: Shared(syncUp))))
+  return .none
+
+/// Match any action from any detail screen
+case .path(.element(id: _, action: .detail)):
+  return .none
+
+/// Match pop action (user navigated back)
+case .path(.popFrom(id: let id)):
+  /// Element was popped from stack
+  return .none
+
+/// Match push action
+case .path(.push(id: let id, state: let state)):
+  /// Element was pushed onto stack
+  return .none
+```
+
+**Stack Action Structure:**
+
+```
+StackAction<Path.State, Path.Action>
+  ├── .element(id: StackElementID, action: Path.Action)
+  │     └── The action from a specific element in the stack
+  ├── .popFrom(id: StackElementID)
+  │     └── An element was popped (back navigation)
+  └── .push(id: StackElementID, state: Path.State)
+        └── An element was pushed (forward navigation)
+```
+
+#### Why This Design?
+
+**1. Type Safety**
+Every action path is fully typed. The compiler ensures you can't accidentally handle an action that doesn't exist.
+
+**2. Exhaustive Handling**
+Swift's exhaustive switch ensures you handle all cases (or explicitly ignore them with `case .destination: return .none`).
+
+**3. Composition**
+Child features don't know about their parents. The parent wraps child actions, enabling loose coupling.
+
+**4. Testability**
+You can send any action path in tests:
+
+```swift
+await store.send(.destination(.presented(.alert(.confirmDelete)))) {
+  $0.items = []
+}
+```
+
+**5. Deep Linking**
+Since all navigation is state-driven, you can construct any navigation state programmatically:
+
+```swift
+/// Deep link directly to a detail screen with an alert showing
+state.destination = .detail(DetailFeature.State(
+  item: item,
+  destination: .alert(.confirmDeletion)
+))
+```
+
+#### Common Patterns and Their Meanings
+
+| Pattern | Meaning |
+|---------|---------|
+| `.destination(.dismiss)` | User dismissed the destination (swipe, tap outside) |
+| `.destination(.presented(.someCase))` | Destination sent an action while visible |
+| `.path(.element(id:, action:))` | Action from a specific stack element |
+| `.path(.popFrom(id:))` | User navigated back from an element |
+| `.child(.delegate(.someAction))` | Child requesting parent to do something |
+| `.binding(\.someProperty)` | Two-way binding changed a property |
+
+#### Debugging Action Paths
+
+When you're unsure what action path to match, use a catch-all with a print:
+
+```swift
+case let .destination(action):
+  print("Destination action: \(action)")
+  return .none
+```
+
+Or use TCA's built-in reducer debugging:
+
+```swift
+var body: some ReducerOf<Self> {
+  Reduce { state, action in
+    // ...
+  }
+  ._printChanges()  /// Prints all actions and state changes
+}
+```
+
+#### Quick Reference: Building Action Paths
+
+```swift
+/// Simple action
+.buttonTapped
+
+/// Child feature action
+.child(.buttonTapped)
+
+/// Presented destination action
+.destination(.presented(.detail(.buttonTapped)))
+
+/// Alert action
+.destination(.presented(.alert(.confirmDelete)))
+
+/// Delegate from child
+.child(.delegate(.didFinish))
+
+/// Stack element action
+.path(.element(id: id, action: .detail(.buttonTapped)))
+
+/// Stack element delegate
+.path(.element(id: id, action: .detail(.delegate(.startMeeting(syncUp)))))
+
+/// Binding action
+.binding(\.text)
+```
 
 ---
 

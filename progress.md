@@ -26,6 +26,20 @@
 
 ---
 
+### December 11th, 2025 at 12:30:33 a.m.
+
+📝 Added first-principles guide to TCA action case paths with destinations
+
+[Commit](https://github.com/technoplato/toolshed/commit/991b80b)
+
+- Explains nested enum structure for actions
+- Visual breakdown of PresentationAction paths
+- Pattern matching strategies for reducers
+- Stack navigation action patterns
+- Quick reference table for common patterns
+
+
+
 ### December 10th, 2025 at 11:59:44 p.m.
 
 📝 Added Swift Sharing State comprehensive guide
