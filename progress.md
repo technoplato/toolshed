@@ -30,7 +30,7 @@
 
 📝 Created comprehensive TCA best practices guide with 16 dependency client examples
 
-[Commit](https://github.com/technoplato/toolshed/commit/a7977e8)
+[Commit](https://github.com/technoplato/toolshed/commit/dc76e40)
 
 - Analyzed isowords, SyncUps, and CaseStudies for patterns
 - Documented 16 dependency clients from minimal to very complex
