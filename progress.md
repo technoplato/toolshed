@@ -26,6 +26,19 @@
 
 ---
 
+### December 10th, 2025 at 11:57:19 p.m.
+
+📝 Created comprehensive TCA best practices guide with 16 dependency client examples
+
+[Commit](https://github.com/technoplato/toolshed/commit/a7977e8)
+
+- Analyzed isowords, SyncUps, and CaseStudies for patterns
+- Documented 16 dependency clients from minimal to very complex
+- Added GitHub links to all source files
+- Covered @DependencyClient macro, Live/Test/Preview separation, AsyncStream, Actor-based implementations
+
+
+
 ### December 10th, 2025 at 2:02:06 a.m.
 
 ✨ SpeechRecorderApp: Fix transcription and add segment display
