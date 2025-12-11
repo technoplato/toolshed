@@ -30,7 +30,7 @@
 
 📝 Added first-principles guide to TCA action case paths with destinations
 
-[Commit](https://github.com/technoplato/toolshed/commit/991b80b)
+[Commit](https://github.com/technoplato/toolshed/commit/d519515)
 
 - Explains nested enum structure for actions
 - Visual breakdown of PresentationAction paths
