@@ -30,7 +30,7 @@
 
 📝 Added Swift Sharing State comprehensive guide
 
-[Commit](https://github.com/technoplato/toolshed/commit/846d87b)
+[Commit](https://github.com/technoplato/toolshed/commit/88afb3f)
 
 - Documented @Shared property wrapper patterns
 - Covered persistence strategies (appStorage, fileStorage, inMemory)
