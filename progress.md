@@ -26,6 +26,18 @@
 
 ---
 
+### December 10th, 2025 at 11:59:44 p.m.
+
+📝 Added Swift Sharing State comprehensive guide
+
+[Commit](https://github.com/technoplato/toolshed/commit/846d87b)
+
+- Documented @Shared property wrapper patterns
+- Covered persistence strategies (appStorage, fileStorage, inMemory)
+- Added testing patterns with withDependencies
+
+
+
 ### December 10th, 2025 at 11:57:19 p.m.
 
 📝 Created comprehensive TCA best practices guide with 16 dependency client examples

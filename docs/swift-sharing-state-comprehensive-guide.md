@@ -1,0 +1,2628 @@
+# Comprehensive Guide to Sharing State in Swift Composable Architecture
+
+This guide provides a complete reference for sharing state in Swift applications using Point-Free's `swift-sharing` library and the Swift Composable Architecture (TCA). It covers best practices, patterns, testing strategies, and includes 7 practical recipes from official documentation and examples.
+
+> **📚 Source References**
+>
+> This guide is compiled from the official Point-Free documentation and examples. All code examples include references to both:
+>
+> - **Local paths**: Files in our `references/` submodules for offline exploration
+> - **External links**: Official GitHub repositories for the latest versions
+>
+> **Reference Repositories:**
+>
+> - Swift Sharing: [`references/swift-sharing/`](../references/swift-sharing/) | [GitHub](https://github.com/pointfreeco/swift-sharing)
+> - Swift Composable Architecture: [`references/swift-composable-architecture/`](../references/swift-composable-architecture/) | [GitHub](https://github.com/pointfreeco/swift-composable-architecture)
+> - isowords (production example): [`references/isowords/`](../references/isowords/) | [GitHub](https://github.com/pointfreeco/isowords)
+
+## Table of Contents
+
+- [Comprehensive Guide to Sharing State in Swift Composable Architecture](#comprehensive-guide-to-sharing-state-in-swift-composable-architecture)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+    - [Key Benefits](#key-benefits)
+  - [Core Concepts](#core-concepts)
+    - [The @Shared Property Wrapper](#the-shared-property-wrapper)
+    - [@SharedReader for Read-Only Access](#sharedreader-for-read-only-access)
+  - [Persistence Strategies](#persistence-strategies)
+    - [1. App Storage (UserDefaults)](#1-app-storage-userdefaults)
+    - [2. File Storage](#2-file-storage)
+    - [3. In-Memory](#3-in-memory)
+    - [Comparison Table](#comparison-table)
+  - [Mutating Shared State](#mutating-shared-state)
+    - [Why withLock is Required](#why-withlock-is-required)
+  - [Deriving Shared State](#deriving-shared-state)
+    - [Basic Derivation](#basic-derivation)
+    - [Optional Unwrapping](#optional-unwrapping)
+    - [Collection Iteration](#collection-iteration)
+    - [Subscript Access](#subscript-access)
+  - [Type-Safe Keys](#type-safe-keys)
+    - [Basic Type-Safe Key](#basic-type-safe-key)
+    - [With Default Value](#with-default-value)
+    - [App Storage Key](#app-storage-key)
+    - [In-Memory Key](#in-memory-key)
+  - [Testing Shared State](#testing-shared-state)
+    - [Automatic Test Isolation](#automatic-test-isolation)
+    - [Overriding Initial Values](#overriding-initial-values)
+    - [Repeated/Parameterized Tests](#repeatedparameterized-tests)
+    - [Preventing App Entry Point Execution](#preventing-app-entry-point-execution)
+    - [UI Testing Setup](#ui-testing-setup)
+  - [Navigation Patterns](#navigation-patterns)
+    - [Stack-Based Navigation with Shared State](#stack-based-navigation-with-shared-state)
+    - [Passing Shared State to Child Features](#passing-shared-state-to-child-features)
+    - [Child Feature with Shared State](#child-feature-with-shared-state)
+  - [Recipes](#recipes)
+    - [Recipe 1: Sharing State Across Tabs with File Storage](#recipe-1-sharing-state-across-tabs-with-file-storage)
+    - [Recipe 2: Multi-Step Onboarding Flow with Derived State](#recipe-2-multi-step-onboarding-flow-with-derived-state)
+    - [Recipe 3: Global Router with Persisted Navigation Path](#recipe-3-global-router-with-persisted-navigation-path)
+    - [Recipe 4: Sharing State Between Parent and Child Features](#recipe-4-sharing-state-between-parent-and-child-features)
+    - [Recipe 5: Using @Shared in Observable Models](#recipe-5-using-shared-in-observable-models)
+    - [Recipe 6: Custom Notification-Based Shared State](#recipe-6-custom-notification-based-shared-state)
+    - [Recipe 7: Testing Shared State in TCA](#recipe-7-testing-shared-state-in-tca)
+  - [Gotchas and Best Practices](#gotchas-and-best-practices)
+    - [1. Always Use @ObservationIgnored in @Observable Models](#1-always-use-observationignored-in-observable-models)
+    - [2. Shared State is Not Hashable](#2-shared-state-is-not-hashable)
+    - [3. Shared State is Not Codable](#3-shared-state-is-not-codable)
+    - [4. Dynamic Keys in SwiftUI Views](#4-dynamic-keys-in-swiftui-views)
+    - [5. Prefer Type-Safe Keys](#5-prefer-type-safe-keys)
+    - [6. Use withLock for All Mutations](#6-use-withlock-for-all-mutations)
+    - [7. Derive State for Child Features](#7-derive-state-for-child-features)
+  - [Migration Guide: From Dependencies to @Shared](#migration-guide-from-dependencies-to-shared)
+    - [Overview of Changes](#overview-of-changes)
+    - [Migration Pattern 1: FileClient to @Shared with File Storage](#migration-pattern-1-fileclient-to-shared-with-file-storage)
+    - [Migration Pattern 2: UserDefaultsClient to @Shared with App Storage](#migration-pattern-2-userdefaultsclient-to-shared-with-app-storage)
+    - [Migration Pattern 3: UserSettingsClient to @Shared with File Storage](#migration-pattern-3-usersettingsclient-to-shared-with-file-storage)
+    - [Migration Pattern 4: ServerConfigClient to Custom @SharedReader Key](#migration-pattern-4-serverconfigclient-to-custom-sharedreader-key)
+    - [Migration Pattern 5: Eliminating LowPowerModeClient](#migration-pattern-5-eliminating-lowpowermodeclient)
+    - [Migration Pattern 6: Build Dependency to @Shared](#migration-pattern-6-build-dependency-to-shared)
+    - [Migration Pattern 7: Removing onChange Reducers](#migration-pattern-7-removing-onchange-reducers)
+    - [Migration Pattern 8: Simplifying State Initialization](#migration-pattern-8-simplifying-state-initialization)
+    - [Migration Checklist](#migration-checklist)
+    - [Benefits of Migration](#benefits-of-migration)
+  - [Summary](#summary)
+  - [Reference Quick Links](#reference-quick-links)
+    - [Local Repository References](#local-repository-references)
+    - [External Documentation Links](#external-documentation-links)
+    - [Key Documentation Files](#key-documentation-files)
+  - [Appendix A: SpeechRecorderApp Migration Guide](#appendix-a-speechrecorderapp-migration-guide)
+    - [Overview of Required Changes](#overview-of-required-changes)
+    - [File Change 1: SharedKeys.swift](#file-change-1-sharedkeysswift)
+    - [File Change 2: Recording.swift - Add Identifiable Conformance](#file-change-2-recordingswift---add-identifiable-conformance)
+    - [File Change 3: RecordingsListFeature.swift](#file-change-3-recordingslistfeatureswift)
+    - [File Change 4: PlaybackFeature.swift - Use Derived Shared State](#file-change-4-playbackfeatureswift---use-derived-shared-state)
+    - [File Change 5: RecordingsListFeatureTests.swift - Add @MainActor](#file-change-5-recordingslistfeaturetestsswift---add-mainactor)
+    - [File Change 6: PlaybackFeatureTests.swift - Add @MainActor](#file-change-6-playbackfeaturetestsswift---add-mainactor)
+    - [File Change 7: Add Delete Test with Shared State Pattern](#file-change-7-add-delete-test-with-shared-state-pattern)
+    - [File Change 8: Add Playback Test with Shared State](#file-change-8-add-playback-test-with-shared-state)
+    - [New Tests to Add](#new-tests-to-add)
+      - [Test: Edit Recording Title During Playback](#test-edit-recording-title-during-playback)
+      - [Test: Playback with Pre-populated Shared State](#test-playback-with-pre-populated-shared-state)
+    - [Summary of Changes](#summary-of-changes)
+    - [Reference Files for Each Pattern](#reference-files-for-each-pattern)
+    - [Implementation Order](#implementation-order)
+
+---
+
+## Overview
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Sharing.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Sharing.md)
+> - External: [Swift Sharing README](https://github.com/pointfreeco/swift-sharing#readme)
+> - TCA Integration: [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/SharingState.md`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/SharingState.md)
+
+The `@Shared` property wrapper allows you to share state across multiple parts of your application and optionally persist it to external storage systems. Unlike SwiftUI's `@AppStorage`, `@Shared` works anywhere—in SwiftUI views, `@Observable` models, UIKit view controllers, and even on non-Apple platforms.
+
+The library was designed to solve a fundamental tension in Swift: value types (structs) are great for modeling state because they're copied rather than shared, making reasoning about state changes easier. However, sometimes you genuinely need to share state across features. The `@Shared` property wrapper bridges this gap by providing reference semantics with value-type ergonomics.
+
+### Key Benefits
+
+- **Universal Usage**: Works in views, models, view controllers, and actors
+- **Multiple Persistence Strategies**: UserDefaults, file system, in-memory, or custom
+- **Thread-Safe**: Built-in synchronization via `withLock`
+- **Testable**: Automatic test isolation with quarantined storage
+- **Derivable**: Create sub-pieces of shared state for child features
+
+---
+
+## Core Concepts
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/Shared.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/Shared.md)
+> - External: [Shared Documentation](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/shared)
+
+### The @Shared Property Wrapper
+
+The `@Shared` property wrapper is the core tool for sharing state. It can be used in two ways:
+
+1. **Explicit sharing** (no persistence key): State is shared in memory and passed explicitly between features
+2. **Persisted sharing** (with persistence key): State is shared globally and automatically persisted
+
+```swift
+import Sharing
+
+// In a SwiftUI view
+@Shared(.appStorage("count")) var count = 0
+
+// In an @Observable model (requires @ObservationIgnored)
+@Observable
+class CounterModel {
+  @ObservationIgnored
+  @Shared(.appStorage("count")) var count = 0
+}
+```
+
+### @SharedReader for Read-Only Access
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/SharedReader.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/SharedReader.md)
+
+When a feature only needs to observe shared state without modifying it, use `@SharedReader`. This is particularly useful for configuration data that comes from a server or system settings that your app shouldn't modify:
+
+```swift
+@SharedReader(.appStorage("isHapticsEnabled")) var isHapticsEnabled = true
+```
+
+---
+
+## Persistence Strategies
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/PersistenceStrategies.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/PersistenceStrategies.md)
+> - External: [Persistence Strategies](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/persistencestrategies)
+
+The library ships with three built-in persistence strategies, each designed for different use cases. Understanding when to use each is crucial for building robust applications.
+
+### 1. App Storage (UserDefaults)
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/AppStorageKey.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/AppStorageKey.md)
+> - Case Study: [`references/swift-sharing/Examples/CaseStudies/AppStorageSharedState.swift`](../references/swift-sharing/Examples/CaseStudies/AppStorageSharedState.swift)
+
+Best for simple data types: strings, booleans, integers, doubles, URLs, data. The `appStorage` strategy uses `UserDefaults` under the hood but provides automatic observation and thread-safe access.
+
+**Important considerations from the documentation:**
+
+- Keys containing periods (`.`) or at-symbols (`@`) use `NotificationCenter` instead of KVO, which has performance implications
+- Changes are delivered synchronously when using KVO-compatible keys
+- Codable types are supported but should be used with caution for large data
+
+```swift
+@Shared(.appStorage("soundsOn")) var soundsOn = true
+@Shared(.appStorage("userSort")) var userSort = UserSort.name
+```
+
+### 2. File Storage
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/FileStorageKey.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/FileStorageKey.md)
+> - Case Study: [`references/swift-sharing/Examples/CaseStudies/FileStorageSharedState.swift`](../references/swift-sharing/Examples/CaseStudies/FileStorageSharedState.swift)
+
+Best for complex, Codable data types persisted as JSON. The file storage strategy automatically serializes your data to JSON and writes it to disk.
+
+**Key behaviors from the documentation:**
+
+- Writes are **throttled** to at most one write per second to prevent excessive disk I/O
+- Pending changes are automatically saved when the app is backgrounded or terminated
+- External file changes are automatically detected and loaded back into `@Shared`
+- In tests and previews, an in-memory virtual file system is used for isolation
+
+```swift
+@Shared(.fileStorage(.documentsDirectory.appending(component: "meetings.json")))
+var meetings: [Meeting] = []
+```
+
+### 3. In-Memory
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/InMemoryKey.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/InMemoryKey.md)
+> - Case Study: [`references/swift-sharing/Examples/CaseStudies/InMemorySharedState.swift`](../references/swift-sharing/Examples/CaseStudies/InMemorySharedState.swift)
+
+Shares state globally but resets on app relaunch. This is useful for session-specific state that should be shared across features but doesn't need persistence.
+
+**Key difference from `@State`:** While `@State` is cleared when navigating away from a view and coming back, `@Shared(.inMemory(...))` persists for the entire lifetime of the app.
+
+```swift
+@Shared(.inMemory("events")) var events: [String] = []
+```
+
+### Comparison Table
+
+| Strategy      | Persistence        | Data Types    | Use Case              |
+| ------------- | ------------------ | ------------- | --------------------- |
+| `appStorage`  | UserDefaults       | Simple types  | Settings, preferences |
+| `fileStorage` | File system (JSON) | Codable types | Complex data, lists   |
+| `inMemory`    | RAM only           | Any Equatable | Session state, caches |
+
+---
+
+## Mutating Shared State
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/MutatingSharedState.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/MutatingSharedState.md)
+> - External: [Mutating Shared State](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/mutatingsharedstate)
+
+**Critical**: Always use `withLock` for mutations to prevent race conditions. This is a deliberate design decision that makes the potential for race conditions explicit rather than hidden.
+
+```swift
+// ✅ Correct - Thread-safe mutation
+$count.withLock { $0 += 1 }
+
+// ✅ Correct - Complex mutations
+$stats.withLock { $0.increment() }
+
+// ❌ Wrong - Direct mutation (not allowed)
+count += 1  // Compiler error
+```
+
+### Why withLock is Required
+
+The documentation explains that SwiftUI's `@AppStorage` actually has hidden race conditions when mutated from multiple threads—this code compiles without warnings in Swift 6 but can lose data:
+
+```swift
+// This code with @AppStorage can lose increments due to race conditions
+await withTaskGroup(of: Void.self) { group in
+  for _ in 1...1_000 {
+    group.addTask { _count.wrappedValue += 1 }  // Race condition!
+  }
+}
+
+// With @Shared, you must use withLock
+await withTaskGroup(of: Void.self) { group in
+  for _ in 1...1_000 {
+    group.addTask {
+      $count.withLock { $0 += 1 }  // Thread-safe
+    }
+  }
+}
+```
+
+The `withLock` requirement is a fair compromise: you get to use `@Shared` anywhere (UIKit, actors, non-Apple platforms), with multiple persistence strategies, and with full test isolation—all in exchange for explicit synchronization.
+
+---
+
+## Deriving Shared State
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/DerivingSharedState.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/DerivingSharedState.md)
+> - External: [Deriving Shared State](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/derivingsharedstate)
+
+You can derive smaller pieces of shared state from a larger piece, allowing child features to hold only what they need. Think of `@Shared` as an analogue of SwiftUI's `@Binding`—it expresses that the "source of truth" lies elsewhere, but you can read and write to it.
+
+### Basic Derivation
+
+The key insight is using the `$` projected value to derive sub-pieces. When you have `@Shared var signUpData: SignUpData`, you can access `$signUpData.phoneNumber` to get a `Shared<String>`:
+
+```swift
+// Parent has full SignUpData
+@Shared var signUpData: SignUpData
+
+// Child only needs phone number
+func nextButtonTapped() {
+  path.append(
+    PhoneNumberModel(phoneNumber: $signUpData.phoneNumber)
+  )
+}
+
+// Child feature
+@Observable
+class PhoneNumberModel {
+  @ObservationIgnored
+  @Shared var phoneNumber: String  // Just the piece it needs
+}
+```
+
+### Optional Unwrapping
+
+```swift
+@Shared var currentUser: User?
+
+if let loggedInUser = Shared($currentUser) {
+  loggedInUser  // Shared<User> (non-optional)
+}
+```
+
+### Collection Iteration
+
+```swift
+@Shared(.fileStorage(.todos)) var todos: IdentifiedArrayOf<Todo> = []
+
+ForEach(Array($todos)) { $todo in  // $todo is Shared<Todo>
+  TodoRow(todo: $todo)
+}
+```
+
+### Subscript Access
+
+```swift
+guard let todo = Shared($todos[id: todoID])
+else { return }
+todo  // Shared<Todo>
+```
+
+---
+
+## Type-Safe Keys
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/TypeSafeKeys.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/TypeSafeKeys.md)
+> - External: [Type-Safe Keys](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/typesafekeys)
+
+Define reusable, type-safe keys to prevent mismatches and improve code clarity. This is crucial because persistence inherently loses type safety—you're shuffling data to external storage and back. Type-safe keys catch mismatches at compile time.
+
+### Basic Type-Safe Key
+
+The pattern is to extend `SharedKey` (or `SharedReaderKey`) with a static property that returns the appropriate key type:
+
+```swift
+extension SharedKey where Self == FileStorageKey<IdentifiedArrayOf<SyncUp>> {
+  static var syncUps: Self {
+    fileStorage(.documentsDirectory.appending(component: "sync-ups.json"))
+  }
+}
+
+// Usage
+@Shared(.syncUps) var syncUps
+```
+
+### With Default Value
+
+```swift
+extension SharedKey where Self == FileStorageKey<IdentifiedArrayOf<SyncUp>>.Default {
+  static var syncUps: Self {
+    Self[.fileStorage(.documentsDirectory.appending(component: "sync-ups.json")), default: []]
+  }
+}
+
+// Usage - no default needed
+@Shared(.syncUps) var syncUps
+```
+
+### App Storage Key
+
+```swift
+extension SharedKey where Self == AppStorageKey<Int> {
+  static var count: Self {
+    appStorage("sharedStateDemoCount")
+  }
+}
+```
+
+### In-Memory Key
+
+```swift
+extension SharedKey where Self == InMemoryKey<Stats> {
+  static var stats: Self {
+    inMemory("stats")
+  }
+}
+```
+
+---
+
+## Testing Shared State
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Testing.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Testing.md)
+> - TCA Testing: [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/TestingTCA.md`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/TestingTCA.md)
+> - External: [Testing Documentation](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/testing)
+
+The testing story for `@Shared` is one of its strongest features. Despite interacting with external storage systems, tests remain deterministic and isolated.
+
+### Automatic Test Isolation
+
+Each test gets a fresh, quarantined storage system. The `appStorage` strategy uses a non-persisting user defaults, and `fileStorage` uses an in-memory virtual file system. This means:
+
+- Tests don't interfere with each other
+- Tests can run in parallel
+- No cleanup is needed between tests
+
+```swift
+@Test func increment() {
+  let model = CounterModel()
+  model.incrementButtonTapped()
+  #expect(model.count == 1)  // Passes deterministically
+}
+```
+
+### Overriding Initial Values
+
+```swift
+@Test func basics() {
+  @Shared(.appStorage("count")) var count = 42  // Override default
+
+  let model = FeatureModel()
+  #expect(model.count == 42)
+}
+```
+
+### Repeated/Parameterized Tests
+
+Use the `.dependencies` trait:
+
+```swift
+import DependenciesTestSupport
+
+@Test(.dependencies)
+func increment() {
+  // Test code here
+}
+```
+
+### Preventing App Entry Point Execution
+
+```swift
+@main
+struct EntryPoint: App {
+  var body: some Scene {
+    WindowGroup {
+      if !isTesting {
+        ContentView()
+      }
+    }
+  }
+}
+```
+
+### UI Testing Setup
+
+```swift
+@main
+struct EntryPoint: App {
+  init() {
+    if ProcessInfo.processInfo.environment["UI_TESTING"] != nil {
+      prepareDependencies {
+        $0.defaultAppStorage = .inMemory
+        $0.defaultFileStorage = .inMemory
+      }
+    }
+  }
+}
+```
+
+---
+
+## Navigation Patterns
+
+> **📖 Source Documentation**
+>
+> - TCA Navigation: [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/Navigation.md`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/Navigation.md)
+> - Stack Navigation: [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/StackBasedNavigation.md`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/StackBasedNavigation.md)
+
+Navigation with shared state requires careful consideration of how state flows through the navigation hierarchy. The key principle is that parent features own the persistence key, and child features receive derived shared state.
+
+### Stack-Based Navigation with Shared State
+
+```swift
+@Reducer
+struct AppFeature {
+  @Reducer
+  enum Path {
+    case detail(SyncUpDetail)
+    case meeting(Meeting, syncUp: SyncUp)
+    case record(RecordMeeting)
+  }
+
+  @ObservableState
+  struct State: Equatable {
+    var path = StackState<Path.State>()
+    var syncUpsList = SyncUpsList.State()
+  }
+}
+```
+
+### Passing Shared State to Child Features
+
+```swift
+// In SyncUpsList
+ForEach(Array(store.$syncUps)) { $syncUp in
+  NavigationLink(state: AppFeature.Path.State.detail(
+    SyncUpDetail.State(syncUp: $syncUp)
+  )) {
+    CardView(syncUp: syncUp)
+  }
+}
+```
+
+### Child Feature with Shared State
+
+```swift
+@Reducer
+struct SyncUpDetail {
+  @ObservableState
+  struct State: Equatable {
+    @Presents var destination: Destination.State?
+    @Shared var syncUp: SyncUp  // Receives shared state from parent
+  }
+}
+```
+
+---
+
+## Recipes
+
+The following recipes are derived from official Point-Free examples and documentation. Each includes source references for deeper exploration.
+
+### Recipe 1: Sharing State Across Tabs with File Storage
+
+> **📖 Source**
+>
+> - Based on: [`references/swift-composable-architecture/Examples/CaseStudies/SwiftUICaseStudies/01-GettingStarted-SharedState.swift`](../references/swift-composable-architecture/Examples/CaseStudies/SwiftUICaseStudies/01-GettingStarted-SharedState.swift)
+> - External: [TCA Case Studies](https://github.com/pointfreeco/swift-composable-architecture/tree/main/Examples/CaseStudies)
+
+This pattern demonstrates sharing complex state between independent tab views with automatic file persistence. The key insight is that both tabs reference the same persistence key, so changes in one are immediately visible in the other.
+
+```swift
+import ComposableArchitecture
+import SwiftUI
+
+// MARK: - Shared Key Definition
+extension SharedKey where Self == FileStorageKey<Stats> {
+  static var stats: Self {
+    fileStorage(.documentsDirectory.appending(component: "stats.json"))
+  }
+}
+
+// MARK: - Stats Model
+struct Stats: Codable, Equatable {
+  private(set) var count = 0
+  private(set) var maxCount = 0
+  private(set) var minCount = 0
+  private(set) var numberOfCounts = 0
+
+  mutating func increment() {
+    count += 1
+    numberOfCounts += 1
+    maxCount = max(maxCount, count)
+  }
+
+  mutating func decrement() {
+    count -= 1
+    numberOfCounts += 1
+    minCount = min(minCount, count)
+  }
+}
+
+// MARK: - Counter Tab
+@Reducer
+struct CounterTab {
+  @ObservableState
+  struct State: Equatable {
+    @Presents var alert: AlertState<Action.Alert>?
+    @Shared(.stats) var stats = Stats()
+  }
+
+  enum Action {
+    case alert(PresentationAction<Alert>)
+    case decrementButtonTapped
+    case incrementButtonTapped
+    enum Alert: Equatable {}
+  }
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .alert:
+        return .none
+      case .decrementButtonTapped:
+        state.$stats.withLock { $0.decrement() }
+        return .none
+      case .incrementButtonTapped:
+        state.$stats.withLock { $0.increment() }
+        return .none
+      }
+    }
+    .ifLet(\.$alert, action: \.alert)
+  }
+}
+
+// MARK: - Profile Tab
+@Reducer
+struct ProfileTab {
+  @ObservableState
+  struct State: Equatable {
+    @Shared(.stats) var stats = Stats()
+  }
+
+  enum Action {
+    case resetStatsButtonTapped
+  }
+
+  var body: some Reducer<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .resetStatsButtonTapped:
+        state.$stats.withLock { $0 = Stats() }
+        return .none
+      }
+    }
+  }
+}
+```
+
+**Key Points:**
+
+- Both tabs reference the same `.stats` key
+- Changes in one tab immediately reflect in the other
+- Data persists across app launches via file storage
+
+---
+
+### Recipe 2: Multi-Step Onboarding Flow with Derived State
+
+> **📖 Source**
+>
+> - Based on: [`references/swift-composable-architecture/Examples/CaseStudies/SwiftUICaseStudies/01-GettingStarted-SharedState.swift`](../references/swift-composable-architecture/Examples/CaseStudies/SwiftUICaseStudies/01-GettingStarted-SharedState.swift)
+> - Derivation docs: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/DerivingSharedState.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/DerivingSharedState.md)
+
+This pattern shows how to share data across a multi-step flow while giving each step only the data it needs. The parent holds the complete `SignUpData`, but each step receives only a derived piece—the phone number step gets `Shared<String>`, the topics step gets `Shared<Set<Topic>>`, etc.
+
+```swift
+import ComposableArchitecture
+import SwiftUI
+
+// MARK: - Sign Up Data Model
+struct SignUpData: Equatable {
+  var email = ""
+  var firstName = ""
+  var lastName = ""
+  var password = ""
+  var passwordConfirmation = ""
+  var phoneNumber = ""
+  var topics: Set<Topic> = []
+
+  enum Topic: String, Identifiable, CaseIterable {
+    case advancedSwift = "Advanced Swift"
+    case composableArchitecture = "Composable Architecture"
+    case concurrency = "Concurrency"
+    var id: Self { self }
+  }
+}
+
+// MARK: - Root Sign Up Feature
+@Reducer
+struct SignUpFeature {
+  @Reducer
+  enum Path {
+    case basics(BasicsFeature)
+    case personalInfo(PersonalInfoFeature)
+    case topics(TopicsFeature)
+    case summary(SummaryFeature)
+  }
+
+  @ObservableState
+  struct State {
+    var path = StackState<Path.State>()
+    @Shared var signUpData: SignUpData
+  }
+
+  enum Action {
+    case path(StackActionOf<Path>)
+  }
+
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .path(.element(id: _, action: .topics(.delegate(.stepFinished)))):
+        // Navigate to summary after topics step
+        state.path.append(.summary(SummaryFeature.State(signUpData: state.$signUpData)))
+        return .none
+      case .path:
+        return .none
+      }
+    }
+    .forEach(\.path, action: \.path)
+  }
+}
+
+// MARK: - Basics Step (Full SignUpData)
+@Reducer
+struct BasicsFeature {
+  @ObservableState
+  struct State {
+    var isEditingFromSummary = false
+    @Shared var signUpData: SignUpData
+  }
+
+  enum Action: BindableAction {
+    case binding(BindingAction<State>)
+  }
+
+  var body: some ReducerOf<Self> {
+    BindingReducer()
+  }
+}
+
+// MARK: - Topics Step (Only topics subset)
+@Reducer
+struct TopicsFeature {
+  @ObservableState
+  struct State {
+    var isEditingFromSummary = false
+    @Shared var topics: Set<SignUpData.Topic>  // Derived piece only
+  }
+
+  enum Action: BindableAction {
+    case binding(BindingAction<State>)
+    case delegate(Delegate)
+    case nextButtonTapped
+
+    enum Delegate {
+      case stepFinished
+    }
+  }
+
+  var body: some ReducerOf<Self> {
+    BindingReducer()
+    Reduce { state, action in
+      switch action {
+      case .binding:
+        return .none
+      case .delegate:
+        return .none
+      case .nextButtonTapped:
+        return .send(.delegate(.stepFinished))
+      }
+    }
+  }
+}
+
+// MARK: - Usage in Navigation
+struct SignUpFlow: View {
+  @Bindable private var store = Store(
+    initialState: SignUpFeature.State(signUpData: Shared(value: SignUpData()))
+  ) {
+    SignUpFeature()
+  }
+
+  var body: some View {
+    NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+      // Root view with "Sign up" button
+      NavigationLink(
+        "Sign up",
+        state: SignUpFeature.Path.State.basics(
+          BasicsFeature.State(signUpData: store.$signUpData)
+        )
+      )
+    } destination: { store in
+      switch store.case {
+      case let .basics(store):
+        BasicsStep(store: store)
+      case let .personalInfo(store):
+        PersonalInfoStep(store: store)
+      case let .topics(store):
+        // Pass derived topics only
+        TopicsStep(store: store)
+      case let .summary(store):
+        SummaryStep(store: store)
+      }
+    }
+  }
+}
+
+// MARK: - Passing Derived State
+struct PersonalInfoStep: View {
+  @Bindable var store: StoreOf<PersonalInfoFeature>
+
+  var body: some View {
+    Form {
+      TextField("First name", text: $store.signUpData.firstName)
+      TextField("Last name", text: $store.signUpData.lastName)
+    }
+    .toolbar {
+      NavigationLink(
+        "Next",
+        state: SignUpFeature.Path.State.topics(
+          // Derive just the topics from signUpData
+          TopicsFeature.State(topics: store.$signUpData.topics)
+        )
+      )
+    }
+  }
+}
+```
+
+**Key Points:**
+
+- Parent holds `Shared<SignUpData>`
+- Child features receive only what they need via derivation
+- Changes propagate back to parent automatically
+- Summary can edit any step by passing derived state
+
+---
+
+### Recipe 3: Global Router with Persisted Navigation Path
+
+> **📖 Source**
+>
+> - Based on: [`references/swift-sharing/Examples/CaseStudies/GlobalRouter.swift`](../references/swift-sharing/Examples/CaseStudies/GlobalRouter.swift)
+> - External: [Global Router Case Study](https://github.com/pointfreeco/swift-sharing/blob/main/Examples/CaseStudies/GlobalRouter.swift)
+
+This pattern enables any part of the app to modify navigation, with automatic persistence. The navigation path is stored as a `@Shared` array of routes, allowing SwiftUI views, `@Observable` models, and even UIKit view controllers to push and pop routes.
+
+```swift
+import Sharing
+import SwiftUI
+
+// MARK: - Route Definition
+private enum Route: Codable, Hashable {
+  case plainView
+  case observableModel
+  case viewController
+}
+
+// MARK: - Shared Key for Navigation Path
+extension SharedReaderKey where Self == FileStorageKey<[Route]>.Default {
+  static var path: Self {
+    Self[
+      .fileStorage(.documentsDirectory.appending(path: "path.json")),
+      default: []
+    ]
+  }
+}
+
+// MARK: - Root View
+struct GlobalRouterView: View {
+  @Shared(.path) private var path
+
+  var body: some View {
+    NavigationStack(path: Binding($path)) {
+      RootView()
+        .navigationDestination(for: Route.self) { route in
+          switch route {
+          case .plainView:
+            PlainView()
+          case .observableModel:
+            ViewWithObservableModel()
+          case .viewController:
+            ViewController.Representable()
+          }
+        }
+    }
+  }
+}
+
+// MARK: - Plain SwiftUI View
+struct PlainView: View {
+  @Shared(.path) var path
+
+  var body: some View {
+    Form {
+      Button("Go to plain SwiftUI view") {
+        $path.withLock { $0.append(.plainView) }
+      }
+      Button("Go to view with @Observable model") {
+        $path.withLock { $0.append(.observableModel) }
+      }
+    }
+  }
+}
+
+// MARK: - Observable Model
+struct ViewWithObservableModel: View {
+  @Observable class Model {
+    @ObservationIgnored @Shared(.path) var path
+  }
+
+  @State var model = Model()
+
+  var body: some View {
+    Form {
+      Button("Go to plain SwiftUI view") {
+        model.$path.withLock { $0.append(.plainView) }
+      }
+    }
+  }
+}
+
+// MARK: - UIKit View Controller
+class ViewController: UIViewController {
+  @Shared(.path) var path
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+
+    let button = UIButton(type: .system)
+    button.setTitle("Go to plain SwiftUI view", for: .normal)
+    button.addAction(
+      UIAction { [weak self] _ in
+        self?.$path.withLock { $0.append(.plainView) }
+      },
+      for: .touchUpInside
+    )
+    // ... layout code
+  }
+}
+```
+
+**Key Points:**
+
+- Navigation path is shared globally via `.path` key
+- Any view, model, or view controller can modify navigation
+- Path persists across app launches
+- Works with SwiftUI, UIKit, and @Observable models
+
+---
+
+### Recipe 4: Sharing State Between Parent and Child Features
+
+> **📖 Source**
+>
+> - Based on: [SyncUps Example App](https://github.com/pointfreeco/syncups)
+> - TCA Tutorial: [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Tutorials/BuildingSyncUps/`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Tutorials/BuildingSyncUps/)
+
+This pattern from the SyncUps example shows how to pass shared state through a navigation hierarchy. The list feature owns the `@Shared(.syncUps)` with persistence, and passes derived `Shared<SyncUp>` references to detail and recording features.
+
+```swift
+import ComposableArchitecture
+import SwiftUI
+
+// MARK: - Shared Key
+extension SharedKey where Self == FileStorageKey<IdentifiedArrayOf<SyncUp>>.Default {
+  static var syncUps: Self {
+    Self[.fileStorage(.documentsDirectory.appending(component: "sync-ups.json")), default: []]
+  }
+}
+
+// MARK: - List Feature (Parent)
+@Reducer
+struct SyncUpsList {
+  @ObservableState
+  struct State: Equatable {
+    @Presents var destination: Destination.State?
+    @Shared(.syncUps) var syncUps  // Owns the shared state
+  }
+
+  enum Action {
+    case addSyncUpButtonTapped
+    case confirmAddSyncUpButtonTapped
+    case onDelete(IndexSet)
+    // ...
+  }
+
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .confirmAddSyncUpButtonTapped:
+        guard case let .some(.add(editState)) = state.destination
+        else { return .none }
+        var syncUp = editState.syncUp
+        // Mutate shared state
+        state.$syncUps.withLock { _ = $0.append(syncUp) }
+        state.destination = nil
+        return .none
+
+      case let .onDelete(indexSet):
+        state.$syncUps.withLock { $0.remove(atOffsets: indexSet) }
+        return .none
+
+      // ...
+      }
+    }
+  }
+}
+
+// MARK: - List View
+struct SyncUpsListView: View {
+  @Bindable var store: StoreOf<SyncUpsList>
+
+  var body: some View {
+    List {
+      // Iterate over shared collection, deriving Shared<SyncUp> for each
+      ForEach(Array(store.$syncUps)) { $syncUp in
+        NavigationLink(
+          state: AppFeature.Path.State.detail(
+            SyncUpDetail.State(syncUp: $syncUp)  // Pass derived shared state
+          )
+        ) {
+          CardView(syncUp: syncUp)
+        }
+      }
+      .onDelete { indexSet in
+        store.send(.onDelete(indexSet))
+      }
+    }
+  }
+}
+
+// MARK: - Detail Feature (Child)
+@Reducer
+struct SyncUpDetail {
+  @ObservableState
+  struct State: Equatable {
+    @Presents var destination: Destination.State?
+    @Shared var syncUp: SyncUp  // Receives derived shared state
+  }
+
+  enum Action: Sendable {
+    case deleteButtonTapped
+    case deleteMeetings(atOffsets: IndexSet)
+    case doneEditingButtonTapped
+    case delegate(Delegate)
+
+    @CasePathable
+    enum Delegate {
+      case startMeeting(Shared<SyncUp>)
+    }
+  }
+
+  @Dependency(\.dismiss) var dismiss
+
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case let .deleteMeetings(atOffsets: indices):
+        // Mutate the shared syncUp directly
+        state.$syncUp.withLock { $0.meetings.remove(atOffsets: indices) }
+        return .none
+
+      case .destination(.presented(.alert(.confirmDeletion))):
+        // Access parent's shared state to remove this item
+        @Shared(.syncUps) var syncUps
+        $syncUps.withLock { _ = $0.remove(id: state.syncUp.id) }
+        return .run { _ in await dismiss() }
+
+      case .doneEditingButtonTapped:
+        guard case let .some(.edit(editState)) = state.destination
+        else { return .none }
+        state.$syncUp.withLock { $0 = editState.syncUp }
+        state.destination = nil
+        return .none
+
+      // ...
+      }
+    }
+  }
+}
+
+// MARK: - Record Meeting Feature (Grandchild)
+@Reducer
+struct RecordMeeting {
+  @ObservableState
+  struct State: Equatable {
+    @Shared var syncUp: SyncUp  // Receives shared state from parent
+    var transcript = ""
+    // ...
+  }
+
+  enum Action {
+    case alert(PresentationAction<Alert>)
+    case timerTick
+    // ...
+  }
+
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .alert(.presented(.confirmSave)):
+        // Mutate shared state to add meeting
+        state.$syncUp.withLock {
+          $0.meetings.insert(
+            Meeting(id: Meeting.ID(uuid()), date: now, transcript: state.transcript),
+            at: 0
+          )
+        }
+        return .run { _ in await dismiss() }
+
+      // ...
+      }
+    }
+  }
+}
+```
+
+**Key Points:**
+
+- Parent owns `@Shared(.syncUps)` with persistence
+- Child receives `@Shared var syncUp` (derived, no persistence key)
+- Grandchild also receives derived shared state
+- All mutations propagate up and persist automatically
+- Child can access parent's shared key directly when needed
+
+---
+
+### Recipe 5: Using @Shared in Observable Models
+
+> **📖 Source**
+>
+> - Case Study: [`references/swift-sharing/Examples/CaseStudies/SharedStateInObservableModel.swift`](../references/swift-sharing/Examples/CaseStudies/SharedStateInObservableModel.swift)
+> - External: [SharedStateInObservableModel.swift](https://github.com/pointfreeco/swift-sharing/blob/main/Examples/CaseStudies/SharedStateInObservableModel.swift)
+
+This pattern shows how to properly use `@Shared` in `@Observable` models. The critical requirement is using `@ObservationIgnored` because Swift macros don't play nicely with property wrappers. Views still update when shared state changes because `@Shared` handles its own observation.
+
+```swift
+import Sharing
+import SwiftUI
+
+// MARK: - Observable Model with Shared State
+@Observable
+class CounterModel {
+  // IMPORTANT: Must use @ObservationIgnored with @Shared in @Observable
+  @ObservationIgnored
+  @Shared(.appStorage("count")) var count = 0
+
+  @ObservationIgnored
+  @Shared(.fileStorage(.documentsDirectory.appending(component: "settings.json")))
+  var settings = Settings()
+
+  func incrementButtonTapped() {
+    $count.withLock { $0 += 1 }
+  }
+
+  func decrementButtonTapped() {
+    $count.withLock { $0 -= 1 }
+  }
+
+  func toggleDarkMode() {
+    $settings.withLock { $0.isDarkMode.toggle() }
+  }
+}
+
+struct Settings: Codable, Equatable {
+  var isDarkMode = false
+  var fontSize = 14
+}
+
+// MARK: - View Using the Model
+struct CounterView: View {
+  @State private var model = CounterModel()
+
+  var body: some View {
+    Form {
+      Section {
+        Text("\(model.count)")
+        Button("Decrement") {
+          model.decrementButtonTapped()
+        }
+        Button("Increment") {
+          model.incrementButtonTapped()
+        }
+      }
+
+      Section {
+        Toggle("Dark Mode", isOn: Binding(
+          get: { model.settings.isDarkMode },
+          set: { _ in model.toggleDarkMode() }
+        ))
+      }
+    }
+  }
+}
+
+// MARK: - Alternative: Direct @Shared in View
+struct DirectSharedView: View {
+  @Shared(.appStorage("count")) var count = 0
+
+  var body: some View {
+    VStack {
+      Text("\(count)")
+      Button("Decrement") {
+        $count.withLock { $0 -= 1 }
+      }
+      Button("Increment") {
+        $count.withLock { $0 += 1 }
+      }
+
+      // SwiftUI Binding from Shared
+      Stepper("\(count)", value: Binding($count))
+    }
+  }
+}
+```
+
+**Key Points:**
+
+- Always use `@ObservationIgnored` with `@Shared` in `@Observable` models
+- Views still update when shared state changes (handled by `@Shared`)
+- Can use `@Shared` directly in views without a model
+- Convert to SwiftUI `Binding` using `Binding($sharedValue)`
+
+---
+
+### Recipe 6: Custom Notification-Based Shared State
+
+> **📖 Source**
+>
+> - Case Study: [`references/swift-sharing/Examples/CaseStudies/Notifications.swift`](../references/swift-sharing/Examples/CaseStudies/Notifications.swift)
+> - External: [Notifications.swift](https://github.com/pointfreeco/swift-sharing/blob/main/Examples/CaseStudies/Notifications.swift)
+
+This pattern shows how to create a custom `SharedReaderKey` for read-only state from system notifications. This is useful for observing system events like screenshots, low power mode changes, or keyboard appearance.
+
+```swift
+import ConcurrencyExtras
+import Sharing
+import SwiftUI
+
+// MARK: - Custom Notification Key
+struct NotificationKey<Value: Sendable>: SharedReaderKey {
+  let name: Notification.Name
+  let transform: @Sendable (Notification) -> Value
+
+  init(
+    initialValue: Value,
+    name: Notification.Name,
+    transform: @escaping @Sendable (inout Value, Notification) -> Void
+  ) {
+    self.name = name
+    let value = LockIsolated(initialValue)
+    self.transform = { notification in
+      nonisolated(unsafe) let notification = notification
+      return value.withValue {
+        transform(&$0, notification)
+        return $0
+      }
+    }
+  }
+
+  var id: some Hashable { name }
+
+  func load(context: LoadContext<Value>, continuation: LoadContinuation<Value>) {
+    continuation.resumeReturningInitialValue()
+  }
+
+  func subscribe(
+    context: LoadContext<Value>,
+    subscriber: SharedSubscriber<Value>
+  ) -> SharedSubscription {
+    nonisolated(unsafe) let token = NotificationCenter.default.addObserver(
+      forName: name,
+      object: nil,
+      queue: nil
+    ) { notification in
+      subscriber.yield(transform(notification))
+    }
+    return SharedSubscription {
+      NotificationCenter.default.removeObserver(token)
+    }
+  }
+}
+
+// MARK: - Convenience Extension
+extension SharedReaderKey where Self == NotificationKey<Int> {
+  static func count(_ name: Notification.Name) -> Self {
+    Self(initialValue: 0, name: name) { value, _ in value += 1 }
+  }
+}
+
+// MARK: - Usage
+struct NotificationsView: View {
+  @SharedReader(.count(UIApplication.userDidTakeScreenshotNotification))
+  var screenshotCount = 0
+
+  @SharedReader(.count(UIApplication.willResignActiveNotification))
+  var resignCount = 0
+
+  var body: some View {
+    Form {
+      Text("Number of screenshots: \(screenshotCount)")
+      Text("Number of times resigned active: \(resignCount)")
+    }
+  }
+}
+```
+
+**Key Points:**
+
+- Implement `SharedReaderKey` for read-only external state
+- Use `subscribe` to listen for changes from external system
+- State updates automatically when notifications fire
+- Great for system events, remote config, etc.
+
+---
+
+### Recipe 7: Testing Shared State in TCA
+
+> **📖 Source**
+>
+> - TCA Testing: [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/TestingTCA.md`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/TestingTCA.md)
+> - Sharing Testing: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Testing.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Testing.md)
+
+This pattern demonstrates comprehensive testing of features using shared state. The `TestStore` and `@Shared` work together to snapshot state before and after actions, enabling exhaustive assertions even though shared state is technically a reference.
+
+```swift
+import ComposableArchitecture
+import Testing
+
+@testable import YourApp
+
+@MainActor
+struct SyncUpsListTests {
+  init() { uncheckedUseMainSerialExecutor = true }
+
+  // MARK: - Basic Test
+  @Test
+  func add() async throws {
+    let store = TestStore(initialState: SyncUpsList.State()) {
+      SyncUpsList()
+    } withDependencies: {
+      $0.uuid = .incrementing
+    }
+
+    var syncUp = SyncUp(
+      id: SyncUp.ID(UUID(0)),
+      attendees: [Attendee(id: Attendee.ID(UUID(1)))]
+    )
+
+    await store.send(.addSyncUpButtonTapped) {
+      $0.destination = .add(SyncUpForm.State(syncUp: syncUp))
+    }
+
+    syncUp.title = "Engineering"
+    await store.send(\.destination.add.binding.syncUp, syncUp) {
+      $0.destination?.modify(\.add) { $0.syncUp.title = "Engineering" }
+    }
+
+    await store.send(.confirmAddSyncUpButtonTapped) {
+      $0.destination = nil
+      // Assert shared state mutation
+      $0.$syncUps.withLock { $0 = [syncUp] }
+    }
+  }
+
+  // MARK: - Testing with Pre-populated Shared State
+  @Test
+  func delete() async throws {
+    let syncUp = SyncUp.mock
+
+    // Override shared state for this test
+    @Shared(.syncUps) var syncUps = [syncUp]
+    defer { #expect(syncUps == []) }  // Verify final state
+
+    // Get a shared reference to the specific item
+    let sharedSyncUp = try #require(Shared($syncUps[id: syncUp.id]))
+
+    let store = TestStore(
+      initialState: SyncUpDetail.State(syncUp: sharedSyncUp)
+    ) {
+      SyncUpDetail()
+    }
+
+    await store.send(.deleteButtonTapped) {
+      $0.destination = .alert(.deleteSyncUp)
+    }
+
+    await store.send(\.destination.alert.confirmDeletion) {
+      $0.destination = nil
+    }
+
+    #expect(store.isDismissed)
+  }
+
+  // MARK: - Testing Shared State Mutations
+  @Test
+  func edit() async {
+    var syncUp = SyncUp.mock
+
+    let store = TestStore(
+      initialState: SyncUpDetail.State(syncUp: Shared(value: syncUp))
+    ) {
+      SyncUpDetail()
+    } withDependencies: {
+      $0.uuid = .incrementing
+    }
+
+    await store.send(.editButtonTapped) {
+      $0.destination = .edit(SyncUpForm.State(syncUp: syncUp))
+    }
+
+    syncUp.title = "Blob's Meeting"
+    await store.send(\.destination.edit.binding.syncUp, syncUp) {
+      $0.destination?.modify(\.edit) { $0.syncUp.title = "Blob's Meeting" }
+    }
+
+    await store.send(.doneEditingButtonTapped) {
+      $0.destination = nil
+      // Assert the shared state was mutated
+      $0.$syncUp.withLock { $0.title = "Blob's Meeting" }
+    }
+  }
+
+  // MARK: - Repeated Test with Dependencies Trait
+  @Test(.dependencies)
+  func incrementRepeated() async {
+    @Shared(.appStorage("count")) var count = 0
+
+    let model = CounterModel()
+    model.incrementButtonTapped()
+
+    #expect(count == 1)
+  }
+}
+
+// MARK: - Testing Delegate Actions with Shared State
+@MainActor
+struct SyncUpDetailTests {
+  @Test
+  func startMeeting() async throws {
+    let store = TestStore(
+      initialState: SyncUpDetail.State(syncUp: Shared(value: .mock))
+    ) {
+      SyncUpDetail()
+    } withDependencies: {
+      $0.speechClient.authorizationStatus = { .authorized }
+    }
+
+    await store.send(.startMeetingButtonTapped)
+
+    // Verify delegate action includes the shared state
+    await store.receive(\.delegate.startMeeting)
+  }
+}
+```
+
+**Key Points:**
+
+- Each test gets isolated storage automatically
+- Override shared state by declaring `@Shared` at test start
+- Use `$0.$sharedValue.withLock` in state assertions
+- Use `.dependencies` trait for repeated/parameterized tests
+- Access shared state from parent key when testing child features
+- Use `Shared(value:)` for inline test values
+
+---
+
+## Gotchas and Best Practices
+
+> **📖 Source Documentation**
+>
+> - Local: [`references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Gotchas.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Gotchas.md)
+> - External: [Gotchas](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/gotchas)
+
+### 1. Always Use @ObservationIgnored in @Observable Models
+
+```swift
+@Observable
+class Model {
+  @ObservationIgnored  // Required!
+  @Shared(.appStorage("count")) var count = 0
+}
+```
+
+### 2. Shared State is Not Hashable
+
+Because `@Shared` is equatable based on its wrapped value and held in a reference, it cannot be hashable. Don't compute hashes from shared values.
+
+### 3. Shared State is Not Codable
+
+You must explicitly handle encoding/decoding:
+
+```swift
+struct Feature: Codable {
+  @Shared(.appStorage("count")) var count = 0
+  var todos: [String] = []
+}
+
+extension Feature {
+  enum CodingKeys: String, CodingKey {
+    case todos  // Omit shared state
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self._count = Shared(wrappedValue: 0, .appStorage("count"))
+    self.todos = try container.decode([String].self, forKey: .todos)
+  }
+
+  func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(self.todos, forKey: .todos)
+  }
+}
+```
+
+### 4. Dynamic Keys in SwiftUI Views
+
+If you dynamically change the key, use `@State.Shared`:
+
+```swift
+struct MyView: View {
+  @State.Shared(.key) var value  // Persists across view recreations
+}
+```
+
+### 5. Prefer Type-Safe Keys
+
+Always define type-safe keys for reusability and compile-time safety:
+
+```swift
+// ✅ Good
+extension SharedKey where Self == FileStorageKey<[User]> {
+  static var users: Self { fileStorage(url) }
+}
+@Shared(.users) var users
+
+// ❌ Avoid
+@Shared(.fileStorage(url)) var users: [User] = []
+```
+
+### 6. Use withLock for All Mutations
+
+Never try to mutate shared state directly:
+
+```swift
+// ✅ Correct
+$count.withLock { $0 += 1 }
+
+// ❌ Wrong - won't compile
+count += 1
+```
+
+### 7. Derive State for Child Features
+
+Pass only what children need:
+
+```swift
+// ✅ Good - child only gets what it needs
+ChildFeature.State(phoneNumber: $signUpData.phoneNumber)
+
+// ❌ Avoid - child gets more than needed
+ChildFeature.State(signUpData: $signUpData)
+```
+
+---
+
+## Migration Guide: From Dependencies to @Shared
+
+> **📖 Source**
+>
+> - isowords PR #202: [GitHub PR](https://github.com/pointfreeco/isowords/pull/202)
+> - Full diff: [`docs/isowords-pr-202-shared-state-full.md`](./isowords-pr-202-shared-state-full.md)
+> - isowords repo: [`references/isowords/`](../references/isowords/) | [GitHub](https://github.com/pointfreeco/isowords)
+
+This section documents the migration patterns observed in isowords PR #202, which demonstrates a comprehensive migration from traditional dependency-based state management to `@Shared`. This PR (860 additions, 1,426 deletions across 80 files) shows real-world patterns for migrating a production app.
+
+**Note:** This PR is still open (not merged as of the documentation date), but it provides valuable insights into migration patterns that Point-Free is exploring for their production apps.
+
+### Overview of Changes
+
+The migration eliminates several dependency clients in favor of `@Shared` with persistence keys:
+
+| Removed Dependency   | Replaced With                  | Persistence Strategy |
+| -------------------- | ------------------------------ | -------------------- |
+| `FileClient`         | `@Shared(.fileStorage(...))`   | File Storage         |
+| `UserDefaultsClient` | `@Shared(.appStorage(...))`    | App Storage          |
+| `UserSettingsClient` | `@Shared(.userSettings)`       | File Storage         |
+| `ServerConfigClient` | `@SharedReader(.serverConfig)` | Custom Key           |
+| `LowPowerModeClient` | Local `@Published` property    | In-View State        |
+
+### Migration Pattern 1: FileClient to @Shared with File Storage
+
+**Before (FileClient dependency):**
+
+```swift
+// FileClient/Client.swift
+@DependencyClient
+public struct FileClient {
+  public var delete: @Sendable (String) async throws -> Void
+  public var load: @Sendable (String) async throws -> Data
+  public var save: @Sendable (String, Data) async throws -> Void
+}
+
+// Usage in reducer
+@Dependency(\.fileClient) var fileClient
+
+case .appDelegate(.didFinishLaunching):
+  return .run { send in
+    await send(
+      .savedGamesLoaded(
+        Result { try await self.fileClient.loadSavedGames() }
+      )
+    )
+  }
+
+case let .savedGamesLoaded(.success(savedGames)):
+  state.home.savedGames = savedGames
+  return .none
+```
+
+**After (@Shared with file storage):**
+
+```swift
+// Define persistence key
+extension PersistenceReaderKey where Self == FileStorageKey<SavedGamesState> {
+  public static var savedGames: Self {
+    fileStorage(.documentsDirectory.appending(path: "saved-games.json"))
+  }
+}
+
+// In State - no loading action needed!
+@ObservableState
+struct State: Equatable {
+  @Shared(.savedGames) var savedGames = SavedGamesState()
+}
+
+// Mutations are direct
+case .destination(.presented(.game(.activeGames(.dailyChallengeTapped)))):
+  guard let inProgressGame = state.savedGames.dailyChallengeUnlimited
+  else { return .none }
+  state.destination = .game(Game.State(inProgressGame: inProgressGame))
+  return .none
+```
+
+**Key Changes:**
+
+- Remove `savedGamesLoaded` action entirely
+- Remove `fileClient.save` calls - persistence is automatic
+- Remove `onChange(of:)` reducers that saved state
+- State is available immediately (no async loading)
+
+### Migration Pattern 2: UserDefaultsClient to @Shared with App Storage
+
+**Before (UserDefaultsClient):**
+
+```swift
+// UserDefaultsClient/Interface.swift
+@DependencyClient
+public struct UserDefaultsClient {
+  public var boolForKey: @Sendable (String) -> Bool = { _ in false }
+  public var doubleForKey: @Sendable (String) -> Double = { _ in 0 }
+  public var integerForKey: @Sendable (String) -> Int = { _ in 0 }
+  public var setBool: @Sendable (Bool, String) async -> Void
+  public var setDouble: @Sendable (Double, String) async -> Void
+  public var setInteger: @Sendable (Int, String) async -> Void
+
+  public var hasShownFirstLaunchOnboarding: Bool {
+    self.boolForKey(hasShownFirstLaunchOnboardingKey)
+  }
+
+  public func setHasShownFirstLaunchOnboarding(_ bool: Bool) async {
+    await self.setBool(bool, hasShownFirstLaunchOnboardingKey)
+  }
+}
+
+// Usage
+@Dependency(\.userDefaults) var userDefaults
+
+case .appDelegate(.didFinishLaunching):
+  if !self.userDefaults.hasShownFirstLaunchOnboarding {
+    state.destination = .onboarding(...)
+  }
+  if self.userDefaults.installationTime <= 0 {
+    await self.userDefaults.setInstallationTime(now)
+  }
+```
+
+**After (@Shared with app storage):**
+
+```swift
+// Define persistence keys
+extension PersistenceReaderKey where Self == AppStorageKey<Double> {
+  public static var installationTime: Self {
+    appStorage("installationTimeKey")
+  }
+}
+
+extension PersistenceReaderKey where Self == AppStorageKey<Bool> {
+  public static var hasShownFirstLaunchOnboarding: Self {
+    AppStorageKey("hasShownFirstLaunchOnboardingKey")
+  }
+}
+
+extension PersistenceReaderKey where Self == AppStorageKey<Int> {
+  public static var multiplayerOpensCount: Self {
+    AppStorageKey("multiplayerOpensCount")
+  }
+}
+
+// In State
+@ObservableState
+struct State: Equatable {
+  @SharedReader(.hasShownFirstLaunchOnboarding) var hasShownFirstLaunchOnboarding = false
+  @Shared(.installationTime) var installationTime = 0
+}
+
+// Usage - direct access, no dependency
+case .appDelegate(.didFinishLaunching):
+  if !state.hasShownFirstLaunchOnboarding {
+    state.destination = .onboarding(...)
+  }
+  if state.installationTime <= 0 {
+    state.installationTime = self.now.timeIntervalSinceReferenceDate
+  }
+```
+
+**Key Changes:**
+
+- Remove `@Dependency(\.userDefaults)` entirely
+- Use `@SharedReader` for read-only values
+- Use `@Shared` for read-write values
+- Direct property access instead of method calls
+
+### Migration Pattern 3: UserSettingsClient to @Shared with File Storage
+
+**Before (UserSettingsClient with streams):**
+
+```swift
+// UserSettingsClient.swift
+@dynamicMemberLookup
+public struct UserSettingsClient {
+  public var get: @Sendable () -> UserSettings
+  public var set: @Sendable (UserSettings) async -> Void
+  public var stream: @Sendable () -> AsyncStream<UserSettings>
+
+  public subscript<Value>(dynamicMember keyPath: KeyPath<UserSettings, Value>) -> Value {
+    self.get()[keyPath: keyPath]
+  }
+}
+
+// Usage in reducer
+@Dependency(\.userSettings) var userSettings
+
+case .task:
+  return .run { send in
+    for await userSettings in self.userSettings.stream() {
+      await send(.userSettingsUpdated(userSettings))
+    }
+  }
+
+case let .userSettingsUpdated(userSettings):
+  state.enableGyroMotion = userSettings.enableGyroMotion
+  state.isAnimationReduced = userSettings.enableReducedAnimation
+  return .none
+```
+
+**After (@Shared in State):**
+
+```swift
+// UserSettings.swift - define persistence key
+extension PersistenceReaderKey where Self == FileStorageKey<UserSettings> {
+  public static var userSettings: Self {
+    fileStorage(
+      FileManager.default
+        .urls(for: .documentDirectory, in: .userDomainMask)
+        .first!
+        .appendingPathComponent("user-settings")
+        .appendingPathExtension("json")
+    )
+  }
+}
+
+// In State - settings are directly accessible
+@ObservableState
+struct State: Equatable {
+  @Shared(.userSettings) var userSettings = UserSettings()
+}
+
+// Usage - direct property access
+var cubeSceneViewState: CubeSceneView.ViewState {
+  CubeSceneView.ViewState(
+    enableGyroMotion: self.userSettings.enableGyroMotion,  // Direct access
+    // ...
+  )
+}
+
+// In views
+if !store.userSettings.enableReducedAnimation {
+  BloomBackground(...)
+}
+```
+
+**Key Changes:**
+
+- Remove `userSettingsUpdated` action entirely
+- Remove streaming/observation logic
+- Remove `onChange(of:)` reducers for saving
+- Direct property access in computed properties and views
+
+### Migration Pattern 4: ServerConfigClient to Custom @SharedReader Key
+
+**Before (ServerConfigClient):**
+
+```swift
+// ServerConfigClient.swift
+@DependencyClient
+public struct ServerConfigClient {
+  public var config: () -> ServerConfig = { ServerConfig() }
+  public var refresh: @Sendable () async throws -> ServerConfig
+}
+
+// Usage
+@Dependency(\.serverConfig.config) var serverConfig
+@Dependency(\.serverConfig.refresh) var refreshServerConfig
+
+case .didChangeScenePhase(.active):
+  return .run { _ in
+    async let refresh = self.refreshServerConfig()
+    _ = try await refresh
+  }
+
+case .updateButtonTapped:
+  return .run { _ in
+    _ = await self.openURL(self.serverConfig().appStoreUrl.absoluteURL, [:])
+  }
+```
+
+**After (Custom PersistenceReaderKey):**
+
+```swift
+// ServerConfigPersistenceKey.swift
+@propertyWrapper
+public struct ServerConfig_: Equatable {
+  @Shared(.fileStorage(.serverConfig)) var config = ServerConfig()
+
+  public var wrappedValue: ServerConfig {
+    get { config }
+    nonmutating set { config = newValue }
+  }
+
+  public func reload() async throws {
+    @Dependency(\.apiClient) var apiClient
+    @Shared(.build) var build = Build()
+    self.config = try await apiClient
+      .apiRequest(route: .config(build: build.number), as: ServerConfig.self)
+  }
+}
+
+// Custom key with subscription for auto-refresh
+public struct ServerConfigKey: PersistenceReaderKey, Hashable, Sendable {
+  @Dependency(\.apiClient) var apiClient
+  @Shared(.build) var build = Build()
+  @Shared(.fileStorage(.serverConfig)) var config = ServerConfig()
+  let (stream, continuation) = AsyncStream<Void>.makeStream()
+
+  public func reload() async {
+    continuation.yield()
+  }
+
+  public func subscribe(
+    initialValue: ServerConfig?,
+    didSet: @escaping (ServerConfig?) -> Void
+  ) -> Shared<ServerConfig, Self>.Subscription {
+    let task = Task {
+      try await didSet(
+        apiClient.apiRequest(route: .config(build: build.number), as: ServerConfig.self)
+      )
+      for await _ in stream {
+        let config = try await apiClient.apiRequest(...)
+        didSet(config)
+      }
+    }
+    return Shared.Subscription { task.cancel() }
+  }
+}
+
+// In State
+@ObservableState
+struct State: Equatable {
+  @SharedReader(.serverConfig) var serverConfig = ServerConfig()
+}
+
+// Usage
+case .didChangeScenePhase(.active):
+  return .run { [serverConfig = state.$serverConfig] _ in
+    async let refresh: Void = serverConfig.persistence.reload()
+    _ = await refresh
+  }
+
+case .updateButtonTapped:
+  return .run { [url = state.serverConfig.appStoreUrl.absoluteURL] _ in
+    _ = await self.openURL(url, [:])
+  }
+```
+
+**Key Changes:**
+
+- Create custom `PersistenceReaderKey` for complex loading logic
+- Use `@SharedReader` for read-only access
+- Capture values in `.run` closures for Sendable compliance
+- Reload via `persistence.reload()` method
+
+### Migration Pattern 5: Eliminating LowPowerModeClient
+
+**Before (LowPowerModeClient dependency):**
+
+```swift
+// LowPowerModeClient.swift
+@DependencyClient
+public struct LowPowerModeClient {
+  public var start: @Sendable () async -> AsyncStream<Bool> = { .finished }
+}
+
+// In State
+struct State {
+  var isOnLowPowerMode: Bool
+}
+
+// In reducer
+@Dependency(\.lowPowerMode) var lowPowerMode
+
+case .task:
+  return .run { send in
+    for await isLowPower in await self.lowPowerMode.start() {
+      await send(.lowPowerModeChanged(isLowPower))
+    }
+  }
+
+case let .lowPowerModeChanged(isOn):
+  state.isOnLowPowerMode = isOn
+  return .none
+```
+
+**After (Local @Published in View):**
+
+```swift
+// In CubeSceneView.swift - handle locally in the view
+public class CubeSceneView: SCNView {
+  @Published var isLowPowerEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled {
+    didSet { self.update() }
+  }
+
+  override init() {
+    super.init()
+
+    // Subscribe to system notification
+    NotificationCenter.default.publisher(for: .NSProcessInfoPowerStateDidChange)
+      .sink { [weak self] _ in
+        self?.isLowPowerEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
+      }
+      .store(in: &cancellables)
+  }
+}
+
+// State no longer needs isOnLowPowerMode
+struct State {
+  // isOnLowPowerMode removed - handled in view
+}
+```
+
+**Key Changes:**
+
+- Remove dependency client entirely
+- Handle system state locally where it's used
+- Remove action and state property
+- Simplifies reducer significantly
+
+### Migration Pattern 6: Build Dependency to @Shared
+
+**Before (Build dependency):**
+
+```swift
+// Build.swift
+@DependencyClient
+public struct Build {
+  public var gitSha: () -> String = { "deadbeef" }
+  public var number: () -> Number = { 0 }
+}
+
+extension Build: DependencyKey {
+  public static let liveValue = Self(
+    gitSha: { Bundle.main.infoDictionary?["GitSHA"] as? String ?? "" },
+    number: { ... }
+  )
+}
+
+// Usage
+@Dependency(\.build.number) var buildNumber
+
+case .task:
+  let build = self.buildNumber()
+```
+
+**After (@Shared with inMemory):**
+
+```swift
+// Build.swift - simple struct
+public struct Build: Equatable, Sendable {
+  public var gitSha = Bundle.main.infoDictionary?["GitSHA"] as? String ?? ""
+  public var number = Number(rawValue: ...)
+  public init() {}
+}
+
+extension PersistenceReaderKey where Self == InMemoryKey<Build> {
+  public static var build: Self {
+    inMemory("build")
+  }
+}
+
+// In State
+@SharedReader(.build) var build = Build()
+
+// Usage - direct access
+case .task:
+  let build = state.build.number
+```
+
+**Key Changes:**
+
+- Convert from dependency client to simple struct
+- Use `inMemory` for non-persisted shared state
+- Direct property access instead of function calls
+
+### Migration Pattern 7: Removing onChange Reducers
+
+**Before (Manual persistence with onChange):**
+
+```swift
+var body: some ReducerOf<Self> {
+  Reduce { state, action in
+    // ... reducer logic
+  }
+  .onChange(of: \.home.savedGames) { _, savedGames in
+    Reduce { _, action in
+      if case .savedGamesLoaded(.success) = action { return .none }
+      return .run { _ in
+        try await self.fileClient.save(games: savedGames)
+      }
+    }
+  }
+  .onChange(of: \.userSettings) { _, userSettings in
+    Reduce { _, _ in
+      return .run { _ in await self.userSettings.set(userSettings) }
+        .debounce(id: CancelID.saveDebounce, for: .seconds(0.5), scheduler: self.mainQueue)
+    }
+  }
+}
+```
+
+**After (Automatic persistence):**
+
+```swift
+var body: some ReducerOf<Self> {
+  Reduce { state, action in
+    // ... reducer logic
+  }
+  // No onChange needed - @Shared handles persistence automatically!
+}
+```
+
+**Key Changes:**
+
+- Remove all `onChange(of:)` reducers for persistence
+- Remove debouncing logic
+- Remove save actions and effects
+- Persistence is automatic with `@Shared`
+
+### Migration Pattern 8: Simplifying State Initialization
+
+**Before (State with dependency access in init):**
+
+```swift
+@ObservableState
+struct State: Equatable {
+  var enableGyroMotion: Bool
+  var isAnimationReduced: Bool
+  var isOnLowPowerMode: Bool
+
+  init(...) {
+    @Dependency(\.userSettings) var userSettings
+    self.enableGyroMotion = userSettings.enableGyroMotion
+    self.isAnimationReduced = userSettings.enableReducedAnimation
+    self.isOnLowPowerMode = false
+    // ...
+  }
+}
+```
+
+**After (State with @Shared):**
+
+```swift
+@ObservableState
+struct State: Equatable {
+  @Shared(.userSettings) var userSettings = UserSettings()
+  // enableGyroMotion, isAnimationReduced, isOnLowPowerMode removed
+
+  init(...) {
+    // No dependency access needed
+    // Settings accessed via userSettings.enableGyroMotion
+  }
+}
+```
+
+**Key Changes:**
+
+- Remove derived state properties
+- Remove `@Dependency` access in init
+- Access settings directly via shared state
+- Simpler, more declarative state
+
+### Migration Checklist
+
+When migrating from dependencies to `@Shared`:
+
+1. **Identify Candidates**
+   - [ ] `FileClient` for JSON persistence → `@Shared(.fileStorage(...))`
+   - [ ] `UserDefaultsClient` for simple values → `@Shared(.appStorage(...))`
+   - [ ] Custom settings clients → `@Shared(.fileStorage(...))`
+   - [ ] Config clients with refresh → Custom `PersistenceReaderKey`
+
+2. **Create Persistence Keys**
+   - [ ] Define type-safe keys as extensions on `PersistenceReaderKey`
+   - [ ] Choose appropriate strategy (appStorage, fileStorage, inMemory)
+   - [ ] Add default values where appropriate
+
+3. **Update State**
+   - [ ] Add `@Shared` or `@SharedReader` properties
+   - [ ] Remove derived state properties (access via shared state)
+   - [ ] Remove dependency access in initializers
+
+4. **Update Reducer**
+   - [ ] Remove loading actions (e.g., `savedGamesLoaded`)
+   - [ ] Remove update actions (e.g., `userSettingsUpdated`)
+   - [ ] Remove `onChange(of:)` reducers for persistence
+   - [ ] Remove `@Dependency` declarations for removed clients
+   - [ ] Update mutations to use `$shared.withLock { }`
+
+5. **Update Effects**
+   - [ ] Remove file loading effects
+   - [ ] Remove file saving effects
+   - [ ] Capture shared values in `.run` closures for Sendable
+
+6. **Update Tests**
+   - [ ] Remove `fileClient` overrides
+   - [ ] Remove `userDefaults` overrides
+   - [ ] Use `@Shared` to set initial test state
+   - [ ] Assert shared state mutations with `$0.$shared.withLock`
+
+7. **Clean Up**
+   - [ ] Delete removed client files
+   - [ ] Remove client from Package.swift
+   - [ ] Update imports throughout codebase
+
+### Benefits of Migration
+
+The isowords PR demonstrates significant benefits:
+
+| Metric             | Before  | After | Change     |
+| ------------------ | ------- | ----- | ---------- |
+| Lines of Code      | ~1,426  | ~860  | -40%       |
+| Dependency Clients | 5       | 0     | -100%      |
+| Loading Actions    | Many    | 0     | -100%      |
+| onChange Reducers  | Several | 0     | -100%      |
+| Test Complexity    | High    | Low   | Simplified |
+
+**Qualitative Benefits:**
+
+- State is immediately available (no async loading)
+- Persistence is automatic (no manual save calls)
+- Less boilerplate (no client protocols/implementations)
+- Simpler testing (no mock clients needed)
+- Better type safety (compile-time key checking)
+- Reduced action count (no load/save actions)
+
+---
+
+## Summary
+
+The `@Shared` property wrapper and Swift Sharing library provide a powerful, type-safe, and testable way to share state across your application. Key takeaways:
+
+1. **Choose the right persistence strategy** for your data type and persistence needs
+2. **Always use `withLock`** for thread-safe mutations
+3. **Derive shared state** to give child features only what they need
+4. **Define type-safe keys** for reusability and compile-time safety
+5. **Tests are automatically isolated** - no special setup needed for most cases
+6. **Use `@ObservationIgnored`** when using `@Shared` in `@Observable` models
+7. **Migrate from dependency clients** to eliminate boilerplate and simplify your codebase
+
+---
+
+## Reference Quick Links
+
+### Local Repository References
+
+| Resource             | Local Path                                                                                                                                                                                                                                          |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Swift Sharing Docs   | [`references/swift-sharing/Sources/Sharing/Documentation.docc/`](../references/swift-sharing/Sources/Sharing/Documentation.docc/)                                                                                                                   |
+| TCA Sharing Docs     | [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/SharingState.md`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/SharingState.md)     |
+| Sharing Case Studies | [`references/swift-sharing/Examples/CaseStudies/`](../references/swift-sharing/Examples/CaseStudies/)                                                                                                                                               |
+| TCA Case Studies     | [`references/swift-composable-architecture/Examples/CaseStudies/`](../references/swift-composable-architecture/Examples/CaseStudies/)                                                                                                               |
+| SyncUps Tutorial     | [`references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Tutorials/BuildingSyncUps/`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Tutorials/BuildingSyncUps/) |
+| isowords Example     | [`references/isowords/`](../references/isowords/)                                                                                                                                                                                                   |
+
+### External Documentation Links
+
+| Resource                    | URL                                                                                                                                                           |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Swift Sharing Documentation | [swiftpackageindex.com/pointfreeco/swift-sharing](https://swiftpackageindex.com/pointfreeco/swift-sharing/main/documentation/sharing/)                        |
+| TCA Documentation           | [pointfreeco.github.io/swift-composable-architecture](https://pointfreeco.github.io/swift-composable-architecture/main/documentation/composablearchitecture/) |
+| Point-Free Video Series     | [pointfree.co/collections/tours/tour-of-swift-sharing](https://www.pointfree.co/collections/tours/tour-of-swift-sharing)                                      |
+| isowords PR #202            | [github.com/pointfreeco/isowords/pull/202](https://github.com/pointfreeco/isowords/pull/202)                                                                  |
+| SyncUps App                 | [github.com/pointfreeco/syncups](https://github.com/pointfreeco/syncups)                                                                                      |
+
+### Key Documentation Files
+
+| Topic                  | Local Path                                                                                                                                           | Description                            |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `@Shared` Overview     | [`Extensions/Shared.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/Shared.md)                                        | Core property wrapper documentation    |
+| Persistence Strategies | [`Articles/PersistenceStrategies.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/PersistenceStrategies.md)              | appStorage, fileStorage, inMemory      |
+| File Storage           | [`Extensions/FileStorageKey.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/FileStorageKey.md)                        | Throttling, external writes, testing   |
+| App Storage            | [`Extensions/AppStorageKey.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Extensions/AppStorageKey.md)                          | KVO vs NotificationCenter, key formats |
+| Mutating State         | [`Articles/MutatingSharedState.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/MutatingSharedState.md)                  | Why withLock is required               |
+| Deriving State         | [`Articles/DerivingSharedState.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/DerivingSharedState.md)                  | Sub-pieces, optionals, collections     |
+| Type-Safe Keys         | [`Articles/TypeSafeKeys.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/TypeSafeKeys.md)                                | Compile-time safety                    |
+| Testing                | [`Articles/Testing.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Testing.md)                                          | Isolation, overrides, UI testing       |
+| Gotchas                | [`Articles/Gotchas.md`](../references/swift-sharing/Sources/Sharing/Documentation.docc/Articles/Gotchas.md)                                          | Hashability, Codability, SwiftUI views |
+| TCA Sharing            | [`Articles/SharingState.md`](../references/swift-composable-architecture/Sources/ComposableArchitecture/Documentation.docc/Articles/SharingState.md) | TCA-specific patterns and testing      |
+
+---
+
+## Appendix A: SpeechRecorderApp Migration Guide
+
+This appendix provides specific file changes needed to align the SpeechRecorderApp with the best practices demonstrated in the SyncUps reference implementation.
+
+### Overview of Required Changes
+
+| Issue             | Current Implementation                  | Best Practice (SyncUps)                            | Priority |
+| ----------------- | --------------------------------------- | -------------------------------------------------- | -------- |
+| SharedKey type    | `SharedReaderKey`                       | `SharedKey` with `.Default`                        | High     |
+| Collection type   | `[Recording]`                           | `IdentifiedArrayOf<Recording>`                     | High     |
+| Default value     | At usage site                           | Embedded in key definition                         | Medium   |
+| Child state       | Value copy (`var recording: Recording`) | Derived shared state (`@Shared var recording`)     | High     |
+| Test annotation   | `@Suite` only                           | `@MainActor` with `uncheckedUseMainSerialExecutor` | High     |
+| Shared assertions | Not used                                | `$0.$recordings.withLock { }`                      | Medium   |
+| Delete pattern    | Direct removal                          | Access parent's shared key                         | Medium   |
+
+### File Change 1: SharedKeys.swift
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderApp/SharedKeys/SharedKeys.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/SharedKeys/SharedKeys.swift)
+
+**Reference:** [`SyncUpsList.swift:183-186`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpsList.swift)
+
+**Current (lines 43-47):**
+
+```swift
+extension SharedReaderKey where Self == FileStorageKey<[Recording]> {
+    /// Shared key for the list of recordings
+    static var recordings: Self {
+        .fileStorage(.documentsDirectory.appending(component: "recordings.json"))
+    }
+}
+```
+
+**Improved:**
+
+```swift
+import IdentifiedCollections
+
+extension SharedKey where Self == FileStorageKey<IdentifiedArrayOf<Recording>>.Default {
+    /// Shared key for the list of recordings with embedded default
+    static var recordings: Self {
+        Self[.fileStorage(.documentsDirectory.appending(component: "recordings.json")), default: []]
+    }
+}
+```
+
+**Why:**
+
+1. Uses `SharedKey` instead of `SharedReaderKey` for read-write access
+2. Uses `IdentifiedArrayOf<Recording>` for O(1) lookup by ID
+3. Embeds the default value in the key definition using `.Default`
+4. No default needed at usage sites
+
+### File Change 2: Recording.swift - Add Identifiable Conformance
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderApp/Models/Recording.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Models/Recording.swift)
+
+**Reference:** [`SyncUp.swift`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/Models.swift) (uses `IdentifiedArrayOf`)
+
+**Current (line 44):**
+
+```swift
+struct Recording: Codable, Identifiable, Equatable, Sendable {
+```
+
+**No change needed** - `Recording` already conforms to `Identifiable` with `id: UUID`. However, you need to add the import for `IdentifiedCollections` in files that use `IdentifiedArrayOf<Recording>`.
+
+### File Change 3: RecordingsListFeature.swift
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingsListFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingsListFeature.swift)
+
+**Reference:** [`SyncUpsList.swift:17-21`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpsList.swift)
+
+**Current (lines 53-56):**
+
+```swift
+@ObservableState
+struct State: Equatable {
+    /// The list of recordings, persisted to disk
+    @Shared(.recordings) var recordings: [Recording] = []
+```
+
+**Improved:**
+
+```swift
+import IdentifiedCollections
+
+@ObservableState
+struct State: Equatable {
+    /// The list of recordings, persisted to disk
+    /// No default needed - embedded in SharedKey definition
+    @Shared(.recordings) var recordings: IdentifiedArrayOf<Recording>
+```
+
+**Additional change (lines 99-107):**
+
+**Current:**
+
+```swift
+case let .deleteRecordings(indexSet):
+    state.$recordings.withLock { recordings in
+        /// Delete audio files
+        for index in indexSet {
+            let recording = recordings[index]
+            try? FileManager.default.removeItem(at: recording.audioURL)
+        }
+        recordings.remove(atOffsets: indexSet)
+    }
+    return .none
+```
+
+**Improved:**
+
+```swift
+case let .deleteRecordings(indexSet):
+    state.$recordings.withLock { recordings in
+        /// Delete audio files
+        for index in indexSet {
+            let recording = recordings[index]
+            try? FileManager.default.removeItem(at: recording.audioURL)
+        }
+        recordings.remove(atOffsets: indexSet)
+    }
+    return .none
+```
+
+**Note:** The delete logic remains the same since `IdentifiedArrayOf` supports `remove(atOffsets:)`.
+
+### File Change 4: PlaybackFeature.swift - Use Derived Shared State
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift)
+
+**Reference:** [`SyncUpDetail.swift:20-22`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpDetail.swift)
+
+**Current (lines 54-57):**
+
+```swift
+@ObservableState
+struct State: Equatable, Sendable {
+    /// The recording being played
+    var recording: Recording
+```
+
+**Improved:**
+
+```swift
+@ObservableState
+struct State: Equatable, Sendable {
+    /// The recording being played - derived shared state from parent
+    @Shared var recording: Recording
+```
+
+**Why:**
+
+- Changes from parent propagate automatically
+- Edits to the recording (e.g., title changes) persist immediately
+- Follows the SyncUpDetail pattern where child receives `@Shared var syncUp`
+
+**Additional change - Update RecordingsListFeature to pass derived state (line 96):**
+
+**Current:**
+
+```swift
+case let .selectRecording(recording):
+    state.playback = PlaybackFeature.State(recording: recording)
+    return .none
+```
+
+**Improved:**
+
+```swift
+case let .selectRecording(recording):
+    /// Get a shared reference to the recording from the collection
+    guard let sharedRecording = Shared(state.$recordings[id: recording.id]) else {
+        return .none
+    }
+    state.playback = PlaybackFeature.State(recording: sharedRecording)
+    return .none
+```
+
+### File Change 5: RecordingsListFeatureTests.swift - Add @MainActor
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingsListFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingsListFeatureTests.swift)
+
+**Reference:** [`SyncUpsListTests.swift:7-9`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpsListTests.swift)
+
+**Current (lines 38-39):**
+
+```swift
+@Suite("RecordingsListFeature Tests")
+struct RecordingsListFeatureTests {
+```
+
+**Improved:**
+
+```swift
+@Suite("RecordingsListFeature Tests")
+@MainActor
+struct RecordingsListFeatureTests {
+    init() { uncheckedUseMainSerialExecutor = true }
+```
+
+**Why:**
+
+- `@MainActor` ensures tests run on the main actor
+- `uncheckedUseMainSerialExecutor = true` enables deterministic async testing
+- Matches the SyncUps test pattern exactly
+
+### File Change 6: PlaybackFeatureTests.swift - Add @MainActor
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift)
+
+**Reference:** [`SyncUpDetailTests.swift:6-8`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift)
+
+**Current (lines 38-39):**
+
+```swift
+@Suite("PlaybackFeature Tests")
+struct PlaybackFeatureTests {
+```
+
+**Improved:**
+
+```swift
+@Suite("PlaybackFeature Tests")
+@MainActor
+struct PlaybackFeatureTests {
+    init() { uncheckedUseMainSerialExecutor = true }
+```
+
+### File Change 7: Add Delete Test with Shared State Pattern
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingsListFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingsListFeatureTests.swift)
+
+**Reference:** [`SyncUpDetailTests.swift:117-135`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift)
+
+**Add new test (after line 83):**
+
+```swift
+@Test("Delete recording removes from shared state")
+func deleteRecordingRemovesFromSharedState() async throws {
+    let recording = Recording.preview()
+
+    /// Override shared state for this test
+    @Shared(.recordings) var recordings: IdentifiedArrayOf<Recording> = [recording]
+    defer { #expect(recordings.isEmpty) }
+
+    let store = await TestStore(initialState: RecordingsListFeature.State()) {
+        RecordingsListFeature()
+    }
+
+    await store.send(.deleteRecordings(IndexSet(integer: 0))) {
+        $0.$recordings.withLock { $0.remove(id: recording.id) }
+    }
+}
+```
+
+**Why:**
+
+- Tests shared state mutations using the `$0.$recordings.withLock` pattern
+- Uses `defer` to verify final state
+- Follows the SyncUpDetailTests delete pattern
+
+### File Change 8: Add Playback Test with Shared State
+
+**File:** [`apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift)
+
+**Reference:** [`SyncUpDetailTests.swift:94-114`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift)
+
+**Update existing tests to use `Shared(value:)` pattern:**
+
+**Current (line 57):**
+
+```swift
+let store = await TestStore(
+    initialState: PlaybackFeature.State(recording: recording)
+) {
+```
+
+**Improved:**
+
+```swift
+let store = await TestStore(
+    initialState: PlaybackFeature.State(recording: Shared(value: recording))
+) {
+```
+
+### New Tests to Add
+
+#### Test: Edit Recording Title During Playback
+
+```swift
+@Test("Edit recording title persists via shared state")
+func editRecordingTitlePersists() async {
+    var recording = Recording.preview()
+
+    let store = await TestStore(
+        initialState: PlaybackFeature.State(recording: Shared(value: recording))
+    ) {
+        PlaybackFeature()
+    }
+
+    /// Simulate title edit (would need to add action)
+    recording.title = "New Title"
+
+    /// Verify shared state mutation pattern
+    /// $0.$recording.withLock { $0.title = "New Title" }
+}
+```
+
+#### Test: Playback with Pre-populated Shared State
+
+```swift
+@Test("Playback uses shared recording from parent")
+func playbackUsesSharedRecording() async throws {
+    let recording = Recording.preview()
+
+    /// Set up shared state
+    @Shared(.recordings) var recordings: IdentifiedArrayOf<Recording> = [recording]
+
+    /// Get derived shared reference
+    let sharedRecording = try #require(Shared($recordings[id: recording.id]))
+
+    let store = await TestStore(
+        initialState: PlaybackFeature.State(recording: sharedRecording)
+    ) {
+        PlaybackFeature()
+    }
+
+    /// Changes to recording would propagate to parent
+    await store.send(.timeUpdated(0.5)) {
+        $0.currentTime = 0.5
+        $0.currentWordIndex = nil
+    }
+}
+```
+
+### Summary of Changes
+
+| File                               | Lines Changed | Change Type                                           |
+| ---------------------------------- | ------------- | ----------------------------------------------------- |
+| `SharedKeys.swift`                 | 43-47         | Replace `SharedReaderKey` with `SharedKey.Default`    |
+| `RecordingsListFeature.swift`      | 53-56         | Use `IdentifiedArrayOf<Recording>`, remove default    |
+| `RecordingsListFeature.swift`      | 96            | Pass derived `Shared<Recording>` to playback          |
+| `PlaybackFeature.swift`            | 54-57         | Change `var recording` to `@Shared var recording`     |
+| `RecordingsListFeatureTests.swift` | 38-39         | Add `@MainActor` and `uncheckedUseMainSerialExecutor` |
+| `PlaybackFeatureTests.swift`       | 38-39         | Add `@MainActor` and `uncheckedUseMainSerialExecutor` |
+| `PlaybackFeatureTests.swift`       | All tests     | Use `Shared(value:)` for test state                   |
+
+### Reference Files for Each Pattern
+
+| Pattern                | SyncUps Reference                                                                                                                      | SpeechRecorderApp Target                 |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| SharedKey with Default | [`SyncUpsList.swift:183-186`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpsList.swift)                  | `SharedKeys.swift:43-47`                 |
+| Derived Shared State   | [`SyncUpDetail.swift:22`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpDetail.swift)                     | `PlaybackFeature.swift:57`               |
+| Delete via Parent Key  | [`SyncUpDetail.swift:65-68`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpDetail.swift)                  | N/A (future enhancement)                 |
+| Test @MainActor        | [`SyncUpsListTests.swift:7-9`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpsListTests.swift)       | `RecordingsListFeatureTests.swift:38-39` |
+| Test Shared Assertions | [`SyncUpsListTests.swift:34-37`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpsListTests.swift)     | New tests to add                         |
+| Test Delete Pattern    | [`SyncUpDetailTests.swift:117-135`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift) | New test to add                          |
+
+### Implementation Order
+
+1. **Phase 1: SharedKey Migration** (High Priority)
+   - Update `SharedKeys.swift` to use `.Default` pattern
+   - Add `IdentifiedCollections` import
+   - Update `RecordingsListFeature.State` to use `IdentifiedArrayOf`
+
+2. **Phase 2: Derived Shared State** (High Priority)
+   - Update `PlaybackFeature.State` to use `@Shared var recording`
+   - Update `RecordingsListFeature` to pass derived shared state
+
+3. **Phase 3: Test Improvements** (High Priority)
+   - Add `@MainActor` to all test structs
+   - Add `uncheckedUseMainSerialExecutor = true` to init
+   - Update tests to use `Shared(value:)` pattern
+   - Add shared state assertion tests
+
+4. **Phase 4: Additional Patterns** (Medium Priority)
+   - Consider adding Destination enum pattern for alerts
+   - Add AlertState extensions for reusable alerts
+   - Implement delete via parent key pattern if needed
