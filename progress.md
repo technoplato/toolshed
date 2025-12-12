@@ -30,7 +30,7 @@
 
 📝 Enhanced SpeechRecorderApp PRD with status tracking and experimental features
 
-[Commit](https://github.com/technoplato/toolshed/commit/8630dbc)
+[Commit](https://github.com/technoplato/toolshed/commit/e81ffa7)
 
 - Added status legend (Polished/Implemented/Implementing/Planned)
 - Added feature matrix with implementation status and notes
