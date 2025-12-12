@@ -50,6 +50,8 @@ WHEN:
   [Change Log:
     - 2025-12-09: Fixed embedding deletion on split, added embedding extraction on relabel
     - 2025-12-09: Renamed from server.py to ground_truth_server.py for clarity
+    - 2025-12-09: Simplified _handle_embedding_update() for upfront embedding extraction:
+                  Fast path checks PostgreSQL directly, legacy fallback extracts from audio
   ]
 
 WHERE:
@@ -83,6 +85,7 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 from ingestion.config import ServerConfig
+from ingestion.clustering import cluster_embeddings, get_cluster_representatives
 from src.data.factory import DatabaseFactory
 from src.data.models import DiarizationSegment, DiarizationRun
 from src.embeddings.pgvector_client import PgVectorClient
@@ -96,16 +99,15 @@ class Embedder:
     def get_pipeline(cls):
         if cls._pipeline is None:
             print("Loading pyannote/embedding pipeline...")
-            from pyannote.audio import Inference
-            # Use a lightweight model or the standard one
-            cls._pipeline = Inference("pyannote/embedding", window="sliding", duration=3.0, step=1.0) # Or just plain embedding? 'pyannote/embedding' works.
-            # Actually, `Model.from_pretrained("pyannote/embedding")`?
-            # pyannote.audio 3.1 uses `Model.from_pretrained`.
-            # Let's check how we did it in workflows.
-            # We referenced `pyannote/embedding` before.
-            # Let's use `Model` + `Inference`.
-            from pyannote.audio import Model
-            model = Model.from_pretrained("pyannote/embedding", use_auth_token=os.environ.get("HF_TOKEN"))
+            import torch
+            from pyannote.audio import Inference, Model
+            from ingestion.safe_globals import get_safe_globals
+            
+            # Load the model first, then create Inference
+            # pyannote.audio 3.1 requires Model.from_pretrained before Inference
+            # Use safe_globals context manager for PyTorch 2.6+ compatibility
+            with torch.serialization.safe_globals(get_safe_globals()):
+                model = Model.from_pretrained("pyannote/embedding", use_auth_token=os.environ.get("HF_TOKEN"))
             cls._pipeline = Inference(model, window="whole")
         return cls._pipeline
 
@@ -113,24 +115,21 @@ class Embedder:
     def extract_embedding(audio_path: str, start: float, end: float) -> List[float]:
         pipeline = Embedder.get_pipeline()
         from pyannote.audio.core.io import Audio
+        from pyannote.core import Segment
+        
         loader = Audio(sample_rate=16000, mono="downmix")
         
-        # Load snippet
+        # Load audio snippet for the specified time range
         # Audio.crop returns (waveform, sample_rate)
-        # Inference expects waveform or path?
-        # Inference(window="whole") expects waveform or path.
+        waveform, sr = loader.crop(audio_path, Segment(start, end))
         
-        snippet = loader.crop(audio_path, Segment(start, end)) # pyannote.core.Segment
-        # snippet is Tensor? No, loader.crop return Tensor.
-        # Wait, I need pyannote.core.Segment
-        from pyannote.core import Segment as PySegment
-        
-        waveform, sr = loader.crop(audio_path, PySegment(start, end))
-        
-        # Inference
+        # Run inference to get embedding
         embedding = pipeline({"waveform": waveform, "sample_rate": sr})
-        # embedding is (1, D)
-        return embedding[0].tolist()
+        # embedding can be (1, D) or (D,) depending on pyannote version
+        # Flatten to 1D and convert to list
+        import numpy as np
+        emb_array = np.array(embedding).flatten()
+        return emb_array.tolist()
 
 def run_server(config: ServerConfig):
     # ... (rest same, updated port print)
@@ -321,6 +320,10 @@ def make_handler_class(config: ServerConfig):
                 self.handle_assign_speaker()
             elif self.path == '/delete_segment':
                 self.handle_delete_segment()
+            elif self.path == "/bulk_confirm":
+                self.handle_bulk_confirm()
+            elif self.path == "/cluster":
+                self.handle_cluster_request()
             else:
                 self.send_error(404)
 
@@ -641,8 +644,15 @@ def make_handler_class(config: ServerConfig):
         
         def _handle_embedding_update(self, segment_id, speaker_name, repo, pg_client):
             """
-            Handle embedding operations AFTER the HTTP response has been sent.
-            This runs synchronously but doesn't block the client.
+            Update speaker_id for an existing embedding, or extract if missing (legacy fallback).
+            
+            With upfront embedding extraction, embeddings should already exist in PostgreSQL
+            with speaker_id = NULL. This method now primarily just updates the speaker_id.
+            
+            FAST PATH: Check PostgreSQL directly for existing embedding (no InstantDB query needed)
+            LEGACY FALLBACK: Extract embedding from audio if not found (for old data)
+            
+            This runs synchronously but in a background thread, so it doesn't block the client.
             """
             import uuid
             
@@ -651,10 +661,33 @@ def make_handler_class(config: ServerConfig):
                 return
             
             t_emb_start = time.time()
-            print(f"[{t_emb_start:.3f}] 🔄 Starting embedding update for segment {segment_id}")
+            print(f"[{t_emb_start:.3f}] 🔄 Starting embedding update for segment {segment_id[:8]}...")
             
             try:
-                # Fetch segment with video info for embedding operations
+                # FAST PATH: Check PostgreSQL directly for existing embedding
+                # With upfront extraction, embeddings are stored with segment_id as external_id
+                t_before_check = time.time()
+                existing = pg_client.get_embedding(segment_id)
+                t_after_check = time.time()
+                print(f"[{t_after_check:.3f}] 🔍 PostgreSQL lookup: {(t_after_check - t_before_check)*1000:.1f}ms")
+                
+                if existing and existing.get("embedding"):
+                    # Fast path: embedding exists, just update speaker_id
+                    t_before_update = time.time()
+                    try:
+                        pg_client.update_speaker_id(segment_id, speaker_name)
+                        t_after_update = time.time()
+                        print(f"[{t_after_update:.3f}] ✅ FAST PATH: Updated speaker_id for segment {segment_id[:8]}... to '{speaker_name}': {(t_after_update - t_before_update)*1000:.1f}ms")
+                        print(f"[{t_after_update:.3f}] ⏱️ TOTAL embedding update time: {(t_after_update - t_emb_start)*1000:.1f}ms")
+                        return
+                    except Exception as e:
+                        print(f"[{time.time():.3f}] ❌ Failed to update speaker_id in Postgres: {e}")
+                        return
+                
+                # LEGACY FALLBACK: No embedding found, need to extract from audio
+                print(f"[{time.time():.3f}] 📦 LEGACY FALLBACK: No embedding found for segment {segment_id[:8]}..., extracting from audio")
+                
+                # Fetch segment with video info for embedding extraction
                 q_seg = {
                     "diarizationSegments": {
                         "$": {"where": {"id": segment_id}},
@@ -672,89 +705,377 @@ def make_handler_class(config: ServerConfig):
                 segs = res.get("diarizationSegments", [])
                 
                 if not segs:
-                    print(f"[{time.time():.3f}] ⚠️ Segment not found for embedding update")
+                    print(f"[{time.time():.3f}] ⚠️ Segment not found in InstantDB for embedding extraction")
                     return
                 
                 seg = segs[0]
-                emb_id = seg.get("embedding_id")
                 
-                if emb_id:
-                    # Embedding exists - just update the speaker_id
-                    t_before_update = time.time()
-                    try:
-                        pg_client.update_speaker_id(emb_id, speaker_name)
-                        t_after_update = time.time()
-                        print(f"[{t_after_update:.3f}] ✅ Updated Postgres speaker for embedding {emb_id}: {(t_after_update - t_before_update)*1000:.1f}ms")
-                    except Exception as e:
-                        print(f"[{time.time():.3f}] ❌ Failed to update Postgres: {e}")
-                else:
-                    # No embedding - extract one and save it
-                    # This happens for segments created from splits or whisper_identified workflow
-                    try:
-                        # Get audio path from video
-                        runs = seg.get("diarizationRun", [])
-                        video = runs[0].get("video", []) if runs else []
-                        audio_path = video[0].get("filepath") if video else None
-                        video_id = video[0].get("id") if video else None
-                        run_id = runs[0].get("id") if runs else None
+                # Extract embedding from audio
+                try:
+                    # Get audio path from video
+                    runs = seg.get("diarizationRun", [])
+                    video = runs[0].get("video", []) if runs else []
+                    audio_path = video[0].get("filepath") if video else None
+                    video_id = video[0].get("id") if video else None
+                    run_id = runs[0].get("id") if runs else None
+                    
+                    # Resolve audio path for Docker container
+                    # The filepath in InstantDB is the host path, but in Docker
+                    # the files are mounted at /app/data/clips/
+                    audio_path = self._resolve_audio_path(audio_path)
+                    
+                    if audio_path and os.path.exists(audio_path):
+                        start_time = seg.get("start_time")
+                        end_time = seg.get("end_time")
+                        speaker_label = seg.get("speaker_label", "UNKNOWN")
                         
-                        # Resolve audio path for Docker container
-                        # The filepath in InstantDB is the host path, but in Docker
-                        # the files are mounted at /app/data/clips/
-                        audio_path = self._resolve_audio_path(audio_path)
+                        print(f"[{time.time():.3f}] 🎤 Extracting embedding for segment {segment_id[:8]}... ({start_time:.1f}s - {end_time:.1f}s)...")
                         
-                        if audio_path and os.path.exists(audio_path):
-                            start_time = seg.get("start_time")
-                            end_time = seg.get("end_time")
-                            speaker_label = seg.get("speaker_label", "UNKNOWN")
-                            
-                            print(f"[{time.time():.3f}] 🎤 Extracting embedding for segment {segment_id} ({start_time:.1f}s - {end_time:.1f}s)...")
-                            
-                            # Extract embedding using PyAnnote
-                            t_before_extract = time.time()
-                            embedding = Embedder.extract_embedding(audio_path, start_time, end_time)
-                            t_after_extract = time.time()
-                            print(f"[{t_after_extract:.3f}] 🎤 Embedding extracted: {(t_after_extract - t_before_extract)*1000:.1f}ms")
-                            
-                            # Generate new embedding ID
-                            new_emb_id = str(uuid.uuid4())
-                            
-                            # Save to PostgreSQL
-                            t_before_save = time.time()
-                            pg_client.add_embedding(
-                                external_id=new_emb_id,
-                                embedding=embedding,
-                                speaker_id=speaker_name,
-                                speaker_label=speaker_label,
-                                video_id=video_id,
-                                diarization_run_id=run_id,
-                                start_time=start_time,
-                                end_time=end_time,
-                            )
-                            t_after_save = time.time()
-                            print(f"[{t_after_save:.3f}] 💾 Saved embedding to PostgreSQL: {(t_after_save - t_before_save)*1000:.1f}ms")
-                            
-                            # Update segment with embedding_id
-                            t_before_link = time.time()
-                            repo._transact([
-                                ["update", "diarizationSegments", segment_id, {"embedding_id": new_emb_id}]
-                            ])
-                            t_after_link = time.time()
-                            print(f"[{t_after_link:.3f}] 🔗 Updated segment with embedding_id: {(t_after_link - t_before_link)*1000:.1f}ms")
-                        else:
-                            print(f"[{time.time():.3f}] ⚠️ Audio file not found at {audio_path}, skipping embedding extraction")
-                    except Exception as e:
-                        print(f"[{time.time():.3f}] ❌ Failed to extract/save embedding: {e}")
-                        import traceback
-                        traceback.print_exc()
-                
-                t_emb_end = time.time()
-                print(f"[{t_emb_end:.3f}] ⏱️ TOTAL embedding update time: {(t_emb_end - t_emb_start)*1000:.1f}ms")
+                        # Extract embedding using PyAnnote
+                        t_before_extract = time.time()
+                        embedding = Embedder.extract_embedding(audio_path, start_time, end_time)
+                        t_after_extract = time.time()
+                        print(f"[{t_after_extract:.3f}] 🎤 Embedding extracted: {(t_after_extract - t_before_extract)*1000:.1f}ms")
+                        
+                        # Save to PostgreSQL using segment_id as external_id
+                        # This matches the upfront extraction convention
+                        t_before_save = time.time()
+                        pg_client.add_embedding(
+                            external_id=segment_id,
+                            embedding=embedding,
+                            speaker_id=speaker_name,
+                            speaker_label=speaker_label,
+                            video_id=video_id,
+                            diarization_run_id=run_id,
+                            start_time=start_time,
+                            end_time=end_time,
+                        )
+                        t_after_save = time.time()
+                        print(f"[{t_after_save:.3f}] 💾 Saved embedding to PostgreSQL: {(t_after_save - t_before_save)*1000:.1f}ms")
+                        
+                        # Update segment with embedding_id (same as segment_id for consistency)
+                        t_before_link = time.time()
+                        repo._transact([
+                            ["update", "diarizationSegments", segment_id, {"embedding_id": segment_id}]
+                        ])
+                        t_after_link = time.time()
+                        print(f"[{t_after_link:.3f}] 🔗 Updated segment with embedding_id: {(t_after_link - t_before_link)*1000:.1f}ms")
+                        
+                        t_emb_end = time.time()
+                        print(f"[{t_emb_end:.3f}] ⏱️ TOTAL embedding update time (legacy path): {(t_emb_end - t_emb_start)*1000:.1f}ms")
+                    else:
+                        print(f"[{time.time():.3f}] ⚠️ Audio file not found at {audio_path}, skipping embedding extraction")
+                except Exception as e:
+                    print(f"[{time.time():.3f}] ❌ Failed to extract/save embedding: {e}")
+                    import traceback
+                    traceback.print_exc()
                 
             except Exception as e:
                 print(f"[{time.time():.3f}] ❌ Error in embedding update: {e}")
                 import traceback
                 traceback.print_exc()
+
+        def handle_bulk_confirm(self):
+            """
+            POST /bulk_confirm
+            
+            Bulk confirm speaker assignments for multiple segments.
+            Used to confirm all segments in a cluster at once.
+            
+            Request body:
+            {
+                "segment_ids": ["uuid1", "uuid2", ...],
+                "speaker_name": "Shane Gillis"
+            }
+            
+            Response:
+            {
+                "success": true,
+                "updated_count": 5,
+                "speaker_name": "Shane Gillis"
+            }
+            """
+            try:
+                length = int(self.headers['Content-Length'])
+                data = json.loads(self.rfile.read(length))
+                
+                segment_ids = data.get("segment_ids", [])
+                speaker_name = data.get("speaker_name")
+                
+                if not segment_ids:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "success": False,
+                        "error": "segment_ids is required"
+                    }).encode())
+                    return
+                
+                if not speaker_name:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "success": False,
+                        "error": "speaker_name is required"
+                    }).encode())
+                    return
+                
+                print(f"[{time.time():.3f}] 📦 Bulk confirming {len(segment_ids)} segments as '{speaker_name}'")
+                
+                # 1. Update PostgreSQL embeddings with speaker_id
+                pg_updated = 0
+                if pg_client:
+                    try:
+                        pg_updated = pg_client.bulk_update_speaker_id(segment_ids, speaker_name)
+                        print(f"[{time.time():.3f}] ✅ Updated {pg_updated} embeddings in PostgreSQL")
+                    except Exception as e:
+                        print(f"[{time.time():.3f}] ⚠️ PostgreSQL bulk update failed: {e}")
+                
+                # 2. Create speaker assignments in InstantDB via the TypeScript proxy
+                # This uses the proper InstantDB SDK instead of raw Admin API calls
+                from ingestion.instant_client import InstantClient
+                
+                try:
+                    instant_client = InstantClient(base_url="http://instant-proxy:3001")
+                except RuntimeError:
+                    # Fallback to localhost for local development
+                    try:
+                        instant_client = InstantClient(base_url="http://localhost:3001")
+                    except RuntimeError as e:
+                        print(f"[{time.time():.3f}] ⚠️ InstantDB proxy not available: {e}")
+                        # Return success for PostgreSQL update, note InstantDB failure
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.send_header('Access-Control-Allow-Origin', '*')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({
+                            "success": True,
+                            "updated_count": len(segment_ids),
+                            "pg_updated": pg_updated,
+                            "speaker_name": speaker_name,
+                            "warning": "InstantDB proxy not available, speaker assignments not created"
+                        }).encode())
+                        return
+                
+                # Build assignments for the proxy
+                assignments = [
+                    {
+                        "segment_id": seg_id,
+                        "speaker_name": speaker_name,  # Proxy will find/create speaker
+                        "source": "user",
+                        "confidence": 1.0,
+                        "note": {"method": "bulk_confirm"},
+                        "assigned_by": "bulk_confirm",
+                    }
+                    for seg_id in segment_ids
+                ]
+                
+                result = instant_client.create_speaker_assignments(assignments)
+                print(f"[{time.time():.3f}] ✅ Created {len(segment_ids)} speaker assignments via InstantDB proxy")
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "updated_count": len(segment_ids),
+                    "pg_updated": pg_updated,
+                    "speaker_name": speaker_name
+                }).encode())
+                
+            except Exception as e:
+                print(f"[{time.time():.3f}] ❌ Bulk confirm failed: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": False,
+                    "error": str(e)
+                }).encode())
+
+
+        def handle_cluster_request(self):
+            """
+            POST /cluster
+            
+            Clusters unlabeled embeddings for a diarization run using HDBSCAN.
+            Returns cluster assignments and representative segments.
+            Saves cluster assignments to PostgreSQL for persistence.
+            
+            Request body:
+            {
+                "diarization_run_id": "uuid-string",
+                "min_cluster_size": 2,  // optional, default 2
+                "min_samples": 1,       // optional, default 1
+                "cluster_selection_method": "leaf"  // optional, 'leaf' or 'eom'
+            }
+            
+            Response:
+            {
+                "success": true,
+                "clusters": {
+                    "0": ["embedding_id_1", "embedding_id_2"],
+                    "1": ["embedding_id_3", "embedding_id_4", "embedding_id_5"]
+                },
+                "noise": ["embedding_id_6"],
+                "representatives": {
+                    "0": "embedding_id_1",
+                    "1": "embedding_id_3"
+                },
+                "cluster_run_id": "uuid-of-this-clustering-run",
+                "stats": {
+                    "total_embeddings": 7,
+                    "num_clusters": 2,
+                    "noise_count": 1
+                }
+            }
+            """
+            try:
+                import uuid
+                length = int(self.headers['Content-Length'])
+                data = json.loads(self.rfile.read(length))
+                
+                diarization_run_id = data.get("diarization_run_id")
+                
+                if not diarization_run_id:
+                    self.send_response(400)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "success": False,
+                        "error": "diarization_run_id is required"
+                    }).encode())
+                    return
+                
+                min_cluster_size = data.get("min_cluster_size", 2)
+                min_samples = data.get("min_samples", 1)
+                # 'leaf' tends to find more, smaller clusters (better for distinct speakers)
+                # 'eom' (Excess of Mass) finds fewer, larger clusters
+                cluster_selection_method = data.get("cluster_selection_method", "leaf")
+                
+                print(f"[{time.time():.3f}] 🔬 Clustering embeddings for run {diarization_run_id} (method={cluster_selection_method})")
+                
+                if not pg_client:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "success": False,
+                        "error": "PostgreSQL client not available"
+                    }).encode())
+                    return
+                
+                # Get embeddings from PostgreSQL
+                embeddings = pg_client.get_embeddings_by_run(
+                    diarization_run_id=diarization_run_id,
+                    only_unlabeled=True  # Only cluster unlabeled segments
+                )
+                
+                if not embeddings:
+                    self.send_response(200)
+                    self.send_header('Content-type', 'application/json')
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({
+                        "success": True,
+                        "clusters": {},
+                        "noise": [],
+                        "representatives": {},
+                        "segment_info": {},
+                        "stats": {
+                            "total_embeddings": 0,
+                            "num_clusters": 0,
+                            "noise_count": 0
+                        },
+                        "message": "No unlabeled embeddings found for this run"
+                    }).encode())
+                    return
+                
+                # Run HDBSCAN clustering
+                result = cluster_embeddings(
+                    embeddings=embeddings,
+                    min_cluster_size=min_cluster_size,
+                    min_samples=min_samples,
+                    cluster_selection_method=cluster_selection_method,
+                )
+                
+                # Get representative segment for each cluster
+                representatives = get_cluster_representatives(embeddings, result)
+                
+                # Save cluster assignments to PostgreSQL
+                cluster_run_id = str(uuid.uuid4())
+                cluster_assignments = {}
+                for cluster_id, segment_ids in result.clusters.items():
+                    for seg_id in segment_ids:
+                        cluster_assignments[seg_id] = cluster_id
+                for seg_id in result.noise:
+                    cluster_assignments[seg_id] = -1  # -1 for noise
+                
+                try:
+                    pg_client.update_cluster_assignments(cluster_run_id, cluster_assignments)
+                    print(f"[{time.time():.3f}] 💾 Saved {len(cluster_assignments)} cluster assignments to PostgreSQL")
+                except Exception as e:
+                    print(f"[{time.time():.3f}] ⚠️ Failed to save cluster assignments: {e}")
+                
+                # Build segment_info map for UI to use (segment_id -> {start_time, end_time, speaker_label})
+                # This allows the UI to display segment info without querying the DOM
+                segment_info = {}
+                for emb in embeddings:
+                    segment_info[emb['external_id']] = {
+                        'start_time': emb.get('start_time'),
+                        'end_time': emb.get('end_time'),
+                        'speaker_label': emb.get('speaker_label'),
+                    }
+                
+                print(
+                    f"[{time.time():.3f}] ✅ Clustering complete: {result.num_clusters} clusters, "
+                    f"{result.noise_count} noise points from {len(embeddings)} embeddings"
+                )
+                
+                # Convert cluster keys to strings for JSON serialization
+                clusters_json = {str(k): v for k, v in result.clusters.items()}
+                representatives_json = {str(k): v for k, v in representatives.items()}
+                
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "clusters": clusters_json,
+                    "noise": result.noise,
+                    "representatives": representatives_json,
+                    "segment_info": segment_info,
+                    "cluster_run_id": cluster_run_id,
+                    "stats": {
+                        "total_embeddings": len(embeddings),
+                        "num_clusters": result.num_clusters,
+                        "noise_count": result.noise_count
+                    }
+                }).encode())
+                
+            except Exception as e:
+                print(f"[{time.time():.3f}] ❌ Clustering failed: {e}")
+                import traceback
+                traceback.print_exc()
+                self.send_response(500)
+                self.send_header('Content-type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": False,
+                    "error": str(e)
+                }).encode())
 
         def handle_delete_segment(self):
             try:

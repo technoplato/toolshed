@@ -760,6 +760,40 @@ const server = Bun.serve({
         }
       }
 
+      // =========================================================================
+      // PUT /diarization-segments/embedding-ids - Update embedding_ids for segments
+      // =========================================================================
+      if (path === "/diarization-segments/embedding-ids" && method === "PUT") {
+        const body = await req.json();
+        const updates = body.updates as Array<{
+          segment_id: string;
+          embedding_id: string;
+        }>;
+
+        if (!updates || !Array.isArray(updates)) {
+          return Response.json(
+            { error: "updates array required" },
+            { status: 400, headers }
+          );
+        }
+
+        const transactions: any[] = [];
+        for (const update of updates) {
+          transactions.push(
+            tx.diarizationSegments[update.segment_id].update({
+              embedding_id: update.embedding_id,
+            })
+          );
+        }
+
+        await db.transact(transactions);
+
+        return Response.json(
+          { success: true, count: updates.length },
+          { headers }
+        );
+      }
+
       // 404 for unknown routes
       return Response.json(
         { error: "Not found", path },
@@ -789,3 +823,4 @@ console.log(`   - POST /speaker-assignments`);
 console.log(`   - GET  /speakers`);
 console.log(`   - POST /speakers`);
 console.log(`   - DELETE /speakers/:id`);
+console.log(`   - PUT  /diarization-segments/embedding-ids`);

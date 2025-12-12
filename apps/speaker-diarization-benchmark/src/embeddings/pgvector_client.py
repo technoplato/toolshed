@@ -158,6 +158,8 @@ class PgVectorClient:
                     cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS start_time FLOAT;")
                     cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS end_time FLOAT;")
                     cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS cluster_id INTEGER;")
+                    cur.execute("ALTER TABLE speaker_embeddings ADD COLUMN IF NOT EXISTS cluster_run_id UUID;")
                     
                 conn.commit()
 
@@ -165,7 +167,7 @@ class PgVectorClient:
         self, 
         external_id: str, 
         embedding: List[float], 
-        speaker_id: str = "UNKNOWN",
+        speaker_id: str = None,
         speaker_label: str = None,
         video_id: str = None,
         diarization_run_id: str = None,
@@ -191,6 +193,9 @@ class PgVectorClient:
         """
         if metadata is None:
             metadata = {}
+        
+        # Convert embedding to numpy array for pgvector compatibility
+        embedding_array = np.array(embedding, dtype=np.float32)
             
         with self._get_conn() as conn:
             with conn.cursor() as cur:
@@ -211,7 +216,7 @@ class PgVectorClient:
                         metadata = EXCLUDED.metadata,
                         updated_at = CURRENT_TIMESTAMP;
                     """,
-                    (external_id, speaker_id, speaker_label, embedding, video_id,
+                    (external_id, speaker_id, speaker_label, embedding_array, video_id,
                      diarization_run_id, start_time, end_time, json.dumps(metadata))
                 )
                 conn.commit()
@@ -320,7 +325,7 @@ class PgVectorClient:
                         AVG(embedding <=> %s::vector) as avg_dist,
                         COUNT(*) as num_embeddings
                     FROM speaker_embeddings
-                    WHERE speaker_id != 'UNKNOWN'
+                    WHERE speaker_id IS NOT NULL
                     GROUP BY speaker_id
                     ORDER BY avg_dist ASC
                     LIMIT %s
@@ -426,3 +431,151 @@ class PgVectorClient:
                     ORDER BY cnt DESC
                 """)
                 return cur.fetchall()
+
+    def get_embeddings_by_run(
+        self, 
+        diarization_run_id: str,
+        speaker_id: str = None,
+        only_unlabeled: bool = False,
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all embeddings for a diarization run.
+        
+        Used for clustering unknown segments to discover likely same-speaker groups.
+        
+        Args:
+            diarization_run_id: UUID of the diarization run
+            speaker_id: Optional - filter to specific speaker (or None for unlabeled)
+            only_unlabeled: If True, only return embeddings where speaker_id IS NULL
+            
+        Returns:
+            List of dicts with external_id, embedding, speaker_id, speaker_label, 
+            start_time, end_time, metadata
+        """
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                query = """
+                    SELECT external_id, embedding, speaker_id, speaker_label, 
+                           start_time, end_time, metadata
+                    FROM speaker_embeddings 
+                    WHERE diarization_run_id = %s
+                """
+                params = [diarization_run_id]
+                
+                if only_unlabeled:
+                    query += " AND (speaker_id IS NULL OR speaker_id = '')"
+                elif speaker_id is not None:
+                    query += " AND speaker_id = %s"
+                    params.append(speaker_id)
+                
+                query += " ORDER BY start_time"
+                
+                cur.execute(query, params)
+                rows = cur.fetchall()
+                
+                return [
+                    {
+                        "external_id": str(row[0]),
+                        "embedding": list(row[1]) if row[1] is not None else None,
+                        "speaker_id": row[2],
+                        "speaker_label": row[3],
+                        "start_time": row[4],
+                        "end_time": row[5],
+                        "metadata": row[6]
+                    }
+                    for row in rows
+                ]
+
+    def update_cluster_assignments(
+        self, 
+        cluster_run_id: str,
+        cluster_assignments: Dict[str, int]
+    ):
+        """
+        Update cluster assignments for multiple embeddings.
+        
+        Called after HDBSCAN clustering to persist cluster IDs.
+        
+        Args:
+            cluster_run_id: UUID identifying this clustering run
+            cluster_assignments: Dict mapping external_id -> cluster_id
+                                 (cluster_id = -1 for noise)
+        """
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                for external_id, cluster_id in cluster_assignments.items():
+                    cur.execute(
+                        """
+                        UPDATE speaker_embeddings 
+                        SET cluster_id = %s, cluster_run_id = %s, updated_at = CURRENT_TIMESTAMP 
+                        WHERE external_id = %s
+                        """,
+                        (cluster_id, cluster_run_id, external_id)
+                    )
+                conn.commit()
+
+    def bulk_update_speaker_id(
+        self, 
+        external_ids: List[str], 
+        new_speaker_id: str
+    ) -> int:
+        """
+        Update speaker_id for multiple embeddings at once.
+        
+        Used for bulk confirmation of clusters.
+        
+        Args:
+            external_ids: List of segment UUIDs to update
+            new_speaker_id: New speaker name to assign
+            
+        Returns:
+            Number of rows updated
+        """
+        if not external_ids:
+            return 0
+            
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                # Use ANY for efficient bulk update
+                cur.execute(
+                    """
+                    UPDATE speaker_embeddings 
+                    SET speaker_id = %s, updated_at = CURRENT_TIMESTAMP 
+                    WHERE external_id = ANY(%s)
+                    """,
+                    (new_speaker_id, external_ids)
+                )
+                updated = cur.rowcount
+                conn.commit()
+                return updated
+
+    def get_cluster_assignments(
+        self, 
+        diarization_run_id: str,
+        cluster_run_id: str = None
+    ) -> Dict[str, int]:
+        """
+        Get cluster assignments for a diarization run.
+        
+        Args:
+            diarization_run_id: UUID of the diarization run
+            cluster_run_id: Optional - filter to specific clustering run
+            
+        Returns:
+            Dict mapping external_id -> cluster_id
+        """
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                query = """
+                    SELECT external_id, cluster_id
+                    FROM speaker_embeddings 
+                    WHERE diarization_run_id = %s AND cluster_id IS NOT NULL
+                """
+                params = [diarization_run_id]
+                
+                if cluster_run_id:
+                    query += " AND cluster_run_id = %s"
+                    params.append(cluster_run_id)
+                
+                cur.execute(query, params)
+                return {str(row[0]): row[1] for row in cur.fetchall()}

@@ -391,7 +391,7 @@ def run_ingest(config: IngestConfig) -> None:
             # Create synthetic diarization segments from Whisper transcription
             logger.info(f"   🔄 Creating synthetic segments from Whisper transcription...")
             with track_run(input_duration_seconds=cache_end_time) as diarization_metrics:
-                segments, stats = _create_synthetic_diarization_segments(transcription_result)
+                segments, stats = _create_synthetic_diarization_segments(transcription_result, audio_path)
             
             logger.info(f"   ⏱️ Synthetic segments created in {diarization_metrics.processing_time_seconds:.2f}s")
         else:
@@ -671,6 +671,71 @@ def run_ingest(config: IngestConfig) -> None:
             if segments_to_save:
                 segs_result = instant_client.save_diarization_segments(diar_run_id, segments_to_save)
                 logger.info(f"   ✅ Segments saved: {segs_result.get('count', 0)} segments")
+                
+                # Get the saved segment IDs from the response
+                saved_segment_ids = segs_result.get('segment_ids', [])
+                
+                # Save embeddings to PostgreSQL if segments have embeddings
+                segments_with_embeddings = [
+                    (seg, seg_id)
+                    for seg, seg_id in zip(segments, saved_segment_ids)
+                    if seg.get('embedding') is not None
+                ]
+                
+                if segments_with_embeddings:
+                    logger.info(f"   🔄 Saving {len(segments_with_embeddings)} embeddings to PostgreSQL...")
+                    
+                    # Initialize PgVectorClient if not already done
+                    if pg_client is None:
+                        from src.embeddings.pgvector_client import PgVectorClient
+                        pg_dsn = os.getenv("SPEAKER_DB_DSN") or "postgresql://diarization:diarization_dev@localhost:5433/speaker_embeddings"
+                        pg_client = PgVectorClient(pg_dsn)
+                    
+                    # Get video_id from the result
+                    video_uuid = result.get('video_id')
+                    
+                    embeddings_saved = 0
+                    embedding_ids_to_update = []
+                    
+                    for seg, seg_id in segments_with_embeddings:
+                        try:
+                            # Save embedding to PostgreSQL
+                            # Use speaker_id=None for unknown speakers (not "UNKNOWN" string)
+                            pg_client.add_embedding(
+                                external_id=seg_id,
+                                embedding=seg['embedding'],
+                                speaker_id=None,  # NULL for unknown speakers
+                                speaker_label=seg.get('speaker', 'UNKNOWN'),
+                                video_id=video_uuid,
+                                diarization_run_id=diar_run_id,
+                                start_time=seg.get('start'),
+                                end_time=seg.get('end'),
+                                metadata={
+                                    "source": seg.get('source', 'whisper_transcription'),
+                                    "transcription_segment_index": seg.get('transcription_segment_index'),
+                                }
+                            )
+                            embeddings_saved += 1
+                            
+                            # Track segment_id -> embedding_id mapping for InstantDB update
+                            # In our schema, external_id IS the segment_id, so embedding_id = segment_id
+                            embedding_ids_to_update.append({
+                                "segment_id": seg_id,
+                                "embedding_id": seg_id,  # Same as segment_id since we use external_id
+                            })
+                        except Exception as e:
+                            logger.warning(f"   ⚠️ Failed to save embedding for segment {seg_id[:8]}...: {e}")
+                    
+                    logger.info(f"   ✅ Saved {embeddings_saved}/{len(segments_with_embeddings)} embeddings to PostgreSQL")
+                    
+                    # Update InstantDB segments with embedding_id
+                    if embedding_ids_to_update:
+                        try:
+                            # Use the instant_client to update embedding_ids
+                            update_result = instant_client.update_segment_embedding_ids(embedding_ids_to_update)
+                            logger.info(f"   ✅ Updated {update_result.get('count', 0)} segments with embedding_ids")
+                        except Exception as e:
+                            logger.warning(f"   ⚠️ Failed to update embedding_ids in InstantDB: {e}")
             
             logger.info(f"   ✅ Diarization run: {diar_run_id[:8]}... (metrics: {diar_metrics.get('processing_time_seconds', 0):.2f}s, {diar_metrics.get('peak_memory_mb', 0):.1f}MB)")
         
@@ -978,6 +1043,7 @@ def _get_or_create_transcription(
 
 def _create_synthetic_diarization_segments(
     transcription_result: TranscriptionResult,
+    audio_path: Path = None,
 ) -> tuple[list[dict], dict]:
     """
     Create synthetic diarization segments from Whisper transcription segments.
@@ -989,22 +1055,57 @@ def _create_synthetic_diarization_segments(
     - speaker_label = "UNKNOWN" (to be identified later)
     - start_time, end_time from the transcription segment
     - text from the transcription segment
+    - embedding: 512-dim voice embedding extracted from the audio segment
     
     Args:
         transcription_result: TranscriptionResult from Whisper
+        audio_path: Path to the audio file for embedding extraction
         
     Returns:
         Tuple of (segments, stats) where:
-        - segments: List of diarization segment dicts
+        - segments: List of diarization segment dicts (with embeddings if audio_path provided)
         - stats: Dict with statistics about the synthetic segments
     """
     segments = []
+    
+    # Initialize embedding extractor if audio_path is provided
+    extractor = None
+    if audio_path is not None:
+        try:
+            from src.embeddings.pyannote_extractor import PyAnnoteEmbeddingExtractor
+            extractor = PyAnnoteEmbeddingExtractor()
+            logger.info(f"   🎤 Initialized PyAnnote embedding extractor")
+        except Exception as e:
+            logger.warning(f"   ⚠️ Failed to initialize embedding extractor: {e}")
+    
+    total_segments = len(transcription_result.segments)
+    embeddings_extracted = 0
+    embeddings_failed = 0
     
     for idx, seg in enumerate(transcription_result.segments):
         # Get segment timing
         start = seg.start if hasattr(seg, 'start') else seg.get('start', 0)
         end = seg.end if hasattr(seg, 'end') else seg.get('end', 0)
         text = seg.text if hasattr(seg, 'text') else seg.get('text', '')
+        
+        # Extract embedding if extractor is available
+        embedding = None
+        if extractor is not None and audio_path is not None:
+            logger.info(f"   🔊 Extracting embedding {idx + 1}/{total_segments}...")
+            try:
+                embedding_np = extractor.extract_embedding(
+                    audio_path=str(audio_path),
+                    start_time=float(start),
+                    end_time=float(end),
+                )
+                if embedding_np is not None:
+                    embedding = embedding_np.tolist()
+                    embeddings_extracted += 1
+                else:
+                    embeddings_failed += 1
+            except Exception as e:
+                logger.warning(f"   ⚠️ Failed to extract embedding for segment {idx}: {e}")
+                embeddings_failed += 1
         
         # Create synthetic diarization segment
         segments.append({
@@ -1015,6 +1116,7 @@ def _create_synthetic_diarization_segments(
             "confidence": None,  # No confidence for synthetic segments
             "source": "whisper_transcription",  # Mark the source
             "transcription_segment_index": idx,
+            "embedding": embedding,  # 512-dim embedding or None
         })
     
     # Calculate stats
@@ -1027,7 +1129,12 @@ def _create_synthetic_diarization_segments(
         "avg_segment_duration": avg_duration,
         "source": "whisper_transcription",
         "workflow": "whisper_identified",
+        "embeddings_extracted": embeddings_extracted,
+        "embeddings_failed": embeddings_failed,
     }
+    
+    if extractor is not None:
+        logger.info(f"   ✅ Extracted {embeddings_extracted}/{total_segments} embeddings ({embeddings_failed} failed)")
     
     return segments, stats
 

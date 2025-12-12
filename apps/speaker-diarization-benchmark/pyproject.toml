@@ -36,6 +36,7 @@ dependencies = [
     "lightning>=2.6.0",
     "psycopg[binary]>=3.0.0",
     "pgvector>=0.4.2",
+    "hdbscan>=0.8.40",
 ]
 
 [project.optional-dependencies]

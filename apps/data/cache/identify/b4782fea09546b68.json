@@ -1,0 +1,758 @@
+{
+  "video_id": "jAlKYYr1bpY",
+  "run_id": null,
+  "start_time": null,
+  "end_time": 30.0,
+  "threshold": 0.5,
+  "top_k": 5,
+  "timestamp": "2025-12-09T02:56:10.437775",
+  "cache_key": "b4782fea09546b68",
+  "results": [
+    {
+      "segment_id": "3c4f14a8-97a6-4f17-b8fd-745851d76da7",
+      "segment_start": 0.0,
+      "segment_end": 1.46,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "MSSP Theme Music",
+      "speaker_id": null,
+      "distance": 0.004471197668851623,
+      "top_matches": [
+        {
+          "speaker": "MSSP Theme Music",
+          "external_id": "8e7abd1a-a677-5318-b0e4-6dcc4b03e907",
+          "distance": 0.004471197668851623
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "d0ac155c-258d-5f10-8885-6aaf03371584",
+          "distance": 0.7927520789467224
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "a3c79c5b-290e-55b8-ba50-2f0eb1208ad9",
+          "distance": 0.8188850475894447
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "63a489c8-aea0-50c3-9273-fdf7738917b8",
+          "distance": 0.8208133129737825
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "daa3292e-c952-54b2-8199-496582dd9f48",
+          "distance": 0.8298731684085461
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "93959708-c188-4f83-af3c-dcf9b392f097",
+      "segment_start": 1.82,
+      "segment_end": 2.38,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Shane Gillis",
+      "speaker_id": null,
+      "distance": 0.004518486850959014,
+      "top_matches": [
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "4f912562-f498-59ab-844b-d84968029712",
+          "distance": 0.004518486850959014
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "59914122-18a5-5ca8-8bad-d876146da318",
+          "distance": 0.6228216560759491
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "c0f1c512-b2c2-550e-b864-1aefb702bc31",
+          "distance": 0.6674282966016116
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "05ee8ed3-c5e4-5ce1-86ed-be9c5d753532",
+          "distance": 0.681007318866825
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "cd7c2b1d-b35c-53a8-8dd8-2d7d40175210",
+          "distance": 0.6859281690968742
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "245683ef-3eda-4c94-87df-36afe026d8d2",
+      "segment_start": 2.58,
+      "segment_end": 2.92,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Shane Gillis",
+      "speaker_id": null,
+      "distance": 0.001924119202546204,
+      "top_matches": [
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "550bdfdd-ac96-5c45-82c4-07817db6a570",
+          "distance": 0.001924119202546204
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "6b768add-b964-5aab-902f-b9946c0cc187",
+          "distance": 0.7840617377923453
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "442815d3-7cf7-5365-ade0-7875cfb0253a",
+          "distance": 0.7924805615813763
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "7fc9afe2-b112-5641-a6cb-ad95350f82c5",
+          "distance": 0.7930595624325689
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "83038d9e-4d4d-5c22-a231-100a9d9f4468",
+          "distance": 0.7978934349784184
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "4e3cf2d1-320a-4e2c-a40f-9e47e72d4486",
+      "segment_start": 3.3000000000000007,
+      "segment_end": 4.18,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Joe DeRosa",
+      "speaker_id": null,
+      "distance": 0.007649959574388299,
+      "top_matches": [
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "0bfc15e4-016c-51f8-b833-e8f25c39046b",
+          "distance": 0.007649959574388299
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "71ceb5eb-e25d-5811-999a-61ef17366ffa",
+          "distance": 0.8135011738971692
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "0de832f1-283a-56cd-b70c-35aef04585bc",
+          "distance": 0.8367100544339829
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "296ba7cb-a0e9-52c4-b6bf-6d85874af68d",
+          "distance": 0.8516171434819144
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "65abe51d-b934-533a-83ba-27fdda476c56",
+          "distance": 0.8582797019820362
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "1f750456-48a8-486f-b573-a91402f9ea09",
+      "segment_start": 4.3,
+      "segment_end": 5.5,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Matt McCusker",
+      "speaker_id": null,
+      "distance": 0.001750531203085437,
+      "top_matches": [
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "190d9dda-10c3-53b9-bb9f-4c82bc71ca60",
+          "distance": 0.001750531203085437
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "73cbb387-54ee-5b0c-8237-27d0a8f294cf",
+          "distance": 0.6431278517785857
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "1231c0a0-603c-5ca7-95ea-2dc4858a9bad",
+          "distance": 0.64856160071525
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "48fa090b-42ea-5a42-a23f-5b044395d537",
+          "distance": 0.6905461501171194
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "4d7037b8-f96e-51d1-881e-520a8bbd84d9",
+          "distance": 0.7152381883017478
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "e29bd7e6-e21d-46b9-8bba-fa62cabfd748",
+      "segment_start": 5.78,
+      "segment_end": 5.94,
+      "original_label": "UNKNOWN",
+      "identified_speaker": null,
+      "speaker_id": null,
+      "distance": null,
+      "top_matches": [],
+      "status": "skipped",
+      "reason": "no embedding available"
+    },
+    {
+      "segment_id": "a4700e45-8e8f-40af-af46-5629b7f6d75a",
+      "segment_start": 6.06,
+      "segment_end": 6.92,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Matt McCusker",
+      "speaker_id": null,
+      "distance": 0.009640008378012044,
+      "top_matches": [
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "685420be-153e-55a1-a2f9-d2e72f15b98f",
+          "distance": 0.009640008378012044
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "48fa090b-42ea-5a42-a23f-5b044395d537",
+          "distance": 0.6294738840685201
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "73cbb387-54ee-5b0c-8237-27d0a8f294cf",
+          "distance": 0.6928797054503011
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "1231c0a0-603c-5ca7-95ea-2dc4858a9bad",
+          "distance": 0.7056210473232732
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "4245473c-5cfe-5ac1-b2ec-b8239fea1094",
+          "distance": 0.7066564694938775
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "94eec0b5-ec4c-4119-9e84-c399b34cd1ac",
+      "segment_start": 7.04,
+      "segment_end": 7.84,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Matt McCusker",
+      "speaker_id": null,
+      "distance": 0.007767445984170451,
+      "top_matches": [
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "1f376f22-1725-5095-8c9b-1846486b03b8",
+          "distance": 0.007767445984170451
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "4245473c-5cfe-5ac1-b2ec-b8239fea1094",
+          "distance": 0.6887813323904566
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "73cbb387-54ee-5b0c-8237-27d0a8f294cf",
+          "distance": 0.6894068533303402
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "ea877a30-8320-56b1-a10b-ca4fa0211df9",
+          "distance": 0.7203380687502974
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "1231c0a0-603c-5ca7-95ea-2dc4858a9bad",
+          "distance": 0.7343473548975563
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "6ce32e2a-b71b-4e8f-8789-ecb92df9fed8",
+      "segment_start": 8.42,
+      "segment_end": 10.14,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Joe DeRosa",
+      "speaker_id": null,
+      "distance": 0.0025282773020640636,
+      "top_matches": [
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "f5017a12-31b8-5c60-8d84-f8ed62dbcaf0",
+          "distance": 0.0025282773020640636
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "0de832f1-283a-56cd-b70c-35aef04585bc",
+          "distance": 0.7450807139431002
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "d8b679af-728b-54ff-8c57-3724e0494b79",
+          "distance": 0.7517047885723753
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "1018773e-ca6b-59f4-b0e8-d01f907a6ff7",
+          "distance": 0.7900074680666997
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "296ba7cb-a0e9-52c4-b6bf-6d85874af68d",
+          "distance": 0.8015706176803254
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "e7680314-b7c2-4459-a7f8-d50bccd34ade",
+      "segment_start": 10.76,
+      "segment_end": 11.18,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Shane Gillis",
+      "speaker_id": null,
+      "distance": 0.0043449685019365525,
+      "top_matches": [
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "7ac0c105-15bb-5204-9467-0d731b33aa98",
+          "distance": 0.0043449685019365525
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "7a34ccf6-1172-5555-8eff-9dde178427d0",
+          "distance": 0.8315710135279608
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "a2b6a6c9-dbaa-520f-84d2-287e6e4574f5",
+          "distance": 0.8479462913538218
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "f5017a12-31b8-5c60-8d84-f8ed62dbcaf0",
+          "distance": 0.8606577103868434
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "7c89150f-dd1e-5856-89c2-6afe9e11c0d3",
+          "distance": 0.873632923185038
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "97c220c4-ff6e-4289-8741-336cafa1a4e3",
+      "segment_start": 11.18,
+      "segment_end": 11.92,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Joe DeRosa",
+      "speaker_id": null,
+      "distance": 0.0030802706384088774,
+      "top_matches": [
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "d5c18a96-dc9d-5fd9-9647-379cb787968f",
+          "distance": 0.0030802706384088774
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "19281f81-fb17-526d-aa17-7225d45d0852",
+          "distance": 0.7904304300113929
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "38519b61-e8b5-5e84-a19e-096d0d4f925c",
+          "distance": 0.7933242244099025
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "86b160d9-66f2-528d-b51c-2b25679997f3",
+          "distance": 0.8183827681714064
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "d8b679af-728b-54ff-8c57-3724e0494b79",
+          "distance": 0.8228419405647512
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "a781a1cd-9526-4303-ba5a-59ad92d25b59",
+      "segment_start": 12.22,
+      "segment_end": 13.84,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Shane Gillis",
+      "speaker_id": null,
+      "distance": 0.0031512298809905914,
+      "top_matches": [
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "7c89150f-dd1e-5856-89c2-6afe9e11c0d3",
+          "distance": 0.0031512298809905914
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "b0c040d7-b108-5b16-afab-2af726687766",
+          "distance": 0.7396821553844725
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "48e95d03-0085-5b17-b0ea-2065dbb0415f",
+          "distance": 0.7424213557737462
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "cee11796-f267-5b82-a425-ca345c7f1e75",
+          "distance": 0.7549320539658301
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "c0f1c512-b2c2-550e-b864-1aefb702bc31",
+          "distance": 0.7667223536145847
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "9d48c25f-d496-4f15-b3d7-c3fa4ba72475",
+      "segment_start": 13.98,
+      "segment_end": 14.92,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Joe DeRosa",
+      "speaker_id": null,
+      "distance": 0.002361938081253623,
+      "top_matches": [
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "3b92bdd9-20b2-5cac-b874-81a6b76b7c6f",
+          "distance": 0.002361938081253623
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "0de832f1-283a-56cd-b70c-35aef04585bc",
+          "distance": 0.6908622018020396
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "d24e7330-366b-5412-a37f-b42ff9dc4603",
+          "distance": 0.7678671543343314
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "64df0d9b-13c3-540e-8ea9-237a8e4272cf",
+          "distance": 0.8544324463394617
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "4d7037b8-f96e-51d1-881e-520a8bbd84d9",
+          "distance": 0.8586127934180785
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "cf7ebe78-818e-4a8d-bbaa-6a16cff36547",
+      "segment_start": 15.16,
+      "segment_end": 16.92,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Shane Gillis",
+      "speaker_id": null,
+      "distance": 0.002471802095860398,
+      "top_matches": [
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "c0f1c512-b2c2-550e-b864-1aefb702bc31",
+          "distance": 0.002471802095860398
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "ab9f4d2a-0301-5f10-af77-c09b32c2196d",
+          "distance": 0.48676480967796043
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "59914122-18a5-5ca8-8bad-d876146da318",
+          "distance": 0.49009549049951495
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "50b27142-f623-5734-9391-e21e963d69ec",
+          "distance": 0.5505019335942166
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "1c9d869f-4d8b-5d6e-8d59-a57fdaad9219",
+          "distance": 0.5686938913556654
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "37fea165-3398-4818-858c-15baeb0bd449",
+      "segment_start": 17.08,
+      "segment_end": 17.36,
+      "original_label": "UNKNOWN",
+      "identified_speaker": null,
+      "speaker_id": null,
+      "distance": null,
+      "top_matches": [],
+      "status": "skipped",
+      "reason": "no embedding available"
+    },
+    {
+      "segment_id": "ce033fd8-477d-45b8-8059-9f5b438efe46",
+      "segment_start": 17.76,
+      "segment_end": 19.66,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Shane Gillis",
+      "speaker_id": null,
+      "distance": 0.002673156927604614,
+      "top_matches": [
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "ff5a5d97-60c6-55d2-8dc2-cc8cbff53cb3",
+          "distance": 0.002673156927604614
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "50b27142-f623-5734-9391-e21e963d69ec",
+          "distance": 0.48637678935183926
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "44e4fdda-dd8e-50b7-9206-129576ea56b9",
+          "distance": 0.5140827887961773
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "ab9f4d2a-0301-5f10-af77-c09b32c2196d",
+          "distance": 0.5189955059211884
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "c0f1c512-b2c2-550e-b864-1aefb702bc31",
+          "distance": 0.5741877329564272
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "53aeaeaf-698a-4a29-abff-395a66631750",
+      "segment_start": 20.18,
+      "segment_end": 21.94,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Joe DeRosa",
+      "speaker_id": null,
+      "distance": 0.0020289908878283747,
+      "top_matches": [
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "b7a7fe6a-22e9-5c3f-bf84-357e3b4a5bc0",
+          "distance": 0.0020289908878283747
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "2c1dd1d9-47b9-5d83-96a1-fc9933889872",
+          "distance": 0.6684094491630721
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "50b27142-f623-5734-9391-e21e963d69ec",
+          "distance": 0.6923837332609382
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "bedd74ce-a438-54c6-8513-02171c33e31a",
+          "distance": 0.6926065923241986
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "e3306f09-2451-5c8e-833c-90607a20dd93",
+          "distance": 0.6997271333587095
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "a3b66723-ef8b-4529-82bb-c2fd9de991bc",
+      "segment_start": 22.16,
+      "segment_end": 24.98,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Joe DeRosa",
+      "speaker_id": null,
+      "distance": 0.026559126930868704,
+      "top_matches": [
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "0de832f1-283a-56cd-b70c-35aef04585bc",
+          "distance": 0.026559126930868704
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "3b92bdd9-20b2-5cac-b874-81a6b76b7c6f",
+          "distance": 0.7242853955387399
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "a55967ec-cc1f-5afc-a2ef-8c5f2eb1548a",
+          "distance": 0.7606523318823372
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "f5017a12-31b8-5c60-8d84-f8ed62dbcaf0",
+          "distance": 0.7648421283716709
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "594d34ac-8eef-5b59-a736-4e15261bf68d",
+          "distance": 0.7747886496517109
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "aa8c59e5-0e72-4959-9b98-1db0ea59d67d",
+      "segment_start": 25.7,
+      "segment_end": 26.9,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Joe DeRosa",
+      "speaker_id": null,
+      "distance": 0.00468343240269542,
+      "top_matches": [
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "594d34ac-8eef-5b59-a736-4e15261bf68d",
+          "distance": 0.00468343240269542
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "b7a7fe6a-22e9-5c3f-bf84-357e3b4a5bc0",
+          "distance": 0.7319248982240442
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "50b27142-f623-5734-9391-e21e963d69ec",
+          "distance": 0.7382741531293753
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "0de832f1-283a-56cd-b70c-35aef04585bc",
+          "distance": 0.7685303872654791
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "f016a3a5-30fd-5db9-819b-0a7468ee7a0e",
+          "distance": 0.7764246658343921
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "91161e3e-4312-4868-9c56-e9293823114d",
+      "segment_start": 26.9,
+      "segment_end": 27.94,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Matt McCusker",
+      "speaker_id": null,
+      "distance": 0.0028262596923050998,
+      "top_matches": [
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "d8b679af-728b-54ff-8c57-3724e0494b79",
+          "distance": 0.0028262596923050998
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "1231c0a0-603c-5ca7-95ea-2dc4858a9bad",
+          "distance": 0.6304290869613074
+        },
+        {
+          "speaker": "Joe DeRosa",
+          "external_id": "4d7037b8-f96e-51d1-881e-520a8bbd84d9",
+          "distance": 0.7055907613254122
+        },
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "190d9dda-10c3-53b9-bb9f-4c82bc71ca60",
+          "distance": 0.7310666649042453
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "f016a3a5-30fd-5db9-819b-0a7468ee7a0e",
+          "distance": 0.7317012991605878
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    },
+    {
+      "segment_id": "3ddf3173-d38f-41c7-9bb0-ddd8ec443c5e",
+      "segment_start": 29.640000000000004,
+      "segment_end": 30.12,
+      "original_label": "UNKNOWN",
+      "identified_speaker": "Matt McCusker",
+      "speaker_id": null,
+      "distance": 0.007339586053288105,
+      "top_matches": [
+        {
+          "speaker": "Matt McCusker",
+          "external_id": "5505ec97-0ae4-5387-b4f5-3c7565949911",
+          "distance": 0.007339586053288105
+        },
+        {
+          "speaker": "MSSP Mannequin Prank Call Lady",
+          "external_id": "18ba2ff2-270b-50b7-9927-00fd1349cbcf",
+          "distance": 0.8212356608566753
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "b5249b97-804d-560c-8b1e-5a5c090930d3",
+          "distance": 0.8331478117695701
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "a4657ce8-a4b6-5557-9e33-63a380b1b08d",
+          "distance": 0.8657916599979525
+        },
+        {
+          "speaker": "Shane Gillis",
+          "external_id": "4c7f770e-74cf-5108-99ce-5c8461d382e2",
+          "distance": 0.8730246239813109
+        }
+      ],
+      "status": "identified",
+      "reason": null
+    }
+  ]
+}

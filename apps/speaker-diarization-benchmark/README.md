@@ -58,6 +58,64 @@ A comprehensive system for speaker diarization, identification, and transcriptio
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+## 🎤 Embedding Workflow
+
+The system extracts voice embeddings for **ALL** diarization segments, regardless of whether the speaker is known:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         EMBEDDING EXTRACTION FLOW                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. DIARIZATION (PyAnnote or Whisper boundaries)                            │
+│     └── Creates DiarizationSegments in InstantDB                            │
+│                                                                              │
+│  2. EMBEDDING EXTRACTION (for ALL segments)                                 │
+│     └── PyAnnote extracts 512-dim voice embedding                           │
+│     └── Saved to PostgreSQL with:                                           │
+│         • external_id = segment.id (CRITICAL: must match!)                  │
+│         • speaker_id = NULL (unknown) or speaker name (confirmed)           │
+│         • speaker_label = original diarization label (e.g., "SPEAKER_0")    │
+│                                                                              │
+│  3. IDENTIFICATION (KNN search)                                             │
+│     └── Compares embedding against known speakers                           │
+│     └── Creates SpeakerAssignment in InstantDB                              │
+│     └── Does NOT update PostgreSQL speaker_id (still NULL)                  │
+│                                                                              │
+│  4. CONFIRMATION (Ground Truth UI)                                          │
+│     └── User confirms or corrects speaker assignment                        │
+│     └── Updates PostgreSQL speaker_id to confirmed speaker name             │
+│     └── Embedding now included in future KNN searches                       │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Design Decisions
+
+| Decision                            | Rationale                                   |
+| ----------------------------------- | ------------------------------------------- |
+| Extract embeddings for ALL segments | Enables clustering of unknown speakers      |
+| Use `speaker_id = NULL` for unknown | Single table design, easy filtering         |
+| `external_id` = segment `id`        | Critical for linking InstantDB ↔ PostgreSQL |
+| Preserve `speaker_label`            | Original diarization label for reference    |
+
+### Clustering Unknown Segments
+
+When segments have embeddings but no confirmed speaker, HDBSCAN clustering groups similar voices:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         CLUSTERING WORKFLOW                                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. Query PostgreSQL for embeddings where speaker_id IS NULL                │
+│  2. Run HDBSCAN clustering (cosine metric, leaf method)                     │
+│  3. Display clusters in Ground Truth UI                                     │
+│  4. User bulk-confirms clusters → Updates speaker_id for all in cluster     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
 ## 🤔 Why This Architecture?
 
 ### Why Two Databases?

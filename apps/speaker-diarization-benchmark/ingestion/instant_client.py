@@ -402,6 +402,28 @@ class InstantClient:
         )
         resp.raise_for_status()
         return resp.json()
+    
+    def update_segment_embedding_ids(
+        self,
+        updates: List[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        """
+        Update embedding_ids for diarization segments in batch.
+        
+        Args:
+            updates: List of dicts with keys:
+                - segment_id: ID of the diarization segment
+                - embedding_id: ID of the embedding in PostgreSQL
+        
+        Returns:
+            Dict with success status and count
+        """
+        resp = requests.put(
+            f"{self.base_url}/diarization-segments/embedding-ids",
+            json={"updates": updates}
+        )
+        resp.raise_for_status()
+        return resp.json()
 
 
 if __name__ == "__main__":

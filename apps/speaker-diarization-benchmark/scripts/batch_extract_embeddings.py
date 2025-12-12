@@ -240,12 +240,13 @@ def extract_and_save_embedding(
         if verbose:
             print(f"  🎤 Extracted embedding in {(t_extract - t_start)*1000:.0f}ms")
         
-        # Generate embedding ID
-        embedding_id = str(uuid.uuid4())
+        # Use segment_id as external_id in PostgreSQL
+        # This ensures the embedding can be looked up by segment ID
+        # and that clustering results use the correct segment IDs
         
         # Save to PostgreSQL
         pg_client.add_embedding(
-            external_id=embedding_id,
+            external_id=segment_id,  # Use segment_id, not a new UUID!
             embedding=embedding,
             speaker_id=speaker_name,  # Can be None
             speaker_label=speaker_label,
@@ -259,9 +260,10 @@ def extract_and_save_embedding(
         if verbose:
             print(f"  💾 Saved to PostgreSQL in {(t_save - t_extract)*1000:.0f}ms")
         
-        # Update InstantDB segment with embedding_id
+        # Update InstantDB segment with embedding_id (same as segment_id)
+        # This creates a 1:1 mapping between segment and embedding
         repo._transact([
-            ["update", "diarizationSegments", segment_id, {"embedding_id": embedding_id}]
+            ["update", "diarizationSegments", segment_id, {"embedding_id": segment_id}]
         ])
         t_update = time.time()
         

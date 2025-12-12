@@ -2,7 +2,7 @@
 
 **Created**: December 9, 2025
 **Authors**: Claude AI, User
-**Status**: Phase 1 ✅ Complete | Phase 2 ✅ Complete | Phase 3 ✅ Complete
+**Status**: Phase 1 ✅ Complete | Phase 2 ✅ Complete | Phase 3 ✅ Complete | Phase 4 ✅ Complete
 
 ---
 
@@ -16,6 +16,7 @@
 6. [Technical Specifications](#technical-specifications)
 7. [Docker Configuration](#docker-configuration)
 8. [Testing Strategy](#testing-strategy)
+9. [Embedding Extraction & ID Alignment](#embedding-extraction--id-alignment)
 
 ---
 
@@ -279,6 +280,9 @@ Delete any speaker entity named "UNKNOWN" from InstantDB.
 ```
 
 ### Phase 2: Whisper Segmentation Support ✅ COMPLETE
+
+> **Note**: Phase 2 also includes HDBSCAN clustering for unknown segments.
+> See [Embedding Extraction & ID Alignment](#embedding-extraction--id-alignment) for details.
 
 #### 2.1 Add `--segment-source` Flag ✅
 
@@ -783,3 +787,108 @@ open http://localhost:8000/data/clips/ground_truth_instant.html
 | `packages/schema/instant.schema.ts`               | Update | Add synthetic segments documentation |
 | `scripts/migrations/delete_unknown_speakers.py`   | Create | Remove UNKNOWN speaker               |
 | `scripts/verification/verify_speaker_workflow.py` | Create | Verification tests                   |
+
+---
+
+## Embedding Extraction & ID Alignment
+
+### Phase 4: Embedding Workflow Improvements ✅ COMPLETE
+
+**Date**: December 10, 2025
+
+This phase addressed critical issues with embedding extraction and ID alignment between InstantDB and PostgreSQL.
+
+### Key Discoveries
+
+#### 1. Embeddings ARE Extracted for ALL Segments
+
+The [`_create_synthetic_diarization_segments()`](../audio_ingestion.py:1044-1139) function already extracts embeddings for every transcription segment, regardless of speaker identification:
+
+```python
+# audio_ingestion.py:1091-1108
+if extractor is not None and audio_path is not None:
+    embedding_np = extractor.extract_embedding(
+        audio_path=str(audio_path),
+        start_time=float(start),
+        end_time=float(end),
+    )
+    if embedding_np is not None:
+        embedding = embedding_np.tolist()
+```
+
+#### 2. PostgreSQL Storage Design
+
+Embeddings are stored with:
+
+- `speaker_id = NULL` for unknown/unconfirmed speakers
+- `speaker_label` stores the diarization label (e.g., "SPEAKER_0", "UNKNOWN")
+- No need for two tables - single table with NULL/non-NULL speaker_id works well
+
+#### 3. Critical ID Alignment Issue (FIXED)
+
+**Problem**: The `batch_extract_embeddings.py` script was generating **new UUIDs** for embeddings instead of using the **segment ID** from InstantDB:
+
+```python
+# BUG: Was generating new UUID
+embedding_id = str(uuid.uuid4())
+pg_client.add_embedding(external_id=embedding_id, ...)  # Wrong!
+
+# FIXED: Use segment_id
+pg_client.add_embedding(external_id=segment_id, ...)  # Correct!
+```
+
+This caused a mismatch:
+
+- PostgreSQL `external_id` = random UUID (e.g., `6be3c5be-...`)
+- InstantDB `segment.id` = different UUID (e.g., `7ba648a7-...`)
+- InstantDB `segment.embedding_id` = points to PostgreSQL's random UUID
+
+When clustering returned `external_id` values and bulk confirm tried to link speaker assignments to those IDs, InstantDB couldn't find segments with those IDs.
+
+**Solution**:
+
+1. Fixed `batch_extract_embeddings.py` to use `segment_id` as `external_id`
+2. Created migration script `fix_embedding_external_ids.py` to fix existing data
+3. Updated schema documentation to clarify the ID alignment requirement
+
+### Files Modified
+
+| File                                                                                   | Change                                   |
+| -------------------------------------------------------------------------------------- | ---------------------------------------- |
+| [`batch_extract_embeddings.py`](../scripts/batch_extract_embeddings.py)                | Use `segment_id` as `external_id`        |
+| [`fix_embedding_external_ids.py`](../scripts/migrations/fix_embedding_external_ids.py) | **NEW** - Migration to fix existing data |
+| [`instant.schema.ts`](../../../packages/schema/instant.schema.ts)                      | Added embedding extraction documentation |
+
+### Correct ID Alignment
+
+After the fix, IDs are properly aligned:
+
+```
+InstantDB segment.id        = "7ba648a7-8647-45e2-9cd3-723b4b2e5adc"
+InstantDB segment.embedding_id = "7ba648a7-8647-45e2-9cd3-723b4b2e5adc"
+PostgreSQL external_id      = "7ba648a7-8647-45e2-9cd3-723b4b2e5adc"
+```
+
+### Clustering Workflow
+
+The HDBSCAN clustering workflow for unknown segments:
+
+1. **User clicks "Cluster Unknown Segments"** in Ground Truth UI
+2. **Server fetches embeddings** where `speaker_id IS NULL` from PostgreSQL
+3. **HDBSCAN clustering** groups similar voice embeddings using cosine distance
+4. **UI displays clusters** with representative segments (clickable to navigate)
+5. **User can bulk-confirm** all segments in a cluster as the same speaker
+6. **Confirmation updates both**:
+   - InstantDB: Creates `speakerAssignment` records
+   - PostgreSQL: Updates `speaker_id` column
+
+### Key Files for Embedding Workflow
+
+| File                                                                    | Purpose                                                            |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [`audio_ingestion.py`](../audio_ingestion.py)                           | Embedding extraction in `_create_synthetic_diarization_segments()` |
+| [`pgvector_client.py`](../src/embeddings/pgvector_client.py)            | PostgreSQL storage with `speaker_id` column                        |
+| [`identify.py`](../ingestion/identify.py)                               | KNN search and speaker identification                              |
+| [`clustering.py`](../ingestion/clustering.py)                           | HDBSCAN clustering for unknown segments                            |
+| [`ground_truth_server.py`](../ingestion/ground_truth_server.py)         | `/cluster` and `/bulk-confirm` endpoints                           |
+| [`batch_extract_embeddings.py`](../scripts/batch_extract_embeddings.py) | Batch extraction for existing segments                             |
