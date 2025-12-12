@@ -26,6 +26,19 @@
 
 ---
 
+### December 12th, 2025 at 12:00:59 p.m.
+
+🚧 Organized and committed WIP changes in semantic batches
+
+[Commit](https://github.com/technoplato/toolshed/commit/ac8a653)
+
+- Audio ingestion: HDBSCAN clustering, pgvector embeddings, migration scripts
+- SpeechRecorderApp: TCA-based iOS app with real-time transcription, README added
+- Documentation: TCA best practices guide, speech recorder audit
+- Infrastructure: Schema updates, new reference submodules (Perth, chatterbox, shazam-kit)
+
+
+
 ### December 11th, 2025 at 5:49:44 a.m.
 
 📝 Comprehensive TCA and Swift Sharing guide updated

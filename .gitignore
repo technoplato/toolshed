@@ -46,6 +46,7 @@ apps/speaker-diarization-benchmark/data/clips/jAlKYYr1bpY.wav
 
 # Audio Files
 *.wav
+*.mp3
 .env.bak
 
 # Local Exploration

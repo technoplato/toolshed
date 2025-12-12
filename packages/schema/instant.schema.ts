@@ -98,13 +98,43 @@
  *
  * =============================================================================
  *
+ * EMBEDDING EXTRACTION STRATEGY:
+ *
+ * Embeddings are extracted for ALL segments, regardless of speaker identification.
+ * This enables:
+ * 1. HDBSCAN clustering to discover unknown speakers
+ * 2. KNN search to identify speakers in new audio
+ * 3. Bulk confirmation of clustered segments
+ *
+ * PostgreSQL Storage (pgvector):
+ * - `external_id`: UUID matching the InstantDB segment ID (CRITICAL for linking)
+ * - `speaker_id`: NULL for unknown/unconfirmed, speaker name for confirmed
+ * - `speaker_label`: Original diarization label (e.g., "SPEAKER_0", "UNKNOWN")
+ * - `embedding`: 512-dimensional vector from PyAnnote
+ *
+ * IMPORTANT: external_id MUST equal the InstantDB segment.id for proper linking.
+ * The batch_extract_embeddings.py script and audio_ingestion.py both use
+ * segment_id as external_id to ensure this alignment.
+ *
  * SPEAKER IDENTIFICATION FLOW:
  *
  * 1. Diarization produces segments with local labels (e.g., "SPEAKER_0")
  * 2. Voice embeddings are extracted and stored in PostgreSQL (pgvector)
- * 3. Embeddings are compared to known speaker centroids
+ *    - speaker_id = NULL (unknown)
+ *    - speaker_label = diarization label
+ * 3. Embeddings are compared to known speaker embeddings via KNN search
  * 4. SpeakerAssignment records link segments to identified speakers
  * 5. Users can correct assignments; history is preserved
+ * 6. When confirmed, PostgreSQL speaker_id is updated to the speaker name
+ *
+ * CLUSTERING WORKFLOW (for unknown segments):
+ *
+ * 1. User clicks "Cluster Unknown Segments" in Ground Truth UI
+ * 2. Server fetches embeddings where speaker_id IS NULL
+ * 3. HDBSCAN clustering groups similar voice embeddings
+ * 4. UI displays clusters with representative segments
+ * 5. User can bulk-confirm all segments in a cluster as the same speaker
+ * 6. Confirmation updates both InstantDB (speakerAssignment) and PostgreSQL (speaker_id)
  *
  * CORRECTION BUSINESS LOGIC:
  *
@@ -718,14 +748,25 @@ const schema = i.schema({
 
       /**
        * Reference to the voice embedding in PostgreSQL (pgvector).
+       *
+       * CRITICAL: This value MUST equal the segment's own `id` field.
+       * The PostgreSQL `external_id` column stores this same value,
+       * enabling proper linking between InstantDB and PostgreSQL.
+       *
+       * Example:
+       *   InstantDB segment.id = "7ba648a7-8647-45e2-9cd3-723b4b2e5adc"
+       *   InstantDB segment.embedding_id = "7ba648a7-8647-45e2-9cd3-723b4b2e5adc"
+       *   PostgreSQL external_id = "7ba648a7-8647-45e2-9cd3-723b4b2e5adc"
+       *
        * NULL if:
        * - Embedding extraction failed
        * - Segment is too short for reliable embedding
        * - This is a split segment pending re-embedding
        *
        * When present, this can be used to:
-       * 1. Identify the speaker by comparing to known speaker centroids
-       * 2. Train/update a speaker's voice model
+       * 1. Identify the speaker by comparing to known speaker embeddings
+       * 2. Cluster unknown segments to discover same-speaker groups
+       * 3. Bulk-confirm clustered segments as the same speaker
        */
       embedding_id: i.string().optional(),
 
