@@ -30,7 +30,7 @@
 
 📝 Moved experimental features to Planned status in PRD
 
-[Commit](https://github.com/technoplato/toolshed/commit/bbb44a6)
+[Commit](https://github.com/technoplato/toolshed/commit/9946e05)
 
 - Added 7 new planned features to feature matrix
 - Action Logging, Interactive Playback, System Audio Recording, Clipboard Integration, Drag-and-Drop Media, Pluggable Timeline Data, Continuous Recording
