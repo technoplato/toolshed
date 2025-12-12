@@ -13,3 +13,9 @@
 [submodule "references/composable-core-location"]
 	path = references/composable-core-location
 	url = https://github.com/pointfreeco/composable-core-location
+[submodule "references/Perth"]
+	path = references/Perth
+	url = https://github.com/resemble-ai/Perth
+[submodule "references/chatterbox"]
+	path = references/chatterbox
+	url = https://github.com/resemble-ai/chatterbox
