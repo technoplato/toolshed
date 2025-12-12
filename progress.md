@@ -30,7 +30,7 @@
 
 📝 Created initial SpeechRecorderApp PRD
 
-[Commit](https://github.com/technoplato/toolshed/commit/7b1b3f8)
+[Commit](https://github.com/technoplato/toolshed/commit/ec5c5b6)
 
 - Documented core features: recording, transcription, playback, media embedding
 - Documented TCA architecture with Point-Free libraries
