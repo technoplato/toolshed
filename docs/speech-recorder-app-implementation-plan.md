@@ -41,12 +41,15 @@ that leverages the latest Apple Speech APIs and Point-Free's TCA ecosystem.
 1. [Project Overview](#project-overview)
 2. [Architecture Overview](#architecture-overview)
 3. [TDD Workflow with TCA](#tdd-workflow-with-tca)
-4. [Phase 1: Project Setup & Basic Recording](#phase-1-project-setup--basic-recording)
-5. [Phase 2: SpeechAnalyzer Integration](#phase-2-speechanalyzer-integration)
-6. [Phase 3: Word-Level Timestamps](#phase-3-word-level-timestamps)
-7. [Phase 4: Persistence with Swift Sharing](#phase-4-persistence-with-swift-sharing)
-8. [Phase 5: Synchronized Playback](#phase-5-synchronized-playback)
-9. [Reference Materials](#reference-materials)
+4. [Phase 1: Project Setup & Basic Recording](#phase-1-project-setup--basic-recording) ✅
+5. [Phase 2: SpeechAnalyzer Integration](#phase-2-speechanalyzer-integration) ✅
+6. [Phase 3: Word-Level Timestamps](#phase-3-word-level-timestamps) ✅
+7. [Phase 4: Persistence with Swift Sharing](#phase-4-persistence-with-swift-sharing) ✅
+8. [Phase 5: Synchronized Playback](#phase-5-synchronized-playback) ✅
+9. [Phase 6: State Sharing Improvements](#phase-6-state-sharing-improvements) 🆕
+10. [Phase 7: Test Coverage Enhancement](#phase-7-test-coverage-enhancement) 🆕
+11. [Phase 8: Code Quality & Cleanup](#phase-8-code-quality--cleanup) 🆕
+12. [Reference Materials](#reference-materials)
 
 ---
 
@@ -54,11 +57,11 @@ that leverages the latest Apple Speech APIs and Point-Free's TCA ecosystem.
 
 ### Goals
 
-1. **Record audio** with real-time transcription
-2. **Display live transcription** with volatile (in-progress) and finalized text
-3. **Store word-level timestamps** for each transcribed word
-4. **Persist recordings** to disk with their transcriptions
-5. **Synchronized playback** - highlight words as audio plays
+1. **Record audio** with real-time transcription ✅
+2. **Display live transcription** with volatile (in-progress) and finalized text ✅
+3. **Store word-level timestamps** for each transcribed word ✅
+4. **Persist recordings** to disk with their transcriptions ✅
+5. **Synchronized playback** - highlight words as audio plays ✅
 
 ### Technology Stack
 
@@ -82,7 +85,7 @@ that leverages the latest Apple Speech APIs and Point-Free's TCA ecosystem.
 │                      AppFeature                              │
 │  ┌─────────────────────────────────────────────────────────┐│
 │  │                  RecordingsListFeature                   ││
-│  │  @Shared(.fileStorage) var recordings: [Recording]       ││
+│  │  @Shared(.recordings) var recordings: [Recording]        ││
 │  └─────────────────────────────────────────────────────────┘│
 │                              │                               │
 │              ┌───────────────┴───────────────┐              │
@@ -231,518 +234,106 @@ struct RecordingFeature {
 
 ---
 
-## Phase 1: Project Setup & Basic Recording
+## Phase 1: Project Setup & Basic Recording ✅
 
 ### Goals
 
-- Set up Xcode project with TCA dependencies
-- Implement basic audio recording (no transcription yet)
-- Create AudioRecorder dependency
+- Set up Xcode project with TCA dependencies ✅
+- Implement basic audio recording (no transcription yet) ✅
+- Create AudioRecorder dependency ✅
 
-### Tasks
+### Completed Tasks
 
-#### 1.1 Create Xcode Project
-
-```bash
-# Create new iOS app project in Xcode
-# Add Swift Package dependencies:
-# - https://github.com/pointfreeco/swift-composable-architecture
-# - https://github.com/pointfreeco/swift-sharing
-# - https://github.com/pointfreeco/swift-dependencies
-```
-
-#### 1.2 Define AudioRecorder Dependency
-
-**Test First:**
-
-```swift
-@Test
-func testAudioRecorder_startsRecording() async throws {
-    let recordingURL = URL(fileURLWithPath: "/tmp/test.m4a")
-    var didStartRecording = false
-
-    let store = TestStore(initialState: RecordingFeature.State()) {
-        RecordingFeature()
-    } withDependencies: {
-        $0.audioRecorder.requestPermission = { true }
-        $0.audioRecorder.startRecording = { url in
-            didStartRecording = true
-            XCTAssertEqual(url, recordingURL)
-        }
-        $0.temporaryDirectory = { URL(fileURLWithPath: "/tmp") }
-        $0.uuid = .constant(UUID(uuidString: "00000000-0000-0000-0000-000000000000")!)
-    }
-
-    await store.send(.recordButtonTapped) {
-        $0.isRecording = true
-    }
-
-    XCTAssertTrue(didStartRecording)
-}
-```
-
-**Implementation:**
-
-```swift
-// AudioRecorderClient.swift
-@DependencyClient
-struct AudioRecorderClient {
-    var requestPermission: @Sendable () async -> Bool = { false }
-    var startRecording: @Sendable (URL) async throws -> Void
-    var stopRecording: @Sendable () async -> Void
-    var currentTime: @Sendable () async -> TimeInterval? = { nil }
-}
-
-extension AudioRecorderClient: DependencyKey {
-    static var liveValue: Self {
-        let recorder = AudioRecorder()
-        return Self(
-            requestPermission: { await recorder.requestPermission() },
-            startRecording: { url in try await recorder.startRecording(url: url) },
-            stopRecording: { await recorder.stopRecording() },
-            currentTime: { await recorder.currentTime }
-        )
-    }
-}
-
-extension DependencyValues {
-    var audioRecorder: AudioRecorderClient {
-        get { self[AudioRecorderClient.self] }
-        set { self[AudioRecorderClient.self] = newValue }
-    }
-}
-```
-
-#### 1.3 Implement Live AudioRecorder
-
-Reference: [`VoiceMemos/RecordingMemo.swift`](../references/swift-composable-architecture/Examples/VoiceMemos/VoiceMemos/RecordingMemo.swift)
-
-```swift
-private actor AudioRecorder {
-    var audioEngine: AVAudioEngine?
-    var audioFile: AVAudioFile?
-
-    func requestPermission() async -> Bool {
-        await withCheckedContinuation { continuation in
-            AVAudioApplication.requestRecordPermission { granted in
-                continuation.resume(returning: granted)
-            }
-        }
-    }
-
-    func startRecording(url: URL) async throws {
-        let audioSession = AVAudioSession.sharedInstance()
-        try audioSession.setCategory(.playAndRecord, mode: .spokenAudio)
-        try audioSession.setActive(true)
-
-        audioEngine = AVAudioEngine()
-        guard let audioEngine else { throw RecordingError.engineNotAvailable }
-
-        let inputNode = audioEngine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
-
-        audioFile = try AVAudioFile(forWriting: url, settings: format.settings)
-
-        inputNode.installTap(onBus: 0, bufferSize: 4096, format: format) { [weak self] buffer, _ in
-            try? self?.audioFile?.write(from: buffer)
-        }
-
-        audioEngine.prepare()
-        try audioEngine.start()
-    }
-
-    func stopRecording() {
-        audioEngine?.stop()
-        audioEngine?.inputNode.removeTap(onBus: 0)
-        audioEngine = nil
-        audioFile = nil
-    }
-}
-```
+- [x] Create Xcode project with TCA dependencies
+- [x] Define AudioRecorderClient dependency
+- [x] Write tests for recording start/stop
+- [x] Implement live AudioRecorder
+- [x] Create basic RecordingView
 
 ---
 
-## Phase 2: SpeechAnalyzer Integration
+## Phase 2: SpeechAnalyzer Integration ✅
 
 ### Goals
 
-- Create SpeechClient dependency wrapping SpeechAnalyzer
-- Integrate live transcription with recording
-- Handle asset installation for locale-specific models
+- Create SpeechClient dependency wrapping SpeechAnalyzer ✅
+- Integrate live transcription with recording ✅
+- Handle asset installation for locale-specific models ✅
 
-### Key Concepts from Apple's SpeechAnalyzer API
+### Completed Tasks
 
-From the [SpeechAnalyzer documentation](../docs/apple/speech/019b0605-a9aa-738b-912a-db8b12168304/developer.apple.com_documentation_speech_speechanalyzer.md):
-
-1. **Modules**: `SpeechTranscriber` performs speech-to-text
-2. **Input**: `AnalyzerInput` wraps `AVAudioPCMBuffer`
-3. **Results**: `AsyncSequence` of `SpeechTranscriber.Result`
-4. **Assets**: `AssetInventory` manages locale-specific model downloads
-
-### Tasks
-
-#### 2.1 Define SpeechClient Dependency
-
-**Test First:**
-
-```swift
-@Test
-func testSpeechClient_transcribesAudio() async {
-    let transcriptionStream = AsyncThrowingStream<TranscriptionUpdate, Error>.makeStream()
-
-    let store = TestStore(initialState: RecordingFeature.State()) {
-        RecordingFeature()
-    } withDependencies: {
-        $0.speechClient.requestAuthorization = { .authorized }
-        $0.speechClient.startTranscription = { _ in transcriptionStream.stream }
-        $0.speechClient.finishTranscription = { transcriptionStream.continuation.finish() }
-    }
-
-    await store.send(.recordButtonTapped) {
-        $0.isRecording = true
-    }
-
-    // Simulate transcription result
-    transcriptionStream.continuation.yield(.init(
-        text: "Hello",
-        words: [.init(text: "Hello", startTime: 0.0, endTime: 0.5, confidence: 0.95)],
-        isFinal: false
-    ))
-
-    await store.receive(\.transcriptionResult.success) {
-        $0.transcription.text = "Hello"
-        $0.transcription.words = [.init(text: "Hello", startTime: 0.0, endTime: 0.5, confidence: 0.95)]
-    }
-}
-```
-
-**Implementation:**
-
-```swift
-// SpeechClient.swift
-struct TranscriptionUpdate: Equatable, Sendable {
-    var text: String
-    var words: [TimestampedWord]
-    var isFinal: Bool
-}
-
-@DependencyClient
-struct SpeechClient {
-    var requestAuthorization: @Sendable () async -> SFSpeechRecognizerAuthorizationStatus = { .notDetermined }
-    var checkAvailability: @Sendable () async -> Bool = { false }
-    var ensureAssets: @Sendable (Locale) async throws -> Void
-    var startTranscription: @Sendable (Locale) async throws -> AsyncThrowingStream<TranscriptionUpdate, Error>
-    var streamAudio: @Sendable (AVAudioPCMBuffer) async throws -> Void
-    var finishTranscription: @Sendable () async throws -> Void
-
-    enum Failure: Error, Equatable {
-        case notAuthorized
-        case notAvailable
-        case assetInstallationFailed
-        case transcriptionFailed
-    }
-}
-
-extension SpeechClient: TestDependencyKey {
-    static var previewValue: Self {
-        Self(
-            requestAuthorization: { .authorized },
-            checkAvailability: { true },
-            ensureAssets: { _ in },
-            startTranscription: { _ in
-                AsyncThrowingStream { continuation in
-                    // Simulate streaming transcription
-                    Task {
-                        try await Task.sleep(for: .milliseconds(500))
-                        continuation.yield(.init(text: "Hello", words: [], isFinal: false))
-                        try await Task.sleep(for: .milliseconds(500))
-                        continuation.yield(.init(text: "Hello world", words: [], isFinal: true))
-                        continuation.finish()
-                    }
-                }
-            },
-            streamAudio: { _ in },
-            finishTranscription: { }
-        )
-    }
-
-    static var testValue: Self {
-        Self()
-    }
-}
-
-extension DependencyValues {
-    var speechClient: SpeechClient {
-        get { self[SpeechClient.self] }
-        set { self[SpeechClient.self] = newValue }
-    }
-}
-```
-
-#### 2.2 Implement Live SpeechClient
-
-Reference: [Apple's Transcription.swift](../references/apple-speech-to-text-sample/SwiftTranscriptionSampleApp/Recording%20and%20Transcription/Transcription.swift)
-
-```swift
-extension SpeechClient: DependencyKey {
-    static var liveValue: Self {
-        let speech = Speech()
-        return Self(
-            requestAuthorization: {
-                await withCheckedContinuation { continuation in
-                    SFSpeechRecognizer.requestAuthorization { status in
-                        continuation.resume(returning: status)
-                    }
-                }
-            },
-            checkAvailability: {
-                await SpeechTranscriber.isAvailable
-            },
-            ensureAssets: { locale in
-                await speech.ensureAssets(for: locale)
-            },
-            startTranscription: { locale in
-                try await speech.startTranscription(locale: locale)
-            },
-            streamAudio: { buffer in
-                await speech.streamAudio(buffer)
-            },
-            finishTranscription: {
-                try await speech.finishTranscription()
-            }
-        )
-    }
-}
-
-private actor Speech {
-    private var transcriber: SpeechTranscriber?
-    private var analyzer: SpeechAnalyzer?
-    private var inputBuilder: AsyncStream<AnalyzerInput>.Continuation?
-    private var analyzerFormat: AVAudioFormat?
-    private var converter: BufferConverter?
-
-    func ensureAssets(for locale: Locale) async throws {
-        guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
-            throw SpeechClient.Failure.notAvailable
-        }
-
-        let transcriber = SpeechTranscriber(
-            locale: supportedLocale,
-            transcriptionOptions: [],
-            reportingOptions: [.volatileResults],
-            attributeOptions: [.audioTimeRange]
-        )
-
-        if let request = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
-            try await request.downloadAndInstall()
-        }
-    }
-
-    func startTranscription(locale: Locale) async throws -> AsyncThrowingStream<TranscriptionUpdate, Error> {
-        guard let supportedLocale = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else {
-            throw SpeechClient.Failure.notAvailable
-        }
-
-        transcriber = SpeechTranscriber(
-            locale: supportedLocale,
-            transcriptionOptions: [],
-            reportingOptions: [.volatileResults],
-            attributeOptions: [.audioTimeRange]
-        )
-
-        guard let transcriber else {
-            throw SpeechClient.Failure.transcriptionFailed
-        }
-
-        analyzer = SpeechAnalyzer(modules: [transcriber])
-        analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [transcriber])
-        converter = BufferConverter()
-
-        let (inputSequence, inputBuilder) = AsyncStream<AnalyzerInput>.makeStream()
-        self.inputBuilder = inputBuilder
-
-        // Start analysis in background
-        Task {
-            try await analyzer?.start(inputSequence: inputSequence)
-        }
-
-        // Return stream of transcription results
-        return AsyncThrowingStream { continuation in
-            Task {
-                do {
-                    for try await result in transcriber.results {
-                        let update = TranscriptionUpdate(
-                            text: String(result.text.characters),
-                            words: extractWords(from: result),
-                            isFinal: result.isFinal
-                        )
-                        continuation.yield(update)
-                    }
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-        }
-    }
-
-    func streamAudio(_ buffer: AVAudioPCMBuffer) {
-        guard let analyzerFormat, let converter, let inputBuilder else { return }
-
-        do {
-            let converted = try converter.convertBuffer(buffer, to: analyzerFormat)
-            let input = AnalyzerInput(buffer: converted)
-            inputBuilder.yield(input)
-        } catch {
-            print("Buffer conversion failed: \(error)")
-        }
-    }
-
-    func finishTranscription() async throws {
-        inputBuilder?.finish()
-        try await analyzer?.finalizeAndFinishThroughEndOfInput()
-        transcriber = nil
-        analyzer = nil
-    }
-
-    private func extractWords(from result: SpeechTranscriber.Result) -> [TimestampedWord] {
-        // Extract word-level timing from AttributedString
-        var words: [TimestampedWord] = []
-        let text = result.text
-
-        for run in text.runs {
-            if let timeRange = run.audioTimeRange {
-                let word = String(text[run.range].characters)
-                words.append(TimestampedWord(
-                    text: word,
-                    startTime: timeRange.start.seconds,
-                    endTime: timeRange.end.seconds,
-                    confidence: nil
-                ))
-            }
-        }
-
-        return words
-    }
-}
-```
+- [x] Define SpeechClient dependency
+- [x] Write tests for transcription flow
+- [x] Implement live SpeechClient with SpeechAnalyzer
+- [x] Handle asset installation
+- [x] Display live transcription
 
 ---
 
-## Phase 3: Word-Level Timestamps
+## Phase 3: Word-Level Timestamps ✅
 
 ### Goals
 
-- Extract word-level timing from SpeechTranscriber.Result
-- Store timestamps with each word
-- Enable synchronized playback preparation
+- Extract word-level timing from SpeechTranscriber.Result ✅
+- Store timestamps with each word ✅
+- Enable synchronized playback preparation ✅
 
-### Key Insight: AttributedString with audioTimeRange
+### Completed Tasks
 
-The `SpeechTranscriber.Result.text` is an `AttributedString` that can contain `audioTimeRange` attributes when configured with `.audioTimeRange` in `attributeOptions`.
-
-```swift
-// From SpeechTranscriber initialization
-let transcriber = SpeechTranscriber(
-    locale: locale,
-    transcriptionOptions: [],
-    reportingOptions: [.volatileResults],
-    attributeOptions: [.audioTimeRange]  // <-- This enables word-level timing
-)
-```
-
-### Tasks
-
-#### 3.1 Test Word Extraction
-
-```swift
-@Test
-func testWordExtraction_extractsTimestamps() async {
-    var receivedWords: [TimestampedWord] = []
-
-    let store = TestStore(initialState: RecordingFeature.State()) {
-        RecordingFeature()
-    } withDependencies: {
-        $0.speechClient.startTranscription = { _ in
-            AsyncThrowingStream { continuation in
-                continuation.yield(.init(
-                    text: "Hello world",
-                    words: [
-                        .init(text: "Hello", startTime: 0.0, endTime: 0.5, confidence: 0.95),
-                        .init(text: "world", startTime: 0.6, endTime: 1.0, confidence: 0.92)
-                    ],
-                    isFinal: true
-                ))
-                continuation.finish()
-            }
-        }
-    }
-
-    await store.send(.recordButtonTapped)
-
-    await store.receive(\.transcriptionResult.success) {
-        $0.transcription.words.count == 2
-        $0.transcription.words[0].startTime == 0.0
-        $0.transcription.words[1].startTime == 0.6
-    }
-}
-```
-
-#### 3.2 Implement Word Extraction
-
-```swift
-private func extractWords(from result: SpeechTranscriber.Result) -> [TimestampedWord] {
-    var words: [TimestampedWord] = []
-    let text = result.text
-
-    // Iterate through runs in the AttributedString
-    for run in text.runs {
-        // Check if this run has timing information
-        if let timeRange = run.audioTimeRange {
-            let wordText = String(text[run.range].characters).trimmingCharacters(in: .whitespaces)
-
-            // Skip empty strings
-            guard !wordText.isEmpty else { continue }
-
-            words.append(TimestampedWord(
-                text: wordText,
-                startTime: timeRange.start.seconds,
-                endTime: timeRange.end.seconds,
-                confidence: nil  // Confidence not available in new API
-            ))
-        }
-    }
-
-    return words
-}
-```
+- [x] Write tests for word extraction
+- [x] Implement word extraction from AttributedString
+- [x] Store TimestampedWord array
+- [x] Verify timing accuracy
 
 ---
 
-## Phase 4: Persistence with Swift Sharing
+## Phase 4: Persistence with Swift Sharing ✅
 
 ### Goals
 
-- Persist recordings list using @Shared
-- Save audio files to documents directory
-- Store transcriptions as JSON
+- Persist recordings list using @Shared ✅
+- Save audio files to documents directory ✅
+- Store transcriptions as JSON ✅
 
-### Key Concepts from Swift Sharing
+### Completed Tasks
 
-From [FileStorageKey.swift](../references/swift-sharing/Sources/Sharing/SharedKeys/FileStorageKey.swift):
+- [x] Define @Shared recordings key
+- [x] Write tests for persistence
+- [x] Implement RecordingsListFeature
+- [x] Save audio files to documents
+- [x] Create recordings list UI
+
+---
+
+## Phase 5: Synchronized Playback ✅
+
+### Goals
+
+- Play audio with word highlighting ✅
+- Sync current playback position with transcription ✅
+- Highlight current word based on timestamps ✅
+
+### Completed Tasks
+
+- [x] Define AudioPlayerClient dependency
+- [x] Write tests for playback sync
+- [x] Implement PlaybackFeature
+- [x] Create word highlighting view
+- [x] Add seek functionality
+
+---
+
+## Phase 6: State Sharing Improvements 🆕
+
+### Goals
+
+Based on the [Swift Sharing State Comprehensive Guide](./swift-sharing-state-comprehensive-guide.md) and the SyncUps reference implementation, improve the state sharing patterns in the app.
+
+### 6.1 Add Default Value to SharedKey
+
+**Current Implementation** ([`SharedKeys.swift:43-47`](../apps/SpeechRecorderApp/SpeechRecorderApp/SharedKeys/SharedKeys.swift:43)):
 
 ```swift
-// Basic usage
-@Shared(.fileStorage(.documentsDirectory.appending(component: "recordings.json")))
-var recordings: [Recording] = []
-```
-
-### Tasks
-
-#### 4.1 Define Shared State
-
-```swift
-// SharedKeys.swift
 extension SharedReaderKey where Self == FileStorageKey<[Recording]> {
     static var recordings: Self {
         .fileStorage(.documentsDirectory.appending(component: "recordings.json"))
@@ -750,304 +341,626 @@ extension SharedReaderKey where Self == FileStorageKey<[Recording]> {
 }
 ```
 
-#### 4.2 Test Persistence
+**Improved Implementation** (following SyncUps pattern from [`SyncUpsList.swift:183-186`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpsList.swift:183)):
 
 ```swift
-@Test
-func testRecordingPersistence_savesToDisk() async {
-    let fileSystem = LockIsolated<[URL: Data]>([:])
-
-    let store = TestStore(initialState: RecordingsListFeature.State()) {
-        RecordingsListFeature()
-    } withDependencies: {
-        $0.defaultFileStorage = .inMemory(fileSystem: fileSystem)
+extension SharedKey where Self == FileStorageKey<[Recording]>.Default {
+    static var recordings: Self {
+        Self[.fileStorage(.documentsDirectory.appending(component: "recordings.json")), default: []]
     }
-
-    let recording = Recording(
-        id: UUID(),
-        title: "Test Recording",
-        date: Date(),
-        duration: 10.0,
-        audioURL: URL(fileURLWithPath: "/tmp/test.m4a"),
-        transcription: .init(text: "Hello world", words: [], isFinal: true)
-    )
-
-    await store.send(.addRecording(recording)) {
-        $0.recordings.append(recording)
-    }
-
-    // Verify file was written
-    XCTAssertFalse(fileSystem.value.isEmpty)
 }
 ```
 
-#### 4.3 Implement RecordingsListFeature
+**Benefits:**
+
+- No need to specify default value at each usage site
+- Consistent with SyncUps pattern
+- Type-safe default value
+
+**Files to Change:**
+
+- [`SharedKeys.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/SharedKeys/SharedKeys.swift) - Update key definition
+- [`RecordingsListFeature.swift:56`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingsListFeature.swift:56) - Remove default value from declaration
+
+### 6.2 Use IdentifiedArrayOf for Recordings
+
+**Current Implementation:**
 
 ```swift
-@Reducer
-struct RecordingsListFeature {
-    @ObservableState
-    struct State: Equatable {
-        @Shared(.recordings) var recordings: [Recording] = []
-        @Presents var recording: RecordingFeature.State?
-        @Presents var playback: PlaybackFeature.State?
-    }
+@Shared(.recordings) var recordings: [Recording] = []
+```
 
-    enum Action: Sendable {
-        case addRecording(Recording)
-        case deleteRecording(IndexSet)
-        case recordButtonTapped
-        case recording(PresentationAction<RecordingFeature.Action>)
-        case playback(PresentationAction<PlaybackFeature.Action>)
-        case selectRecording(Recording)
-    }
+**Improved Implementation:**
 
-    var body: some Reducer<State, Action> {
-        Reduce { state, action in
-            switch action {
-            case let .addRecording(recording):
-                state.$recordings.withLock { $0.append(recording) }
-                return .none
+```swift
+@Shared(.recordings) var recordings: IdentifiedArrayOf<Recording>
+```
 
-            case let .deleteRecording(indexSet):
-                state.$recordings.withLock { $0.remove(atOffsets: indexSet) }
-                return .none
+**Benefits:**
 
-            case .recordButtonTapped:
-                state.recording = RecordingFeature.State()
-                return .none
+- O(1) lookup by ID instead of O(n)
+- Better integration with TCA's `ForEach` and navigation
+- Enables derived shared state for individual recordings
 
-            case .recording(.presented(.delegate(.didFinish(.success(let recording))))):
-                state.recording = nil
-                state.$recordings.withLock { $0.insert(recording, at: 0) }
-                return .none
+**Files to Change:**
 
-            case .recording(.presented(.delegate(.didFinish(.failure)))):
-                state.recording = nil
-                return .none
+- [`SharedKeys.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/SharedKeys/SharedKeys.swift) - Update type
+- [`RecordingsListFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingsListFeature.swift) - Update usage
+- [`AppFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/AppFeature.swift) - Update usage
+- [`Recording.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Models/Recording.swift) - Ensure Identifiable conformance (already done)
 
-            case let .selectRecording(recording):
-                state.playback = PlaybackFeature.State(recording: recording)
-                return .none
+### 6.3 Derive Shared State for PlaybackFeature
 
-            case .recording, .playback:
-                return .none
-            }
-        }
-        .ifLet(\.$recording, action: \.recording) {
-            RecordingFeature()
-        }
-        .ifLet(\.$playback, action: \.playback) {
-            PlaybackFeature()
-        }
+**Current Implementation** ([`RecordingsListFeature.swift:96`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingsListFeature.swift:96)):
+
+```swift
+case let .selectRecording(recording):
+    state.playback = PlaybackFeature.State(recording: recording)
+    return .none
+```
+
+**Improved Implementation** (following SyncUps pattern from [`SyncUpsList.swift:83-86`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpsList.swift:83)):
+
+```swift
+// In RecordingsListView
+ForEach(Array(store.$recordings)) { $recording in
+    NavigationLink(state: AppFeature.Path.State.playback(
+        PlaybackFeature.State(recording: $recording)
+    )) {
+        RecordingRow(recording: recording)
     }
 }
 ```
+
+**Benefits:**
+
+- Changes to recording during playback propagate back to list
+- Enables editing recording metadata during playback
+- Follows SyncUps pattern for parent-child shared state
+
+**Files to Change:**
+
+- [`PlaybackFeature.swift:55-56`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift:55) - Change `var recording: Recording` to `@Shared var recording: Recording`
+- [`RecordingsListFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingsListFeature.swift) - Pass derived shared state
+- [`PlaybackView.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Views/PlaybackView.swift) - Update to use shared binding
+
+### 6.4 Add Type-Safe Key for User Settings
+
+**New Implementation:**
+
+```swift
+// SharedKeys.swift
+extension SharedKey where Self == AppStorageKey<Bool>.Default {
+    static var isHapticsEnabled: Self {
+        Self[.appStorage("isHapticsEnabled"), default: true]
+    }
+
+    static var isAutoScrollEnabled: Self {
+        Self[.appStorage("isAutoScrollEnabled"), default: true]
+    }
+}
+
+extension SharedKey where Self == AppStorageKey<Double>.Default {
+    static var playbackSpeed: Self {
+        Self[.appStorage("playbackSpeed"), default: 1.0]
+    }
+}
+```
+
+**Benefits:**
+
+- Centralized settings management
+- Type-safe access throughout app
+- Automatic persistence to UserDefaults
+
+**Files to Change:**
+
+- [`SharedKeys.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/SharedKeys/SharedKeys.swift) - Add new keys
+- [`PlaybackFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift) - Use settings
+- [`RecordingFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingFeature.swift) - Use settings
+
+### 6.5 Implement Delete with Shared State Access
+
+**Current Implementation** ([`RecordingsListFeature.swift:99-107`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingsListFeature.swift:99)):
+
+```swift
+case let .deleteRecordings(indexSet):
+    state.$recordings.withLock { recordings in
+        for index in indexSet {
+            let recording = recordings[index]
+            try? FileManager.default.removeItem(at: recording.audioURL)
+        }
+        recordings.remove(atOffsets: indexSet)
+    }
+    return .none
+```
+
+**Improved Implementation** (following SyncUps pattern from [`SyncUpDetail.swift:66-68`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpDetail.swift:66)):
+
+```swift
+// In PlaybackFeature for deleting current recording
+case .deleteButtonTapped:
+    state.destination = .alert(.deleteRecording)
+    return .none
+
+case .destination(.presented(.alert(.confirmDeletion))):
+    @Shared(.recordings) var recordings
+    $recordings.withLock { _ = $0.remove(id: state.recording.id) }
+    // Also delete audio file
+    try? FileManager.default.removeItem(at: state.recording.audioURL)
+    return .run { _ in await dismiss() }
+```
+
+**Benefits:**
+
+- Child feature can access parent's shared state directly
+- Cleaner separation of concerns
+- Follows SyncUps pattern for deletion
+
+**Files to Change:**
+
+- [`PlaybackFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift) - Add delete functionality
+- [`PlaybackView.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Views/PlaybackView.swift) - Add delete button
 
 ---
 
-## Phase 5: Synchronized Playback
+## Phase 7: Test Coverage Enhancement 🆕
 
 ### Goals
 
-- Play audio with word highlighting
-- Sync current playback position with transcription
-- Highlight current word based on timestamps
+Improve test coverage following patterns from SyncUps tests.
 
-### Tasks
+### 7.1 Add Shared State Mutation Tests
 
-#### 5.1 Define PlaybackFeature
+**Reference:** [`SyncUpsListTests.swift:34-37`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpsListTests.swift:34)
 
-```swift
-@Reducer
-struct PlaybackFeature {
-    @ObservableState
-    struct State: Equatable {
-        var recording: Recording
-        var isPlaying = false
-        var currentTime: TimeInterval = 0
-        var currentWordIndex: Int?
-
-        var currentWord: TimestampedWord? {
-            guard let index = currentWordIndex else { return nil }
-            return recording.transcription.words[safe: index]
-        }
-    }
-
-    enum Action: Sendable {
-        case playButtonTapped
-        case pauseButtonTapped
-        case seekTo(TimeInterval)
-        case timeUpdated(TimeInterval)
-        case playbackFinished
-    }
-
-    @Dependency(\.audioPlayer) var audioPlayer
-    @Dependency(\.continuousClock) var clock
-
-    var body: some Reducer<State, Action> {
-        Reduce { state, action in
-            switch action {
-            case .playButtonTapped:
-                state.isPlaying = true
-                return .run { [url = state.recording.audioURL] send in
-                    try await audioPlayer.play(url)
-
-                    // Update time periodically
-                    for await _ in clock.timer(interval: .milliseconds(50)) {
-                        if let time = await audioPlayer.currentTime() {
-                            await send(.timeUpdated(time))
-                        }
-                    }
-                }
-
-            case .pauseButtonTapped:
-                state.isPlaying = false
-                return .run { _ in
-                    await audioPlayer.pause()
-                }
-
-            case let .seekTo(time):
-                state.currentTime = time
-                return .run { _ in
-                    await audioPlayer.seek(to: time)
-                }
-
-            case let .timeUpdated(time):
-                state.currentTime = time
-                state.currentWordIndex = findWordIndex(at: time, in: state.recording.transcription.words)
-                return .none
-
-            case .playbackFinished:
-                state.isPlaying = false
-                state.currentTime = 0
-                state.currentWordIndex = nil
-                return .none
-            }
-        }
-    }
-
-    private func findWordIndex(at time: TimeInterval, in words: [TimestampedWord]) -> Int? {
-        words.firstIndex { word in
-            time >= word.startTime && time < word.endTime
-        }
-    }
-}
-```
-
-#### 5.2 Test Synchronized Playback
+**New Test Pattern:**
 
 ```swift
 @Test
-func testPlayback_highlightsCurrentWord() async {
+func addRecording() async {
+    let store = await TestStore(initialState: RecordingsListFeature.State()) {
+        RecordingsListFeature()
+    } withDependencies: {
+        $0.uuid = .incrementing
+        $0.defaultFileStorage = .inMemory
+    }
+
     let recording = Recording(
-        id: UUID(),
+        id: UUID(0),
         title: "Test",
         date: Date(),
-        duration: 2.0,
-        audioURL: URL(fileURLWithPath: "/tmp/test.m4a"),
-        transcription: .init(
-            text: "Hello world",
-            words: [
-                .init(text: "Hello", startTime: 0.0, endTime: 0.5, confidence: nil),
-                .init(text: "world", startTime: 0.6, endTime: 1.0, confidence: nil)
-            ],
-            isFinal: true
-        )
+        duration: 10.0,
+        audioURL: URL(fileURLWithPath: "/tmp/test.m4a")
     )
 
-    let clock = TestClock()
-
-    let store = TestStore(initialState: PlaybackFeature.State(recording: recording)) {
-        PlaybackFeature()
-    } withDependencies: {
-        $0.audioPlayer.play = { _ in }
-        $0.audioPlayer.currentTime = { 0.3 }
-        $0.continuousClock = clock
-    }
-
-    await store.send(.playButtonTapped) {
-        $0.isPlaying = true
-    }
-
-    await clock.advance(by: .milliseconds(50))
-
-    await store.receive(\.timeUpdated) {
-        $0.currentTime = 0.3
-        $0.currentWordIndex = 0  // "Hello" is at index 0
+    // Simulate recording finished
+    await store.send(.recordingFinished(.success(recording))) {
+        $0.$recordings.withLock { $0 = [recording] }
     }
 }
 ```
 
-#### 5.3 Implement PlaybackView
+**Files to Change:**
+
+- [`RecordingsListFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingsListFeatureTests.swift) - Add shared state tests
+
+### 7.2 Add Delete with Shared State Access Test
+
+**Reference:** [`SyncUpDetailTests.swift:117-135`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift:117)
+
+**New Test Pattern:**
 
 ```swift
-struct PlaybackView: View {
-    @Bindable var store: StoreOf<PlaybackFeature>
+@Test
+func deleteRecording() async throws {
+    let recording = Recording.preview()
+    @Shared(.recordings) var recordings = [recording]
+    defer { #expect(recordings == []) }
 
-    var body: some View {
-        VStack(spacing: 20) {
-            // Transcription with word highlighting
-            TranscriptionTextView(
-                words: store.recording.transcription.words,
-                currentWordIndex: store.currentWordIndex
-            )
+    let sharedRecording = try #require(Shared($recordings[id: recording.id]))
 
-            // Playback controls
-            HStack {
-                Button {
-                    if store.isPlaying {
-                        store.send(.pauseButtonTapped)
-                    } else {
-                        store.send(.playButtonTapped)
-                    }
-                } label: {
-                    Image(systemName: store.isPlaying ? "pause.fill" : "play.fill")
-                        .font(.largeTitle)
-                }
-
-                // Progress slider
-                Slider(
-                    value: Binding(
-                        get: { store.currentTime },
-                        set: { store.send(.seekTo($0)) }
-                    ),
-                    in: 0...store.recording.duration
-                )
-            }
-            .padding()
-        }
+    let store = await TestStore(
+        initialState: PlaybackFeature.State(recording: sharedRecording)
+    ) {
+        PlaybackFeature()
     }
+
+    await store.send(.deleteButtonTapped) {
+        $0.destination = .alert(.deleteRecording)
+    }
+
+    await store.send(\.destination.alert.confirmDeletion) {
+        $0.destination = nil
+    }
+
+    #expect(store.isDismissed)
 }
+```
 
-struct TranscriptionTextView: View {
-    let words: [TimestampedWord]
-    let currentWordIndex: Int?
+**Files to Change:**
 
-    var body: some View {
-        Text(attributedText)
-            .font(.body)
-            .padding()
+- [`PlaybackFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift) - Add delete test
+
+### 7.3 Add Edit Recording Test
+
+**Reference:** [`SyncUpDetailTests.swift:93-115`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift:93)
+
+**New Test Pattern:**
+
+```swift
+@Test
+func editRecordingTitle() async {
+    var recording = Recording.preview()
+
+    let store = await TestStore(
+        initialState: PlaybackFeature.State(recording: Shared(value: recording))
+    ) {
+        PlaybackFeature()
     }
 
-    private var attributedText: AttributedString {
-        var result = AttributedString()
+    await store.send(.editButtonTapped) {
+        $0.destination = .edit(RecordingEditFeature.State(recording: recording))
+    }
 
-        for (index, word) in words.enumerated() {
-            var wordString = AttributedString(word.text + " ")
+    recording.title = "Updated Title"
+    await store.send(\.destination.edit.binding.recording, recording) {
+        $0.destination?.modify(\.edit) { $0.recording.title = "Updated Title" }
+    }
 
-            if index == currentWordIndex {
-                wordString.backgroundColor = .yellow
-                wordString.font = .body.bold()
-            }
-
-            result.append(wordString)
-        }
-
-        return result
+    await store.send(.doneEditingButtonTapped) {
+        $0.destination = nil
+        $0.$recording.withLock { $0.title = "Updated Title" }
     }
 }
 ```
+
+**Files to Change:**
+
+- [`PlaybackFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift) - Add edit test
+- Create new `RecordingEditFeature.swift` for editing
+
+### 7.4 Add @MainActor to All Test Structs
+
+**Reference:** [`SyncUpsListTests.swift:8-9`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpsListTests.swift:8)
+
+**Current Implementation:**
+
+```swift
+@Suite("RecordingsListFeature Tests")
+struct RecordingsListFeatureTests {
+    // ...
+}
+```
+
+**Improved Implementation:**
+
+```swift
+@MainActor
+struct RecordingsListFeatureTests {
+    init() { uncheckedUseMainSerialExecutor = true }
+    // ...
+}
+```
+
+**Benefits:**
+
+- Ensures tests run on main actor
+- Prevents race conditions in tests
+- Follows SyncUps pattern
+
+**Files to Change:**
+
+- [`RecordingsListFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingsListFeatureTests.swift)
+- [`PlaybackFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift)
+- [`RecordingFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingFeatureTests.swift)
+- [`AppFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/AppFeatureTests.swift)
+
+### 7.5 Add Delegate Action Tests
+
+**Reference:** [`SyncUpDetailTests.swift:77-78`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift:77)
+
+**New Test Pattern:**
+
+```swift
+@Test
+func recordingFinishedSendsDelegate() async {
+    let recording = Recording.preview()
+
+    let store = await TestStore(
+        initialState: RecordingFeature.State()
+    ) {
+        RecordingFeature()
+    } withDependencies: {
+        // ... dependencies
+    }
+
+    // ... trigger recording finish
+
+    await store.receive(\.delegate.didFinish.success) { _ in
+        // Verify delegate action received
+    }
+}
+```
+
+**Files to Change:**
+
+- [`RecordingFeatureTests.swift`](../apps/SpeechRecorderApp/SpeechRecorderAppTests/RecordingFeatureTests.swift) - Add delegate tests
+
+---
+
+## Phase 8: Code Quality & Cleanup 🆕
+
+### Goals
+
+Improve code quality, documentation, and maintainability.
+
+### 8.1 Add Destination Enum for Navigation
+
+**Reference:** [`SyncUpDetail.swift:5-17`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpDetail.swift:5)
+
+**Current Implementation:**
+
+```swift
+@ObservableState
+struct State: Equatable {
+    @Presents var alert: AlertState<Action.Alert>?
+    @Presents var fullscreenTranscript: FullscreenTranscriptFeature.State?
+    @Presents var fullscreenImage: FullscreenImageFeature.State?
+}
+```
+
+**Improved Implementation:**
+
+```swift
+@Reducer
+enum Destination {
+    case alert(AlertState<Alert>)
+    case fullscreenTranscript(FullscreenTranscriptFeature)
+    case fullscreenImage(FullscreenImageFeature)
+    case edit(RecordingEditFeature)
+
+    @CasePathable
+    enum Alert {
+        case confirmDeletion
+        case discardChanges
+    }
+}
+
+@ObservableState
+struct State: Equatable {
+    @Presents var destination: Destination.State?
+}
+```
+
+**Benefits:**
+
+- Single presentation state
+- Cleaner action handling
+- Better navigation management
+
+**Files to Change:**
+
+- [`PlaybackFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift) - Add Destination enum
+- [`RecordingFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/RecordingFeature.swift) - Add Destination enum
+
+### 8.2 Extract Alert States to Extensions
+
+**Reference:** [`SyncUpDetail.swift:213-264`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpDetail.swift:213)
+
+**New Implementation:**
+
+```swift
+extension AlertState where Action == PlaybackFeature.Destination.Alert {
+    static let deleteRecording = Self {
+        TextState("Delete Recording?")
+    } actions: {
+        ButtonState(role: .destructive, action: .confirmDeletion) {
+            TextState("Delete")
+        }
+        ButtonState(role: .cancel) {
+            TextState("Cancel")
+        }
+    } message: {
+        TextState("This will permanently delete the recording and its transcription.")
+    }
+}
+```
+
+**Benefits:**
+
+- Reusable alert definitions
+- Cleaner reducer code
+- Easier to test
+
+**Files to Change:**
+
+- Create new `Alerts.swift` file
+- [`PlaybackFeature.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift) - Use alert extensions
+
+### 8.3 Add Preview Helpers with @Shared
+
+**Reference:** [`SyncUpsList.swift:158-170`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpsList.swift:158)
+
+**New Implementation:**
+
+```swift
+#Preview("Recordings List") {
+    @Shared(.recordings) var recordings = [
+        .preview(title: "Meeting Notes"),
+        .preview(title: "Voice Memo"),
+        .preview(title: "Interview")
+    ]
+
+    NavigationStack {
+        RecordingsListView(
+            store: Store(initialState: RecordingsListFeature.State()) {
+                RecordingsListFeature()
+            }
+        )
+    }
+}
+```
+
+**Benefits:**
+
+- Previews with realistic data
+- Easy to test different states
+- Follows SyncUps pattern
+
+**Files to Change:**
+
+- [`RecordingsListView.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Views/RecordingsListView.swift) - Add previews
+- [`PlaybackView.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/Views/PlaybackView.swift) - Add previews
+
+### 8.4 Add UI Testing Setup
+
+**Reference:** [Swift Sharing Guide - UI Testing Setup](./swift-sharing-state-comprehensive-guide.md#ui-testing-setup)
+
+**New Implementation:**
+
+```swift
+// SpeechRecorderApp.swift
+@main
+struct SpeechRecorderApp: App {
+    init() {
+        if ProcessInfo.processInfo.environment["UI_TESTING"] != nil {
+            prepareDependencies {
+                $0.defaultAppStorage = .inMemory
+                $0.defaultFileStorage = .inMemory
+            }
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            if !isTesting {
+                ContentView()
+            }
+        }
+    }
+}
+```
+
+**Benefits:**
+
+- Isolated UI tests
+- No file system pollution
+- Deterministic test runs
+
+**Files to Change:**
+
+- [`SpeechRecorderApp.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/SpeechRecorderApp.swift) - Add UI testing setup
+
+### 8.5 Document All Shared Keys
+
+**Current Implementation:**
+
+```swift
+extension SharedReaderKey where Self == FileStorageKey<[Recording]> {
+    /// Shared key for the list of recordings
+    static var recordings: Self {
+        .fileStorage(.documentsDirectory.appending(component: "recordings.json"))
+    }
+}
+```
+
+**Improved Implementation:**
+
+````swift
+/// Shared key for the list of recordings.
+///
+/// This key persists recordings to the documents directory as JSON.
+/// Each recording includes its audio URL, transcription, and metadata.
+///
+/// Usage:
+/// ```swift
+/// @Shared(.recordings) var recordings
+/// ```
+///
+/// In tests, use `.inMemory` file storage:
+/// ```swift
+/// withDependencies {
+///     $0.defaultFileStorage = .inMemory
+/// }
+/// ```
+extension SharedKey where Self == FileStorageKey<IdentifiedArrayOf<Recording>>.Default {
+    static var recordings: Self {
+        Self[.fileStorage(.documentsDirectory.appending(component: "recordings.json")), default: []]
+    }
+}
+````
+
+**Files to Change:**
+
+- [`SharedKeys.swift`](../apps/SpeechRecorderApp/SpeechRecorderApp/SharedKeys/SharedKeys.swift) - Add comprehensive documentation
+
+---
+
+## Development Checklist
+
+### Phase 1: Basic Recording ✅
+
+- [x] Create Xcode project with TCA dependencies
+- [x] Define AudioRecorderClient dependency
+- [x] Write tests for recording start/stop
+- [x] Implement live AudioRecorder
+- [x] Create basic RecordingView
+
+### Phase 2: Speech Integration ✅
+
+- [x] Define SpeechClient dependency
+- [x] Write tests for transcription flow
+- [x] Implement live SpeechClient with SpeechAnalyzer
+- [x] Handle asset installation
+- [x] Display live transcription
+
+### Phase 3: Word Timestamps ✅
+
+- [x] Write tests for word extraction
+- [x] Implement word extraction from AttributedString
+- [x] Store TimestampedWord array
+- [x] Verify timing accuracy
+
+### Phase 4: Persistence ✅
+
+- [x] Define @Shared recordings key
+- [x] Write tests for persistence
+- [x] Implement RecordingsListFeature
+- [x] Save audio files to documents
+- [x] Create recordings list UI
+
+### Phase 5: Synchronized Playback ✅
+
+- [x] Define AudioPlayerClient dependency
+- [x] Write tests for playback sync
+- [x] Implement PlaybackFeature
+- [x] Create word highlighting view
+- [x] Add seek functionality
+
+### Phase 6: State Sharing Improvements 🆕
+
+- [ ] Add default value to SharedKey (6.1)
+- [ ] Use IdentifiedArrayOf for recordings (6.2)
+- [ ] Derive shared state for PlaybackFeature (6.3)
+- [ ] Add type-safe keys for user settings (6.4)
+- [ ] Implement delete with shared state access (6.5)
+
+### Phase 7: Test Coverage Enhancement 🆕
+
+- [ ] Add shared state mutation tests (7.1)
+- [ ] Add delete with shared state access test (7.2)
+- [ ] Add edit recording test (7.3)
+- [ ] Add @MainActor to all test structs (7.4)
+- [ ] Add delegate action tests (7.5)
+
+### Phase 8: Code Quality & Cleanup 🆕
+
+- [ ] Add Destination enum for navigation (8.1)
+- [ ] Extract alert states to extensions (8.2)
+- [ ] Add preview helpers with @Shared (8.3)
+- [ ] Add UI testing setup (8.4)
+- [ ] Document all shared keys (8.5)
 
 ---
 
@@ -1059,6 +972,7 @@ struct TranscriptionTextView: View {
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | Voice Memos        | [`references/swift-composable-architecture/Examples/VoiceMemos/`](../references/swift-composable-architecture/Examples/VoiceMemos/)               | Audio recording, @Dependency, delegate pattern |
 | Speech Recognition | [`references/swift-composable-architecture/Examples/SpeechRecognition/`](../references/swift-composable-architecture/Examples/SpeechRecognition/) | SpeechClient, AsyncThrowingStream, TestStore   |
+| SyncUps            | [`references/swift-composable-architecture/Examples/SyncUps/`](../references/swift-composable-architecture/Examples/SyncUps/)                     | @Shared, navigation, testing patterns          |
 
 ### Apple Sample Code
 
@@ -1068,12 +982,13 @@ struct TranscriptionTextView: View {
 
 ### Documentation
 
-| Topic              | Path                                                                                                                                                                    |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SpeechAnalyzer     | [`docs/apple/speech/.../speechanalyzer.md`](../docs/apple/speech/019b0605-a9aa-738b-912a-db8b12168304/developer.apple.com_documentation_speech_speechanalyzer.md)       |
-| SpeechTranscriber  | [`docs/apple/speech/.../speechtranscriber.md`](../docs/apple/speech/019b0605-a9aa-738b-912a-db8b12168304/developer.apple.com_documentation_speech_speechtranscriber.md) |
-| Swift Sharing      | [`references/swift-sharing/`](../references/swift-sharing/)                                                                                                             |
-| Swift Dependencies | [`references/swift-dependencies/`](../references/swift-dependencies/)                                                                                                   |
+| Topic               | Path                                                                                                                                                                    |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SpeechAnalyzer      | [`docs/apple/speech/.../speechanalyzer.md`](../docs/apple/speech/019b0605-a9aa-738b-912a-db8b12168304/developer.apple.com_documentation_speech_speechanalyzer.md)       |
+| SpeechTranscriber   | [`docs/apple/speech/.../speechtranscriber.md`](../docs/apple/speech/019b0605-a9aa-738b-912a-db8b12168304/developer.apple.com_documentation_speech_speechtranscriber.md) |
+| Swift Sharing       | [`references/swift-sharing/`](../references/swift-sharing/)                                                                                                             |
+| Swift Dependencies  | [`references/swift-dependencies/`](../references/swift-dependencies/)                                                                                                   |
+| State Sharing Guide | [`docs/swift-sharing-state-comprehensive-guide.md`](./swift-sharing-state-comprehensive-guide.md)                                                                       |
 
 ### Key Files to Study
 
@@ -1093,48 +1008,11 @@ struct TranscriptionTextView: View {
 4. **Persistence Pattern**
    - [`FileStorageKey.swift`](../references/swift-sharing/Sources/Sharing/SharedKeys/FileStorageKey.swift) - @Shared file storage
 
----
-
-## Development Checklist
-
-### Phase 1: Basic Recording
-
-- [ ] Create Xcode project with TCA dependencies
-- [ ] Define AudioRecorderClient dependency
-- [ ] Write tests for recording start/stop
-- [ ] Implement live AudioRecorder
-- [ ] Create basic RecordingView
-
-### Phase 2: Speech Integration
-
-- [ ] Define SpeechClient dependency
-- [ ] Write tests for transcription flow
-- [ ] Implement live SpeechClient with SpeechAnalyzer
-- [ ] Handle asset installation
-- [ ] Display live transcription
-
-### Phase 3: Word Timestamps
-
-- [ ] Write tests for word extraction
-- [ ] Implement word extraction from AttributedString
-- [ ] Store TimestampedWord array
-- [ ] Verify timing accuracy
-
-### Phase 4: Persistence
-
-- [ ] Define @Shared recordings key
-- [ ] Write tests for persistence
-- [ ] Implement RecordingsListFeature
-- [ ] Save audio files to documents
-- [ ] Create recordings list UI
-
-### Phase 5: Synchronized Playback
-
-- [ ] Define AudioPlayerClient dependency
-- [ ] Write tests for playback sync
-- [ ] Implement PlaybackFeature
-- [ ] Create word highlighting view
-- [ ] Add seek functionality
+5. **SyncUps Patterns (State Sharing)**
+   - [`SyncUpsList.swift`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpsList.swift) - SharedKey with default, ForEach with derived state
+   - [`SyncUpDetail.swift`](../references/swift-composable-architecture/Examples/SyncUps/SyncUps/SyncUpDetail.swift) - Child with @Shared, delete via parent key
+   - [`SyncUpsListTests.swift`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpsListTests.swift) - Testing shared state mutations
+   - [`SyncUpDetailTests.swift`](../references/swift-composable-architecture/Examples/SyncUps/SyncUpsTests/SyncUpDetailTests.swift) - Testing delete with shared state
 
 ---
 
@@ -1146,3 +1024,7 @@ struct TranscriptionTextView: View {
 4. **Reference existing patterns** - The TCA examples show battle-tested patterns
 5. **Verify with code** - Run tests frequently to validate assumptions
 6. **Check git status** - Ensure clean state before and after changes
+7. **Follow SyncUps patterns** - The SyncUps example is the gold standard for @Shared usage
+8. **Use `$0.$sharedValue.withLock`** - For asserting shared state mutations in tests
+9. **Add @MainActor to test structs** - With `uncheckedUseMainSerialExecutor = true` in init
+10. **Derive shared state for children** - Pass only what child features need

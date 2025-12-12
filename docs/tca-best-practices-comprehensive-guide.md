@@ -553,6 +553,193 @@ With `.finish()`:
 - The `for await` loop receives `CancellationError` and exits
 - `.finish()` returns, and the `.task` modifier completes cleanly
 
+**Handling Cancellation and Cleanup Within Effects:**
+
+When your effect needs to perform cleanup (close connections, release resources, save state), you need to detect and handle cancellation explicitly. Here are the patterns:
+
+**Pattern 1: Using `defer` for Guaranteed Cleanup**
+
+```swift
+return .run { send in
+  /// Setup resources
+  let connection = await openWebSocketConnection()
+  
+  /// defer runs when the scope exits, whether normally or via cancellation
+  defer {
+    connection.close()
+    print("Connection closed - cleanup complete")
+  }
+  
+  /// This loop will exit when cancelled
+  for await message in connection.messages {
+    await send(.messageReceived(message))
+  }
+  /// If we reach here naturally, defer still runs
+}
+```
+
+**Pattern 2: Using `do/catch` to Detect Cancellation**
+
+```swift
+return .run { send in
+  let recorder = AudioRecorder()
+  await recorder.startRecording()
+  
+  do {
+    for await level in recorder.audioLevels {
+      await send(.audioLevelChanged(level))
+    }
+  } catch is CancellationError {
+    /// Cancellation detected - perform cleanup
+    await recorder.stopRecording()
+    await send(.recordingStopped)
+    print("Recording stopped due to cancellation")
+  } catch {
+    /// Handle other errors
+    await send(.recordingFailed(error))
+  }
+}
+```
+
+**Pattern 3: Combining `defer` and `do/catch`**
+
+```swift
+return .run { send in
+  let session = await createSession()
+  
+  /// Guaranteed cleanup
+  defer {
+    session.invalidate()
+  }
+  
+  do {
+    for await event in session.events {
+      await send(.sessionEvent(event))
+    }
+  } catch is CancellationError {
+    /// Cancellation-specific handling (e.g., notify server)
+    await session.notifyDisconnect(reason: .userCancelled)
+  }
+  /// defer runs after catch block completes
+}
+```
+
+**Pattern 4: Using `withTaskCancellationHandler`**
+
+For more complex scenarios where you need immediate notification of cancellation:
+
+```swift
+return .run { send in
+  await withTaskCancellationHandler {
+    /// Main work
+    for await value in someAsyncSequence {
+      await send(.valueReceived(value))
+    }
+  } onCancel: {
+    /// Called immediately when cancellation is requested
+    /// Note: This runs concurrently with the main work
+    /// Use for signaling, not for cleanup that depends on main work state
+    print("Cancellation requested!")
+  }
+}
+```
+
+**Pattern 5: Checking Cancellation Status**
+
+For long-running loops that don't use `for await`:
+
+```swift
+return .run { send in
+  while !Task.isCancelled {
+    let data = await fetchNextBatch()
+    await send(.batchReceived(data))
+    try await Task.sleep(for: .seconds(1))
+  }
+  /// Loop exited due to cancellation
+  await send(.streamEnded)
+}
+```
+
+**Real-World Example: WebSocket with Cleanup**
+
+```swift
+@Reducer
+struct WebSocketFeature {
+  @Dependency(\.webSocket) var webSocket
+  
+  var body: some ReducerOf<Self> {
+    Reduce { state, action in
+      switch action {
+      case .task:
+        return .run { send in
+          let socket = await self.webSocket.connect()
+          
+          /// Guaranteed cleanup on any exit
+          defer {
+            Task { await socket.close(code: .normalClosure) }
+          }
+          
+          do {
+            /// Send connected status
+            await send(.connectionStatusChanged(.connected))
+            
+            /// Listen for messages until cancelled
+            for await message in socket.messages {
+              await send(.messageReceived(message))
+            }
+            
+            /// Natural completion (server closed connection)
+            await send(.connectionStatusChanged(.disconnected))
+            
+          } catch is CancellationError {
+            /// View disappeared - clean disconnect
+            await send(.connectionStatusChanged(.disconnected))
+            
+          } catch {
+            /// Connection error
+            await send(.connectionStatusChanged(.error(error)))
+          }
+        }
+        
+      case .messageReceived(let message):
+        state.messages.append(message)
+        return .none
+        
+      case .connectionStatusChanged(let status):
+        state.connectionStatus = status
+        return .none
+      }
+    }
+  }
+}
+```
+
+**Key Takeaways for Cleanup:**
+
+| Technique | When to Use | Runs On |
+|-----------|-------------|---------|
+| `defer` | Guaranteed cleanup regardless of exit path | Scope exit (normal, error, or cancellation) |
+| `catch is CancellationError` | Cancellation-specific logic | Only on cancellation |
+| `withTaskCancellationHandler` | Immediate cancellation notification | Concurrently with main work |
+| `Task.isCancelled` | Polling in non-async loops | Manual check points |
+
+**Important Notes:**
+
+1. **`defer` is your friend**: It runs regardless of how the scope exits, making it ideal for resource cleanup.
+
+2. **`CancellationError` is thrown by `for await`**: When the task is cancelled, the async sequence's iterator throws `CancellationError`, causing the loop to exit.
+
+3. **Cleanup order matters**: `defer` blocks run in reverse order of declaration, and they run after any `catch` blocks.
+
+4. **Don't swallow cancellation**: If you catch `CancellationError`, the cancellation is handled. If you need to propagate it, rethrow it.
+
+5. **Async cleanup in `defer`**: If you need async cleanup in `defer`, wrap it in a `Task`:
+   ```swift
+   defer {
+     Task { await asyncCleanup() }
+   }
+   ```
+
 ### Debouncing Effects
 
 Debounce rapid actions to prevent excessive work:
