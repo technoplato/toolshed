@@ -30,7 +30,7 @@
 
 🚧 Organized and committed WIP changes in semantic batches
 
-[Commit](https://github.com/technoplato/toolshed/commit/ac8a653)
+[Commit](https://github.com/technoplato/toolshed/commit/adae0a4)
 
 - Audio ingestion: HDBSCAN clustering, pgvector embeddings, migration scripts
 - SpeechRecorderApp: TCA-based iOS app with real-time transcription, README added
