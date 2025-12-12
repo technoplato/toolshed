@@ -10,14 +10,31 @@ The application is built entirely with Point-Free's library ecosystem, leveragin
 
 ## Core Features Summary
 
-| Feature | Description |
-|---------|-------------|
-| **Recording** | Capture audio with real-time speech-to-text transcription |
-| **Playback** | Play recordings with synchronized word highlighting |
-| **Recordings Library** | Browse, manage, and organize persisted recordings |
-| **Media Embedding** | Capture and embed screenshots/photos inline with transcription |
-| **Fullscreen Mode** | Distraction-free viewing with pinch-to-zoom text sizing |
-| **Collapsible Recording** | Minimize recording to floating indicator while browsing |
+### Status Legend
+
+| Status | Meaning |
+|--------|---------|
+| 🟢 **Polished** | Feature complete with great performance |
+| 🟡 **Implemented** | Working but may have flaky behavior or performance issues |
+| 🔵 **Implementing** | Currently being developed |
+| ⚪ **Planned** | Designed but not yet started |
+
+### Feature Matrix
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| **Audio Recording** | 🟡 Implemented | Audio not saved in real-time (waits for recording end) |
+| **Speech Transcription** | 🟡 Implemented | Memory/jankiness issues; volatile text display works |
+| **Playback** | 🟡 Implemented | Word highlighting works; scrubbing functional |
+| **Recordings Library** | 🟢 Polished | Persistence, deletion, browsing all work well |
+| **Media Embedding** | 🟡 Implemented | Photos/screenshots embed; inline display needs work |
+| **Fullscreen Mode** | 🟡 Implemented | Pinch-to-zoom has gesture conflicts |
+| **Collapsible Recording** | 🟡 Implemented | Collapse/expand works; scroll position not preserved |
+| **Auto-Scroll** | 🔵 Implementing | Scrolling behavior needs refinement |
+| **Background Recording** | ⚪ Planned | Audio continues when app backgrounded |
+| **Background Playback** | ⚪ Planned | Playback continues when app backgrounded |
+| **Sharing** | ⚪ Planned | Export/share recordings and transcripts |
+| **Organization** | ⚪ Planned | Folders, tags, search for recordings |
 
 ---
 
@@ -351,6 +368,155 @@ struct TimestampedMedia {
 - [ ] Pinch-to-zoom in fullscreen may need gesture conflict resolution
 - [ ] Liquid glass preview for scrolled-away recording segment (planned)
 - [ ] Background recording support (audio continues when app backgrounded)
+- [ ] Audio not saved in real-time (currently waits for recording to end)
+- [ ] Transcription has memory/jankiness issues
+- [ ] Scroll position not preserved when collapsing/expanding recording modal
+
+---
+
+## Strange Feature Ideas
+
+Experimental concepts that push the boundaries of what a speech recording app can be. These are exploratory and may or may not be implemented.
+
+### 1. Action Logging During Recording
+
+**Concept:** Log user actions and context during recording to create a richer timeline.
+
+**Potential Data Sources:**
+- Which recordings were listened to during this recording session
+- Clipboard activity (text copied/pasted)
+- App context via `RPBroadcastSampleHandler.broadcastAnnotated(withApplicationInfo:)`
+- Screenshots taken (already implemented)
+- URLs visited (if browser integration available)
+
+**Use Case:** When reviewing a recording, see not just what was said but what was being referenced or worked on at each moment.
+
+---
+
+### 2. Interactive Playback During Recording
+
+**Concept:** Play back previous recordings while actively recording, with intelligent speech detection.
+
+**Behavior:**
+- Start playing a previous recording while recording is active
+- When user starts speaking, automatically pause playback
+- When user stops speaking, optionally resume playback
+- Creates a "conversation with past self" experience
+
+**Technical Considerations:**
+- Speech detection threshold tuning
+- Latency between speech detection and playback pause
+- User preference for auto-resume behavior
+
+---
+
+### 3. System Audio Recording
+
+**Concept:** Capture system audio alongside microphone input using `RPBroadcastSampleHandler`.
+
+**Capabilities:**
+- Record audio from other apps (podcasts, videos, calls)
+- Use `broadcastAnnotated(withApplicationInfo:)` to tag which app audio came from
+- Separate tracks for microphone vs system audio
+- Transcribe both streams with speaker attribution
+
+**Use Cases:**
+- Recording a podcast while adding commentary
+- Capturing a video call with personal notes
+- Annotating audio content in real-time
+
+**Platform Notes:** Requires Broadcast Upload Extension on iOS; different approach on macOS.
+
+---
+
+### 4. Clipboard Integration
+
+**Concept:** Automatically embed clipboard content into the recording timeline.
+
+**Behavior:**
+- When app becomes active, check clipboard for new content
+- If text: embed as a text annotation at current timestamp
+- If image: embed as media at current timestamp
+- If URL: embed as link with optional preview
+
+**Privacy Considerations:**
+- User opt-in required
+- Visual indicator when clipboard is accessed
+- Option to exclude sensitive content patterns
+
+---
+
+### 5. Drag-and-Drop Media
+
+**Concept:** Drag photos or files into the recording view to embed them.
+
+**Behavior:**
+- Drag image from Photos app or Finder
+- Drop zone appears in recording view
+- Preview shows before confirming embed
+- Media timestamped at drop moment
+
+**Technical Notes:**
+- Use `onDrop` modifier with `UTType` handling
+- Support for images, PDFs, and potentially other file types
+
+---
+
+### 6. Pluggable Timeline Data
+
+**Concept:** Integrate external data sources into the recording timeline.
+
+**Potential Integrations:**
+- **HealthKit:** Heart rate, activity during recording
+- **Location:** GPS coordinates, place names
+- **Calendar:** Meeting context, attendees
+- **Weather:** Conditions at recording time
+- **Music:** What was playing (if applicable)
+
+**Display:** Timeline annotations showing contextual data alongside transcription.
+
+---
+
+### 7. Continuous Recording Mode
+
+**Concept:** Always-on recording that captures everything, with intelligent segmentation.
+
+**Behavior:**
+- Recording runs continuously in background
+- Automatic segmentation based on silence, context changes
+- Rolling buffer with configurable retention
+- "Save last N minutes" quick action
+
+**Privacy/Storage Considerations:**
+- Significant storage requirements
+- Clear user consent and controls
+- Automatic cleanup policies
+
+---
+
+### 8. Ambient Audio Analysis (Maybe)
+
+**Concept:** Analyze ambient audio for context without full transcription.
+
+**Potential Features:**
+- Detect environment type (office, outdoors, transit)
+- Identify significant sounds (doorbell, phone ring)
+- Measure noise levels over time
+- Tag recordings with acoustic environment
+
+---
+
+### 9. Picture-in-Picture Playback (Maybe)
+
+**Concept:** Continue playback in a floating window while using other apps.
+
+**Behavior:**
+- Minimize playback to PiP window
+- Shows current word/segment
+- Tap to return to full app
+- Works across apps on iOS/macOS
+
+**Technical Notes:** Requires AVPictureInPictureController integration.
 
 ---
 
