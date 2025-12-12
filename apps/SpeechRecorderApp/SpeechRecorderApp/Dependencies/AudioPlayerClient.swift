@@ -120,3 +120,88 @@ extension DependencyValues {
         set { self[AudioPlayerClient.self] = newValue }
     }
 }
+
+// MARK: - Convenience Initializers
+
+extension AudioPlayerClient {
+    /// A no-op implementation that does nothing - useful as a base for tests.
+    /// All methods return empty/default values immediately.
+    static let noop = Self(
+        play: { _ in },
+        pause: {},
+        stop: {},
+        seek: { _ in },
+        currentTime: { nil },
+        duration: { nil }
+    )
+    
+    /// A preview implementation with simulated playback behavior for SwiftUI previews.
+    /// - Parameters:
+    ///   - duration: The simulated duration of the audio (default: 10 seconds)
+    ///   - playbackSpeed: Speed multiplier for simulated playback (default: 1.0)
+    /// - Returns: A configured AudioPlayerClient for previews
+    static func preview(
+        duration: TimeInterval = 10.0,
+        playbackSpeed: Double = 1.0
+    ) -> Self {
+        let isPlaying = LockIsolated(false)
+        let currentTimeValue = LockIsolated(0.0)
+        let durationValue = LockIsolated(duration)
+        
+        return Self(
+            play: { [isPlaying, currentTimeValue, durationValue] _ in
+                isPlaying.setValue(true)
+                while isPlaying.value && currentTimeValue.value < durationValue.value {
+                    try await Task.sleep(for: .milliseconds(50))
+                    currentTimeValue.withValue { $0 += 0.05 * playbackSpeed }
+                }
+                isPlaying.setValue(false)
+            },
+            pause: { [isPlaying] in
+                isPlaying.setValue(false)
+            },
+            stop: { [isPlaying, currentTimeValue] in
+                isPlaying.setValue(false)
+                currentTimeValue.setValue(0)
+            },
+            seek: { [currentTimeValue, durationValue] time in
+                currentTimeValue.setValue(min(max(0, time), durationValue.value))
+            },
+            currentTime: { currentTimeValue.value },
+            duration: { durationValue.value }
+        )
+    }
+    
+    /// Convenience factory for testing with a specific duration.
+    /// - Parameter duration: The duration to return
+    /// - Returns: A configured AudioPlayerClient for testing duration-based logic
+    static func withDuration(_ duration: TimeInterval) -> Self {
+        var client = noop
+        client.duration = { duration }
+        return client
+    }
+    
+    /// Convenience factory for testing with a specific current time.
+    /// - Parameter time: The current time to return
+    /// - Returns: A configured AudioPlayerClient for testing time-based logic
+    static func withCurrentTime(_ time: TimeInterval) -> Self {
+        var client = noop
+        client.currentTime = { time }
+        return client
+    }
+    
+    /// Convenience factory for testing playback state.
+    /// - Parameters:
+    ///   - currentTime: The current playback time
+    ///   - duration: The total duration
+    /// - Returns: A configured AudioPlayerClient for testing playback state
+    static func withPlaybackState(
+        currentTime: TimeInterval,
+        duration: TimeInterval
+    ) -> Self {
+        var client = noop
+        client.currentTime = { currentTime }
+        client.duration = { duration }
+        return client
+    }
+}

@@ -18,6 +18,8 @@
 		021 /* RecordingsListFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121 /* RecordingsListFeature.swift */; };
 		022 /* PlaybackFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122 /* PlaybackFeature.swift */; };
 		023 /* AppFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123 /* AppFeature.swift */; };
+		024 /* FullscreenImageFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124 /* FullscreenImageFeature.swift */; };
+		025 /* FullscreenTranscriptFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125 /* FullscreenTranscriptFeature.swift */; };
 		030 /* AudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130 /* AudioRecorderClient.swift */; };
 		031 /* LiveAudioRecorderClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131 /* LiveAudioRecorderClient.swift */; };
 		032 /* SpeechClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132 /* SpeechClient.swift */; };
@@ -31,6 +33,12 @@
 		041 /* RecordingsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141 /* RecordingsListView.swift */; };
 		042 /* PlaybackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* PlaybackView.swift */; };
 		043 /* TranscriptionTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143 /* TranscriptionTextView.swift */; };
+		044 /* TranscriptionDisplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* TranscriptionDisplayView.swift */; };
+		045 /* FullscreenImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145 /* FullscreenImageView.swift */; };
+		046 /* AudioWaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* AudioWaveformView.swift */; };
+		047 /* FullscreenTranscriptView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147 /* FullscreenTranscriptView.swift */; };
+		048 /* FloatingRecordingIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148 /* FloatingRecordingIndicator.swift */; };
+		049 /* LiveBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 149 /* LiveBadge.swift */; };
 		050 /* SharedKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150 /* SharedKeys.swift */; };
 		060 /* BufferConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 160 /* BufferConverter.swift */; };
 		061 /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 161 /* Helpers.swift */; };
@@ -41,6 +49,7 @@
 		204 /* SpeechClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304 /* SpeechClientTests.swift */; };
 		205 /* PhotoLibraryClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 305 /* PhotoLibraryClientTests.swift */; };
 		206 /* MediaSynchronizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 306 /* MediaSynchronizationTests.swift */; };
+		207 /* AppFeatureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 307 /* AppFeatureTests.swift */; };
 		407AA8832EE9378B00A6B0D0 /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = 950 /* ComposableArchitecture */; };
 		407AA8842EE9378B00A6B0D0 /* Sharing in Frameworks */ = {isa = PBXBuildFile; productRef = 951 /* Sharing */; };
 /* End PBXBuildFile section */
@@ -67,6 +76,8 @@
 		121 /* RecordingsListFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListFeature.swift; sourceTree = "<group>"; };
 		122 /* PlaybackFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackFeature.swift; sourceTree = "<group>"; };
 		123 /* AppFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeature.swift; sourceTree = "<group>"; };
+		124 /* FullscreenImageFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenImageFeature.swift; sourceTree = "<group>"; };
+		125 /* FullscreenTranscriptFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenTranscriptFeature.swift; sourceTree = "<group>"; };
 		130 /* AudioRecorderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorderClient.swift; sourceTree = "<group>"; };
 		131 /* LiveAudioRecorderClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveAudioRecorderClient.swift; sourceTree = "<group>"; };
 		132 /* SpeechClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechClient.swift; sourceTree = "<group>"; };
@@ -80,6 +91,12 @@
 		141 /* RecordingsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordingsListView.swift; sourceTree = "<group>"; };
 		142 /* PlaybackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackView.swift; sourceTree = "<group>"; };
 		143 /* TranscriptionTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionTextView.swift; sourceTree = "<group>"; };
+		144 /* TranscriptionDisplayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptionDisplayView.swift; sourceTree = "<group>"; };
+		145 /* FullscreenImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenImageView.swift; sourceTree = "<group>"; };
+		146 /* AudioWaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioWaveformView.swift; sourceTree = "<group>"; };
+		147 /* FullscreenTranscriptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenTranscriptView.swift; sourceTree = "<group>"; };
+		148 /* FloatingRecordingIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingRecordingIndicator.swift; sourceTree = "<group>"; };
+		149 /* LiveBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBadge.swift; sourceTree = "<group>"; };
 		150 /* SharedKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedKeys.swift; sourceTree = "<group>"; };
 		160 /* BufferConverter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BufferConverter.swift; sourceTree = "<group>"; };
 		161 /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
@@ -90,6 +107,7 @@
 		304 /* SpeechClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechClientTests.swift; sourceTree = "<group>"; };
 		305 /* PhotoLibraryClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibraryClientTests.swift; sourceTree = "<group>"; };
 		306 /* MediaSynchronizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaSynchronizationTests.swift; sourceTree = "<group>"; };
+		307 /* AppFeatureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppFeatureTests.swift; sourceTree = "<group>"; };
 		600 /* SpeechRecorderApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpeechRecorderApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		601 /* SpeechRecorderAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpeechRecorderAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -149,6 +167,7 @@
 				304 /* SpeechClientTests.swift */,
 				305 /* PhotoLibraryClientTests.swift */,
 				306 /* MediaSynchronizationTests.swift */,
+				307 /* AppFeatureTests.swift */,
 			);
 			path = SpeechRecorderAppTests;
 			sourceTree = "<group>";
@@ -180,6 +199,8 @@
 				121 /* RecordingsListFeature.swift */,
 				122 /* PlaybackFeature.swift */,
 				123 /* AppFeature.swift */,
+				124 /* FullscreenImageFeature.swift */,
+				125 /* FullscreenTranscriptFeature.swift */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -207,6 +228,12 @@
 				141 /* RecordingsListView.swift */,
 				142 /* PlaybackView.swift */,
 				143 /* TranscriptionTextView.swift */,
+				144 /* TranscriptionDisplayView.swift */,
+				145 /* FullscreenImageView.swift */,
+				146 /* AudioWaveformView.swift */,
+				147 /* FullscreenTranscriptView.swift */,
+				148 /* FloatingRecordingIndicator.swift */,
+				149 /* LiveBadge.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -350,6 +377,14 @@
 				041 /* RecordingsListView.swift in Sources */,
 				042 /* PlaybackView.swift in Sources */,
 				043 /* TranscriptionTextView.swift in Sources */,
+				044 /* TranscriptionDisplayView.swift in Sources */,
+				045 /* FullscreenImageView.swift in Sources */,
+				046 /* AudioWaveformView.swift in Sources */,
+				047 /* FullscreenTranscriptView.swift in Sources */,
+				048 /* FloatingRecordingIndicator.swift in Sources */,
+				049 /* LiveBadge.swift in Sources */,
+				024 /* FullscreenImageFeature.swift in Sources */,
+				025 /* FullscreenTranscriptFeature.swift in Sources */,
 				050 /* SharedKeys.swift in Sources */,
 				060 /* BufferConverter.swift in Sources */,
 				061 /* Helpers.swift in Sources */,
@@ -367,6 +402,7 @@
 				204 /* SpeechClientTests.swift in Sources */,
 				205 /* PhotoLibraryClientTests.swift in Sources */,
 				206 /* MediaSynchronizationTests.swift in Sources */,
+				207 /* AppFeatureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

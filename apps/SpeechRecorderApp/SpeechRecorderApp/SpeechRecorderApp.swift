@@ -39,7 +39,7 @@ import SwiftUI
 struct SpeechRecorderApp: App {
     /// The root store for the application
     static let store = Store(initialState: AppFeature.State()) {
-        AppFeature()
+      AppFeature()
     }
     
     var body: some Scene {

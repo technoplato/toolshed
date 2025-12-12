@@ -21,38 +21,76 @@
 
  WHEN:
    Created: 2025-12-10
-   Last Modified: 2025-12-10
+   Last Modified: 2025-12-11
+   [Change Log:
+     - 2025-12-11: Updated to use Shared<Recording> pattern for derived state
+   ]
 
  WHERE:
    apps/SpeechRecorderApp/SpeechRecorderAppTests/PlaybackFeatureTests.swift
 
  WHY:
    TDD approach - verify PlaybackFeature behavior.
+   
+   **Migration Note (2025-12-11):**
+   Updated tests to use Shared<Recording> instead of Recording.
+   This matches the SyncUpDetail pattern where child features receive
+   derived shared state from their parent.
+   
+   **Source:** Recipe 7 from swift-sharing-state-comprehensive-guide.md
+   **Motivation:** PlaybackFeature now uses @Shared var recording to enable
+   mutations to propagate back to the parent's IdentifiedArrayOf<Recording>.
  */
 
 import ComposableArchitecture
 import Foundation
+import Sharing
 import Testing
 @testable import SpeechRecorderApp
 
+/**
+ **Source:** SyncUps example - SyncUpDetailTests.swift
+ **Motivation:** Use @MainActor and uncheckedUseMainSerialExecutor for deterministic testing
+ */
 @Suite("PlaybackFeature Tests")
+@MainActor
 struct PlaybackFeatureTests {
+    
+    init() { uncheckedUseMainSerialExecutor = true }
+    
+    /**
+     Helper to create a PlaybackFeature.State with Shared<Recording>.
+     
+     **Source:** Recipe 7 - "Testing Shared State in TCA"
+     **Motivation:** Use Shared(value:) for inline test values when the recording
+     doesn't need to be part of a persisted collection.
+     */
+    private func makeState(recording: Recording) -> PlaybackFeature.State {
+        PlaybackFeature.State(recording: Shared(value: recording))
+    }
     
     @Test("Play button starts playback")
     func playButtonStartsPlayback() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5),
+            TimestampedWord.preview(text: "world", startTime: 0.6, endTime: 1.0)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello world",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5),
-                    .preview(text: "world", startTime: 0.6, endTime: 1.0)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello world", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        /**
+         **Source:** Recipe 7 - "Use Shared(value:) for inline test values"
+         **Motivation:** When testing a child feature in isolation, we don't need
+         the recording to be part of a persisted collection.
+         */
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         } withDependencies: {
@@ -74,10 +112,10 @@ struct PlaybackFeatureTests {
     func pauseButtonStopsPlayback() async {
         let recording = Recording.preview()
         
-        var state = PlaybackFeature.State(recording: recording)
+        var state = makeState(recording: recording)
         state.isPlaying = true
         
-        let store = await TestStore(initialState: state) {
+        let store = TestStore(initialState: state) {
             PlaybackFeature()
         } withDependencies: {
             $0.audioPlayer.pause = { }
@@ -90,19 +128,21 @@ struct PlaybackFeatureTests {
     
     @Test("Time update highlights correct word")
     func timeUpdateHighlightsWord() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5),
+            TimestampedWord.preview(text: "world", startTime: 0.6, endTime: 1.0)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello world",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5),
-                    .preview(text: "world", startTime: 0.6, endTime: 1.0)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello world", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         }
@@ -122,19 +162,21 @@ struct PlaybackFeatureTests {
     
     @Test("Seek updates time and word index")
     func seekUpdatesTimeAndWordIndex() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5),
+            TimestampedWord.preview(text: "world", startTime: 0.6, endTime: 1.0)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello world",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5),
-                    .preview(text: "world", startTime: 0.6, endTime: 1.0)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello world", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         } withDependencies: {
@@ -151,12 +193,12 @@ struct PlaybackFeatureTests {
     func playbackFinishedResetsState() async {
         let recording = Recording.preview()
         
-        var state = PlaybackFeature.State(recording: recording)
+        var state = makeState(recording: recording)
         state.isPlaying = true
         state.currentTime = 5.0
         state.currentWordIndex = 2
         
-        let store = await TestStore(initialState: state) {
+        let store = TestStore(initialState: state) {
             PlaybackFeature()
         }
         
@@ -171,20 +213,22 @@ struct PlaybackFeatureTests {
     
     @Test("Tap word seeks to word start time")
     func tapWordSeeksToWordStart() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5),
+            TimestampedWord.preview(text: "world", startTime: 0.5, endTime: 1.0),
+            TimestampedWord.preview(text: "test", startTime: 1.0, endTime: 1.5)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello world test",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5),
-                    .preview(text: "world", startTime: 0.5, endTime: 1.0),
-                    .preview(text: "test", startTime: 1.0, endTime: 1.5)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello world test", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         } withDependencies: {
@@ -206,18 +250,20 @@ struct PlaybackFeatureTests {
     
     @Test("Tap word with invalid index does nothing")
     func tapWordInvalidIndexDoesNothing() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         }
@@ -229,18 +275,20 @@ struct PlaybackFeatureTests {
     
     @Test("Tap word with negative index does nothing")
     func tapWordNegativeIndexDoesNothing() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         }
@@ -254,20 +302,22 @@ struct PlaybackFeatureTests {
     
     @Test("Time between words returns nil index")
     func timeBetweenWordsReturnsNil() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.4),
+            /// Gap from 0.4 to 0.6
+            TimestampedWord.preview(text: "world", startTime: 0.6, endTime: 1.0)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello world",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.4),
-                    /// Gap from 0.4 to 0.6
-                    .preview(text: "world", startTime: 0.6, endTime: 1.0)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello world", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         }
@@ -281,18 +331,20 @@ struct PlaybackFeatureTests {
     
     @Test("Time after all words returns nil index")
     func timeAfterAllWordsReturnsNil() async {
+        let words = [
+            TimestampedWord.preview(text: "Hello", startTime: 0.0, endTime: 0.5)
+        ]
         let recording = Recording.preview(
             transcription: Transcription(
                 text: "Hello",
-                words: [
-                    .preview(text: "Hello", startTime: 0.0, endTime: 0.5)
-                ],
+                words: words,
+                segments: [TranscriptionSegment(text: "Hello", words: words)],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         }
@@ -310,12 +362,13 @@ struct PlaybackFeatureTests {
             transcription: Transcription(
                 text: "",
                 words: [],
+                segments: [],
                 isFinal: true
             )
         )
         
-        let store = await TestStore(
-            initialState: PlaybackFeature.State(recording: recording)
+        let store = TestStore(
+            initialState: makeState(recording: recording)
         ) {
             PlaybackFeature()
         }

@@ -46,8 +46,12 @@ struct AudioRecorderClientTests {
         let client = AudioRecorderClient(
             currentTime: { nil },
             requestRecordPermission: { true },
-            startRecording: { _ in },
-            stopRecording: { }
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: { },
+            resumeRecording: { },
+            stopRecording: { },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
         )
         
         let result = await client.requestRecordPermission()
@@ -59,8 +63,12 @@ struct AudioRecorderClientTests {
         let client = AudioRecorderClient(
             currentTime: { nil },
             requestRecordPermission: { false },
-            startRecording: { _ in },
-            stopRecording: { }
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: { },
+            resumeRecording: { },
+            stopRecording: { },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
         )
         
         let result = await client.requestRecordPermission()
@@ -77,11 +85,16 @@ struct AudioRecorderClientTests {
             requestRecordPermission: { true },
             startRecording: { url in
                 receivedURLHolder.setValue(url)
+                return AsyncStream { _ in }
             },
-            stopRecording: { }
+            pauseRecording: { },
+            resumeRecording: { },
+            stopRecording: { },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
         )
         
-        try await client.startRecording(url: expectedURL)
+        _ = try await client.startRecording(url: expectedURL)
         #expect(receivedURLHolder.value == expectedURL)
     }
     
@@ -92,10 +105,14 @@ struct AudioRecorderClientTests {
         let client = AudioRecorderClient(
             currentTime: { nil },
             requestRecordPermission: { true },
-            startRecording: { _ in },
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: { },
+            resumeRecording: { },
             stopRecording: {
                 stopCalledExpectation.setValue(true)
-            }
+            },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
         )
         
         await client.stopRecording()
@@ -109,8 +126,12 @@ struct AudioRecorderClientTests {
         let client = AudioRecorderClient(
             currentTime: { expectedTime },
             requestRecordPermission: { true },
-            startRecording: { _ in },
-            stopRecording: { }
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: { },
+            resumeRecording: { },
+            stopRecording: { },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
         )
         
         let result = await client.currentTime()
@@ -122,11 +143,83 @@ struct AudioRecorderClientTests {
         let client = AudioRecorderClient(
             currentTime: { nil },
             requestRecordPermission: { true },
-            startRecording: { _ in },
-            stopRecording: { }
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: { },
+            resumeRecording: { },
+            stopRecording: { },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
         )
         
         let result = await client.currentTime()
         #expect(result == nil)
+    }
+    
+    @Test("Pause recording is called")
+    func pauseRecording() async {
+        let pauseCalledExpectation = LockIsolated(false)
+        
+        let client = AudioRecorderClient(
+            currentTime: { nil },
+            requestRecordPermission: { true },
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: {
+                pauseCalledExpectation.setValue(true)
+            },
+            resumeRecording: { },
+            stopRecording: { },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
+        )
+        
+        await client.pauseRecording()
+        #expect(pauseCalledExpectation.value == true)
+    }
+    
+    @Test("Resume recording is called")
+    func resumeRecording() async throws {
+        let resumeCalledExpectation = LockIsolated(false)
+        
+        let client = AudioRecorderClient(
+            currentTime: { nil },
+            requestRecordPermission: { true },
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: { },
+            resumeRecording: {
+                resumeCalledExpectation.setValue(true)
+            },
+            stopRecording: { },
+            isPaused: { false },
+            audioLevelStream: { AsyncStream { $0.finish() } }
+        )
+        
+        try await client.resumeRecording()
+        #expect(resumeCalledExpectation.value == true)
+    }
+    
+    @Test("isPaused returns correct state")
+    func isPausedReturnsState() async {
+        let isPausedState = LockIsolated(false)
+        
+        let client = AudioRecorderClient(
+            currentTime: { nil },
+            requestRecordPermission: { true },
+            startRecording: { _ in AsyncStream { _ in } },
+            pauseRecording: {
+                isPausedState.setValue(true)
+            },
+            resumeRecording: {
+                isPausedState.setValue(false)
+            },
+            stopRecording: { },
+            isPaused: { isPausedState.value },
+            audioLevelStream: { AsyncStream { $0.finish() } }
+        )
+        
+        #expect(await client.isPaused() == false)
+        await client.pauseRecording()
+        #expect(await client.isPaused() == true)
+        try? await client.resumeRecording()
+        #expect(await client.isPaused() == false)
     }
 }

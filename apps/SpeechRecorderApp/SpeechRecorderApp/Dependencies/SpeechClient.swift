@@ -187,3 +187,139 @@ extension DependencyValues {
         set { self[SpeechClient.self] = newValue }
     }
 }
+
+// MARK: - Convenience Initializers
+
+extension SpeechClient {
+    /// A no-op implementation that does nothing - useful as a base for tests.
+    /// All methods return empty/default values immediately.
+    static let noop = Self(
+        requestAuthorization: { .notDetermined },
+        isAvailable: { _ in false },
+        isAssetInstalled: { _ in false },
+        ensureAssets: { _ in },
+        startTranscription: { _ in AsyncThrowingStream { $0.finish() } },
+        streamAudio: { _ in },
+        finishTranscription: {}
+    )
+    
+    /// A preview implementation with simulated transcription for SwiftUI previews.
+    /// - Parameters:
+    ///   - transcriptionText: The text to simulate transcribing (default: sample text)
+    ///   - wordDelay: Delay between words in milliseconds (default: 300)
+    /// - Returns: A configured SpeechClient for previews
+    static func preview(
+        transcriptionText: String = "Hello world this is a test transcription",
+        wordDelay: Int = 300
+    ) -> Self {
+        let isTranscribing = LockIsolated(false)
+        
+        return Self(
+            requestAuthorization: { .authorized },
+            isAvailable: { _ in true },
+            isAssetInstalled: { _ in true },
+            ensureAssets: { _ in },
+            startTranscription: { [isTranscribing] _ in
+                AsyncThrowingStream { continuation in
+                    Task {
+                        isTranscribing.setValue(true)
+                        
+                        let wordList = transcriptionText.split(separator: " ").map(String.init)
+                        var accumulatedWords: [TimestampedWord] = []
+                        var currentTime: TimeInterval = 0
+                        
+                        for word in wordList {
+                            guard isTranscribing.value else { break }
+                            
+                            try? await Task.sleep(for: .milliseconds(wordDelay))
+                            
+                            let startTime = currentTime
+                            let endTime = currentTime + Double(wordDelay) / 1000.0
+                            currentTime = endTime + 0.1
+                            
+                            accumulatedWords.append(TimestampedWord(
+                                text: word,
+                                startTime: startTime,
+                                endTime: endTime,
+                                confidence: Float.random(in: 0.85...0.99)
+                            ))
+                            
+                            continuation.yield(TranscriptionResult(
+                                text: accumulatedWords.map(\.text).joined(separator: " "),
+                                words: accumulatedWords,
+                                isFinal: false
+                            ))
+                        }
+                        
+                        /// Final result
+                        if !accumulatedWords.isEmpty {
+                            continuation.yield(TranscriptionResult(
+                                text: accumulatedWords.map(\.text).joined(separator: " "),
+                                words: accumulatedWords,
+                                isFinal: true
+                            ))
+                        }
+                        
+                        continuation.finish()
+                    }
+                }
+            },
+            streamAudio: { _ in },
+            finishTranscription: { [isTranscribing] in
+                isTranscribing.setValue(false)
+            }
+        )
+    }
+    
+    /// Convenience factory for testing authorization states.
+    /// - Parameter status: The authorization status to return
+    /// - Returns: A configured SpeechClient for testing authorization flows
+    static func withAuthorizationStatus(_ status: AuthorizationStatus) -> Self {
+        var client = noop
+        client.requestAuthorization = { status }
+        return client
+    }
+    
+    /// Convenience factory for testing availability.
+    /// - Parameter available: Whether speech recognition is available
+    /// - Returns: A configured SpeechClient for testing availability checks
+    static func withAvailability(_ available: Bool) -> Self {
+        var client = noop
+        client.isAvailable = { _ in available }
+        client.isAssetInstalled = { _ in available }
+        return client
+    }
+    
+    /// Convenience factory for testing with a specific transcription result.
+    /// - Parameter result: The transcription result to return immediately
+    /// - Returns: A configured SpeechClient for testing transcription handling
+    static func withTranscriptionResult(_ result: TranscriptionResult) -> Self {
+        var client = noop
+        client.requestAuthorization = { .authorized }
+        client.isAvailable = { _ in true }
+        client.isAssetInstalled = { _ in true }
+        client.startTranscription = { _ in
+            AsyncThrowingStream { continuation in
+                continuation.yield(result)
+                continuation.finish()
+            }
+        }
+        return client
+    }
+    
+    /// Convenience factory for testing transcription errors.
+    /// - Parameter error: The error to throw during transcription
+    /// - Returns: A configured SpeechClient for testing error handling
+    static func withTranscriptionError(_ error: Failure) -> Self {
+        var client = noop
+        client.requestAuthorization = { .authorized }
+        client.isAvailable = { _ in true }
+        client.isAssetInstalled = { _ in true }
+        client.startTranscription = { _ in
+            AsyncThrowingStream { continuation in
+                continuation.finish(throwing: error)
+            }
+        }
+        return client
+    }
+}

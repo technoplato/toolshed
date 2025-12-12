@@ -55,6 +55,7 @@
 import AVFoundation
 import ComposableArchitecture
 import Foundation
+import Sharing
 import UIKit
 
 @Reducer
@@ -67,11 +68,17 @@ struct RecordingFeature {
         /// Whether recording is in progress
         var isRecording = false
         
+        /// Whether recording is paused
+        var isPaused = false
+        
         /// When recording started
         var recordingStartTime: Date?
         
         /// Current recording duration in seconds
         var duration: TimeInterval = 0
+        
+        /// User-editable title for the recording
+        var title: String = ""
         
         /// Whether microphone permission has been granted
         var hasPermission: Bool?
@@ -88,36 +95,40 @@ struct RecordingFeature {
         /// Alert state for permission errors
         @Presents var alert: AlertState<Action.Alert>?
         
+        /// Fullscreen transcript presentation state
+        @Presents var fullscreenTranscript: FullscreenTranscriptFeature.State?
+        
         /// The URL where the recording will be saved
         var recordingURL: URL?
         
-        /// Live transcription text (volatile, in-progress for current segment)
-        var volatileTranscription: String = ""
+        /// Live transcription state - received from parent (AppFeature)
+        /// Uses @Shared without key to receive derived reference from parent
+        /// AppFeature owns this state with @Shared(.liveTranscription)
+        @Shared var liveTranscription: LiveTranscriptionState
         
-        /// Accumulated finalized text from all completed segments
-        var finalizedText: String = ""
-        
-        /// Accumulated finalized words from all completed segments
-        var finalizedWords: [TimestampedWord] = []
-        
-        /// Accumulated finalized segments
-        var finalizedSegments: [TranscriptionSegment] = []
-        
-        /// Finalized transcription (combines all segments)
+        /// Finalized transcription (combines all segments) - for saving to Recording
         var transcription: Transcription = .empty
+        
+        /// Convenience accessors for backward compatibility
+        var volatileTranscription: String {
+            liveTranscription.volatileText ?? ""
+        }
+        
+        var finalizedText: String {
+            liveTranscription.segments.map(\.text).joined(separator: " ")
+        }
+        
+        var finalizedWords: [TimestampedWord] {
+            liveTranscription.words
+        }
+        
+        var finalizedSegments: [TranscriptionSegment] {
+            liveTranscription.segments
+        }
         
         /// Full transcription text (finalized + volatile)
         var fullTranscriptionText: String {
-            let trimmedFinalized = finalizedText.trimmingCharacters(in: .whitespaces)
-            let trimmedVolatile = volatileTranscription.trimmingCharacters(in: .whitespaces)
-            
-            if trimmedFinalized.isEmpty {
-                return trimmedVolatile
-            } else if trimmedVolatile.isEmpty {
-                return trimmedFinalized
-            } else {
-                return trimmedFinalized + " " + trimmedVolatile
-            }
+            liveTranscription.fullText
         }
         
         /// Whether speech assets are being downloaded
@@ -132,9 +143,22 @@ struct RecordingFeature {
         /// Thumbnails for captured media (keyed by media ID)
         var mediaThumbnails: [UUID: UIImage] = [:]
         
+        /// Current audio level for waveform visualization (0.0 to 1.0)
+        var currentAudioLevel: Float = 0
+        
+        /// Whether auto-scroll is enabled (scrolls to latest content)
+        var isAutoScrollEnabled: Bool = true
+        
+        /// Initialize with shared state from parent
+        /// - Parameter liveTranscription: Shared reference from AppFeature
+        init(liveTranscription: Shared<LiveTranscriptionState> = Shared(.liveTranscription)) {
+            self._liveTranscription = liveTranscription
+        }
+        
         enum Mode: Equatable, Sendable {
             case idle
             case recording
+            case paused
             case encoding
         }
     }
@@ -142,6 +166,10 @@ struct RecordingFeature {
     // MARK: - Action
     
     enum Action: Sendable {
+        /// View lifecycle action - called when view appears
+        /// Starts long-living effects that should run while the view is visible
+        case task
+        
         /// User tapped the record button
         case recordButtonTapped
         
@@ -150,6 +178,15 @@ struct RecordingFeature {
         
         /// User tapped the cancel button
         case cancelButtonTapped
+        
+        /// User tapped the pause button
+        case pauseButtonTapped
+        
+        /// User tapped the resume button
+        case resumeButtonTapped
+        
+        /// User changed the title
+        case titleChanged(String)
         
         /// Permission response received
         case permissionResponse(Bool)
@@ -199,8 +236,23 @@ struct RecordingFeature {
         /// Thumbnail loaded for a media item
         case thumbnailLoaded(UUID, UIImage)
         
+        /// Audio level received for waveform visualization
+        case audioLevelReceived(Float)
+        
+        /// User scrolled manually, disable auto-scroll
+        case userDidScroll
+        
+        /// User tapped resume auto-scroll button
+        case resumeAutoScrollTapped
+        
+        /// User double-tapped with two fingers to enter fullscreen
+        case twoFingerDoubleTapped
+        
         /// Alert actions
         case alert(PresentationAction<Alert>)
+        
+        /// Fullscreen transcript actions
+        case fullscreenTranscript(PresentationAction<FullscreenTranscriptFeature.Action>)
         
         /// Delegate actions for parent feature
         case delegate(Delegate)
@@ -239,6 +291,7 @@ struct RecordingFeature {
         case transcription
         case photoObservation
         case audioStreaming
+        case audioLevels
     }
     
     // MARK: - Reducer Body
@@ -246,18 +299,29 @@ struct RecordingFeature {
     var body: some Reducer<State, Action> {
         Reduce { state, action in
             switch action {
+            case .task:
+                /// Start long-living effects that should run while the view is visible
+                /// These effects are automatically cancelled when the view disappears
+                /// via Swift's structured concurrency (the .task modifier)
+                return .none
+                
             case .recordButtonTapped:
                 state.isRecording = true
                 state.recordingStartTime = date.now
                 state.mode = .recording
-                state.volatileTranscription = ""
-                state.finalizedText = ""
-                state.finalizedWords = []
-                state.finalizedSegments = []
+                
+                /// Reset shared live transcription state
+                state.$liveTranscription.withLock { transcription in
+                    transcription = LiveTranscriptionState()
+                }
+                
                 state.transcription = .empty
                 state.speechError = nil
                 state.capturedMedia = []
                 state.mediaThumbnails = [:]
+                
+                /// Set default title to human-readable date
+                state.title = formatHumanReadableDate(date.now)
                 
                 /// Generate recording URL
                 let recordingURL = FileManager.default.temporaryDirectory
@@ -302,7 +366,14 @@ struct RecordingFeature {
                     
                     return .merge(
                         /// Start recording and stream audio buffers to speech client
-                        .run { send in
+                        .run { [audioRecorder, speechClient] send in
+                            defer {
+                                /// Ensure recording is stopped when effect is cancelled or completes
+                                Task { @MainActor in
+                                    await audioRecorder.stopRecording()
+                                }
+                            }
+                            
                             do {
                                 /// Start recording - returns a stream of audio buffers
                                 let bufferStream = try await audioRecorder.startRecording(url: recordingURL)
@@ -312,6 +383,8 @@ struct RecordingFeature {
                                 for await buffer in bufferStream {
                                     await speechClient.streamAudio(buffer)
                                 }
+                            } catch is CancellationError {
+                                /// Graceful cancellation - cleanup handled by defer block
                             } catch {
                                 await send(.recordingFailed(error))
                             }
@@ -320,11 +393,28 @@ struct RecordingFeature {
                         
                         /// Start timer
                         .run { send in
-                            for await _ in clock.timer(interval: .seconds(1)) {
-                                await send(.timerTicked)
+                            do {
+                                for await _ in clock.timer(interval: .seconds(1)) {
+                                    await send(.timerTicked)
+                                }
+                            } catch is CancellationError {
+                                /// Graceful cancellation - timer stopped
                             }
                         }
                         .cancellable(id: CancelID.timer),
+                        
+                        /// Start audio level streaming for waveform visualization
+                        .run { [audioRecorder] send in
+                            do {
+                                let levelStream = audioRecorder.audioLevelStream()
+                                for await level in levelStream {
+                                    await send(.audioLevelReceived(level))
+                                }
+                            } catch is CancellationError {
+                                /// Graceful cancellation - audio level streaming stopped
+                            }
+                        }
+                        .cancellable(id: CancelID.audioLevels),
                         
                         /// Start transcription if authorized
                         speechAuthorized ? startTranscription() : .none,
@@ -336,6 +426,7 @@ struct RecordingFeature {
                     state.isRecording = false
                     state.recordingStartTime = nil
                     state.mode = .idle
+                    state.title = ""
                     state.alert = AlertState {
                         TextState("Permission Required")
                     } message: {
@@ -366,30 +457,24 @@ struct RecordingFeature {
                 
             case let .transcriptionResult(result):
                 if result.isFinal {
-                    /// Append finalized segment to accumulated text
+                    /// Append finalized segment to shared state
                     let segmentText = result.text.trimmingCharacters(in: .whitespaces)
                     if !segmentText.isEmpty {
-                        if state.finalizedText.isEmpty {
-                            state.finalizedText = segmentText
-                        } else {
-                            state.finalizedText += " " + segmentText
-                        }
-                        
                         /// Create a segment for this finalized result
                         let segment = TranscriptionSegment(
                             text: segmentText,
                             words: result.words
                         )
-                        state.finalizedSegments.append(segment)
+                        
+                        /// Update shared state - this automatically syncs to fullscreen view
+                        state.$liveTranscription.withLock { transcription in
+                            transcription.segments.append(segment)
+                            transcription.words.append(contentsOf: result.words)
+                            transcription.volatileText = nil
+                        }
                     }
                     
-                    /// Append finalized words to accumulated words
-                    state.finalizedWords.append(contentsOf: result.words)
-                    
-                    /// Clear volatile since this segment is now finalized
-                    state.volatileTranscription = ""
-                    
-                    /// Update the transcription with all accumulated data
+                    /// Update the transcription for saving to Recording
                     state.transcription = Transcription(
                         text: state.finalizedText,
                         words: state.finalizedWords,
@@ -397,8 +482,10 @@ struct RecordingFeature {
                         isFinal: true
                     )
                 } else {
-                    /// Update volatile transcription for current in-progress segment
-                    state.volatileTranscription = result.text
+                    /// Update volatile transcription in shared state
+                    state.$liveTranscription.withLock { transcription in
+                        transcription.volatileText = result.text
+                    }
                 }
                 return .none
                 
@@ -459,7 +546,7 @@ struct RecordingFeature {
                    let startTime = state.recordingStartTime {
                     let recording = Recording(
                         id: uuid(),
-                        title: "",
+                        title: state.title,
                         date: startTime,
                         duration: state.duration,
                         audioURL: recordingURL,
@@ -478,10 +565,12 @@ struct RecordingFeature {
                 state.isRecording = false
                 state.duration = 0
                 state.mode = .idle
-                state.volatileTranscription = ""
-                state.finalizedText = ""
-                state.finalizedWords = []
-                state.finalizedSegments = []
+                
+                /// Reset shared live transcription state
+                state.$liveTranscription.withLock { transcription in
+                    transcription = LiveTranscriptionState()
+                }
+                
                 state.transcription = .empty
                 state.capturedMedia = []
                 state.mediaThumbnails = [:]
@@ -498,9 +587,45 @@ struct RecordingFeature {
                     }
                 )
                 
-            case .timerTicked:
-                state.duration += 1
+            case let .titleChanged(newTitle):
+                state.title = newTitle
                 return .none
+                
+            case .timerTicked:
+                /// Only increment duration if not paused
+                if !state.isPaused {
+                    state.duration += 1
+                    
+                    /// Update current time in shared state - automatically syncs to fullscreen
+                    state.$liveTranscription.withLock { transcription in
+                        transcription.currentTime = state.duration
+                    }
+                }
+                return .none
+                
+            case .pauseButtonTapped:
+                guard state.isRecording, !state.isPaused else {
+                    return .none
+                }
+                
+                state.isPaused = true
+                state.mode = .paused
+                
+                return .run { _ in
+                    await audioRecorder.pauseRecording()
+                }
+                
+            case .resumeButtonTapped:
+                guard state.isRecording, state.isPaused else {
+                    return .none
+                }
+                
+                state.isPaused = false
+                state.mode = .recording
+                
+                return .run { _ in
+                    try await audioRecorder.resumeRecording()
+                }
                 
             case let .newPhotoDetected(photoAsset):
                 /// Calculate the timestamp relative to recording start
@@ -540,6 +665,34 @@ struct RecordingFeature {
                 state.mediaThumbnails[mediaId] = image
                 return .none
                 
+            case let .audioLevelReceived(level):
+                state.currentAudioLevel = level
+                return .none
+                
+            case .userDidScroll:
+                /// Disable auto-scroll when user scrolls manually
+                state.isAutoScrollEnabled = false
+                return .none
+                
+            case .resumeAutoScrollTapped:
+                /// Re-enable auto-scroll
+                state.isAutoScrollEnabled = true
+                return .none
+                
+            case .twoFingerDoubleTapped:
+                /// Enter fullscreen mode - pass derived shared state reference
+                state.fullscreenTranscript = FullscreenTranscriptFeature.State(
+                    liveTranscription: state.$liveTranscription
+                )
+                return .none
+                
+            case .fullscreenTranscript(.presented(.delegate(.didClose))):
+                state.fullscreenTranscript = nil
+                return .none
+                
+            case .fullscreenTranscript:
+                return .none
+                
             case .alert(.dismiss):
                 state.alert = nil
                 return .none
@@ -552,12 +705,22 @@ struct RecordingFeature {
             }
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$fullscreenTranscript, action: \.fullscreenTranscript) {
+            FullscreenTranscriptFeature()
+        }
     }
     
     // MARK: - Private Helpers
     
     private func startTranscription() -> Effect<Action> {
-        .run { send in
+        .run { [speechClient] send in
+            defer {
+                /// Ensure transcription is finished when effect is cancelled or completes
+                Task { @MainActor in
+                    try? await speechClient.finishTranscription()
+                }
+            }
+            
             do {
                 /// Use the current locale or default to en_US
                 let locale = Locale(identifier: "en_US")
@@ -579,6 +742,8 @@ struct RecordingFeature {
                 }
                 
                 await send(.transcriptionFinished)
+            } catch is CancellationError {
+                /// Graceful cancellation - cleanup handled by defer block
             } catch {
                 await send(.transcriptionFailed(error))
             }
@@ -587,11 +752,22 @@ struct RecordingFeature {
     }
     
     private func startPhotoObservation() -> Effect<Action> {
-        .run { send in
-            let stream = await photoLibrary.observeNewPhotos()
+        .run { [photoLibrary] send in
+            defer {
+                /// Ensure photo observation is stopped when effect is cancelled or completes
+                Task { @MainActor in
+                    await photoLibrary.stopObserving()
+                }
+            }
             
-            for await photoAsset in stream {
-                await send(.newPhotoDetected(photoAsset))
+            do {
+                let stream = await photoLibrary.observeNewPhotos()
+                
+                for await photoAsset in stream {
+                    await send(.newPhotoDetected(photoAsset))
+                }
+            } catch is CancellationError {
+                /// Graceful cancellation - cleanup handled by defer block
             }
         }
         .cancellable(id: CancelID.photoObservation)

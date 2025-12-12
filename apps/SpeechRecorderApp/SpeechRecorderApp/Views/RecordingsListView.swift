@@ -23,10 +23,21 @@
    SwiftUI view for displaying the list of recordings.
    Shows recordings with title, date, and duration.
    Provides record button and navigation to playback.
+   
+   **Migration Note (2025-12-11):**
+   Updated to pass recording.id instead of full recording object.
+   This enables derived shared state in the reducer.
+   
+   Reference: SyncUpsListView.swift
+   See: docs/swift-sharing-state-comprehensive-guide.md#appendix-a-speechrecorderapp-migration-guide
 
  WHEN:
    Created: 2025-12-10
-   Last Modified: 2025-12-10
+   Last Modified: 2025-12-12
+   [Change Log:
+     - 2025-12-11: Updated selectRecording to pass ID for derived shared state
+     - 2025-12-12: Added active recording section at top of list with LIVE indicator (Phase 2.3)
+   ]
 
  WHERE:
    apps/SpeechRecorderApp/SpeechRecorderApp/Views/RecordingsListView.swift
@@ -44,8 +55,8 @@ struct RecordingsListView: View {
     
     var body: some View {
         VStack {
-            /// Recordings list
-            if store.recordings.isEmpty {
+            /// Recordings list (includes active recording section if recording in progress)
+            if store.recordings.isEmpty && store.activeRecording == nil {
                 emptyState
             } else {
                 recordingsList
@@ -55,26 +66,6 @@ struct RecordingsListView: View {
             recordButton
         }
         .navigationTitle("Recordings")
-        .fullScreenCover(item: $store.scope(state: \.recording, action: \.recording)) { recordingStore in
-            NavigationStack {
-                RecordingView(store: recordingStore)
-                    .navigationTitle("New Recording")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                recordingStore.send(.cancelButtonTapped)
-                            }
-                        }
-                    }
-            }
-            .onAppear {
-                /// Auto-start recording when the view appears
-                if !recordingStore.isRecording {
-                    recordingStore.send(.recordButtonTapped)
-                }
-            }
-        }
         .fullScreenCover(item: $store.scope(state: \.playback, action: \.playback)) { playbackStore in
             NavigationStack {
                 PlaybackView(store: playbackStore)
@@ -82,6 +73,7 @@ struct RecordingsListView: View {
                     .navigationBarTitleDisplayMode(.inline)
             }
         }
+        .alert($store.scope(state: \.alert, action: \.alert))
     }
     
     // MARK: - Subviews
@@ -110,15 +102,48 @@ struct RecordingsListView: View {
     
     private var recordingsList: some View {
         List {
-            ForEach(store.recordings) { recording in
-                RecordingRow(recording: recording)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        store.send(.selectRecording(recording))
+            /**
+             Active recording section (if recording in progress).
+             
+             **Phase 2.3 Addition (2025-12-12):**
+             Shows the active recording at the top of the list with a LIVE indicator
+             and live transcription preview. This provides visual feedback to users
+             about the ongoing recording.
+             */
+            if let activeRecording = store.activeRecording {
+                Section {
+                    ActiveRecordingRow(
+                        recording: activeRecording,
+                        transcription: store.liveTranscription
+                    )
+                } header: {
+                    HStack {
+                        Text("Recording Now")
+                        LiveBadge()
                     }
+                }
             }
-            .onDelete { indexSet in
-                store.send(.deleteRecordings(indexSet))
+            
+            /// Saved recordings section
+            Section(store.activeRecording != nil ? "Saved Recordings" : "") {
+                ForEach(store.recordings) { recording in
+                    RecordingRow(recording: recording)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            /**
+                             Pass recording.id for derived shared state lookup.
+                             
+                             **Pattern Source:** SyncUpsListView.swift
+                             
+                             The reducer uses this ID to derive a Shared<Recording>
+                             that propagates mutations back to the recordings list.
+                             */
+                            store.send(.selectRecording(recording.id))
+                        }
+                }
+                .onDelete { indexSet in
+                    store.send(.deleteRecordings(indexSet))
+                }
             }
         }
     }
@@ -142,16 +167,118 @@ struct RecordingsListView: View {
     }
 }
 
+// MARK: - Active Recording Row
+
+/**
+ A row view for displaying the active recording in progress.
+ 
+ **Phase 2.3 Addition (2025-12-12):**
+ Shows the active recording with:
+ - Pulsing red dot to indicate active recording
+ - Recording title (or "Recording..." placeholder)
+ - Duration counter
+ - Live transcription preview (last segment)
+ 
+ This view is displayed at the top of the recordings list while recording is in progress.
+ */
+struct ActiveRecordingRow: View {
+    let recording: Recording
+    let transcription: LiveTranscriptionState
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                /// Recording indicator (pulsing red dot)
+                PulsingRecordingDot()
+                
+                Text(recording.displayTitle)
+                    .font(.headline)
+                
+                Spacer()
+                
+                /// Duration
+                Text(formattedDuration)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            /// Live transcription preview
+            if let lastSegment = transcription.segments.last {
+                Text(lastSegment.text)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            } else if let volatile = transcription.volatileText, !volatile.isEmpty {
+                Text(volatile)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private var formattedDuration: String {
+        let minutes = Int(recording.duration) / 60
+        let seconds = Int(recording.duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+}
+
+// MARK: - Pulsing Recording Dot
+
+/**
+ A pulsing red dot that indicates active recording.
+ 
+ Uses a repeating animation to create a visual "heartbeat" effect
+ that draws attention to the active recording state.
+ */
+struct PulsingRecordingDot: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        Circle()
+            .fill(Color.red)
+            .frame(width: 8, height: 8)
+            .scaleEffect(isAnimating ? 1.3 : 1.0)
+            .opacity(isAnimating ? 0.7 : 1.0)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                    isAnimating = true
+                }
+            }
+    }
+}
+
 // MARK: - Recording Row
 
 struct RecordingRow: View {
     let recording: Recording
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(recording.displayTitle)
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 8) {
+            /// Title row with media indicator
+            HStack {
+                Text(recording.displayTitle)
+                    .font(.headline)
+                    .lineLimit(2)
+                
+                Spacer()
+                
+                /// Media indicator icon if has media
+                if !recording.media.isEmpty {
+                    HStack(spacing: 2) {
+                        Image(systemName: "photo.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("\(recording.media.count)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
             
+            /// Date and duration row
             HStack {
                 Text(formattedDate)
                     .font(.caption)
@@ -164,6 +291,12 @@ struct RecordingRow: View {
                     .foregroundColor(.secondary)
             }
             
+            /// Media thumbnails row (if has media)
+            if !recording.media.isEmpty {
+                mediaThumbnailsRow
+            }
+            
+            /// Transcription preview
             if !recording.transcription.text.isEmpty {
                 Text(recording.transcription.text)
                     .font(.caption)
@@ -173,6 +306,54 @@ struct RecordingRow: View {
         }
         .padding(.vertical, 4)
     }
+    
+    // MARK: - Media Thumbnails
+    
+    @ViewBuilder
+    private var mediaThumbnailsRow: some View {
+        let maxThumbnails = 4
+        let displayMedia = Array(recording.media.prefix(maxThumbnails))
+        let remainingCount = recording.media.count - maxThumbnails
+        
+        HStack(spacing: 6) {
+            ForEach(displayMedia) { media in
+                if let thumbnailData = media.thumbnailData,
+                   let uiImage = UIImage(data: thumbnailData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 44, height: 44)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                } else {
+                    /// Placeholder for missing thumbnail
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 44, height: 44)
+                        .overlay {
+                            Image(systemName: "photo")
+                                .foregroundColor(.gray)
+                        }
+                }
+            }
+            
+            /// "+N" indicator for remaining media
+            if remainingCount > 0 {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        Text("+\(remainingCount)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(.secondary)
+                    }
+            }
+            
+            Spacer()
+        }
+    }
+    
+    // MARK: - Formatting
     
     private var formattedDate: String {
         let formatter = DateFormatter()

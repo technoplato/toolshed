@@ -37,6 +37,7 @@
  */
 
 import ComposableArchitecture
+import Sharing
 import SwiftUI
 
 struct PlaybackView: View {
@@ -45,30 +46,28 @@ struct PlaybackView: View {
     var body: some View {
         VStack(spacing: 20) {
             /// Transcription with segments, media, and word highlighting
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        ForEach(store.recording.transcription.segments) { segment in
-                            segmentView(segment, proxy: proxy)
-                        }
-                        
-                        /// If no segments, fall back to simple word view
-                        if store.recording.transcription.segments.isEmpty && !store.recording.transcription.words.isEmpty {
-                            TranscriptionTextView(
-                                words: store.recording.transcription.words,
-                                currentWordIndex: store.currentWordIndex
-                            )
-                        }
-                    }
-                    .padding()
-                }
-                .onChange(of: store.currentWordIndex) { _, newIndex in
-                    if let index = newIndex {
-                        withAnimation {
-                            proxy.scrollTo("word-\(index)", anchor: .center)
-                        }
-                    }
-                }
+            TranscriptionDisplayView(
+                segments: store.recording.transcription.segments,
+                words: store.recording.transcription.words,
+                media: store.recording.media,
+                mediaThumbnails: store.mediaThumbnails,
+                currentTime: store.currentTime,
+                currentWordIndex: store.currentWordIndex,
+                volatileText: nil,
+                onWordTapped: { index in
+                    store.send(.wordTapped(index))
+                },
+                onMediaTapped: { id in
+                    store.send(.mediaTapped(id))
+                },
+                onImageDoubleTapped: { id in
+                    store.send(.imageDoubleTapped(id))
+                },
+                showEmptyState: false
+            )
+            /// Two-finger double-tap to enter fullscreen transcript
+            .onTwoFingerDoubleTap {
+                store.send(.twoFingerDoubleTapped)
             }
             
             /// Media timeline (if any media exists)
@@ -96,70 +95,19 @@ struct PlaybackView: View {
                 }
             }
         }
-    }
-    
-    // MARK: - Segment View
-    
-    private func segmentView(_ segment: TranscriptionSegment, proxy: ScrollViewProxy) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            /// Show media captured during this segment
-            let segmentMedia = store.recording.media.filter { media in
-                media.timestamp >= segment.startTime && media.timestamp <= segment.endTime
-            }
-            if !segmentMedia.isEmpty {
-                mediaRow(segmentMedia)
-            }
-            
-            /// Segment header with timestamp
-            HStack {
-                Text(formatTime(segment.startTime))
-                    .font(.caption.monospacedDigit())
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.secondary.opacity(0.1))
-                    .cornerRadius(4)
-                
-                Spacer()
-            }
-            
-            /// Words with highlighting
-            FlowLayout(spacing: 4) {
-                ForEach(Array(segment.words.enumerated()), id: \.element.id) { index, word in
-                    let globalIndex = findGlobalWordIndex(word)
-                    let isCurrentWord = store.currentWordIndex == globalIndex
-                    
-                    Text(word.text)
-                        .font(.body)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
-                        .background(isCurrentWord ? Color.yellow : Color.clear)
-                        .cornerRadius(4)
-                        .id("word-\(globalIndex ?? -1)")
-                        .onTapGesture {
-                            if let idx = globalIndex {
-                                store.send(.wordTapped(idx))
-                            }
-                        }
-                }
-            }
+        .fullScreenCover(
+            item: $store.scope(state: \.fullscreenImage, action: \.fullscreenImage)
+        ) { store in
+            FullscreenImageView(store: store)
         }
-        .padding()
-        .background(
-            isSegmentActive(segment) ? Color.blue.opacity(0.05) : Color.clear
-        )
-        .cornerRadius(8)
+        .fullScreenCover(
+            item: $store.scope(state: \.fullscreenTranscript, action: \.fullscreenTranscript)
+        ) { fullscreenStore in
+            FullscreenTranscriptView(store: fullscreenStore)
+        }
     }
     
-    private func isSegmentActive(_ segment: TranscriptionSegment) -> Bool {
-        store.currentTime >= segment.startTime && store.currentTime <= segment.endTime
-    }
-    
-    private func findGlobalWordIndex(_ word: TimestampedWord) -> Int? {
-        store.recording.transcription.words.firstIndex { $0.id == word.id }
-    }
-    
-    // MARK: - Media Views
+    // MARK: - Media Timeline
     
     private var mediaTimeline: some View {
         VStack(alignment: .leading, spacing: 4) {
@@ -172,16 +120,6 @@ struct PlaybackView: View {
                     ForEach(store.recording.media) { media in
                         mediaThumbnailButton(media)
                     }
-                }
-            }
-        }
-    }
-    
-    private func mediaRow(_ media: [TimestampedMedia]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(media) { item in
-                    mediaThumbnailButton(item)
                 }
             }
         }
@@ -297,57 +235,16 @@ struct PlaybackView: View {
     }
 }
 
-// MARK: - Flow Layout for Words
-
-/// A simple flow layout that wraps content to the next line
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 4
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = layout(proposal: proposal, subviews: subviews)
-        return result.size
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = layout(proposal: proposal, subviews: subviews)
-        
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
-                                       y: bounds.minY + result.positions[index].y),
-                          proposal: .unspecified)
-        }
-    }
-    
-    private func layout(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
-        let maxWidth = proposal.width ?? .infinity
-        var positions: [CGPoint] = []
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var lineHeight: CGFloat = 0
-        var maxX: CGFloat = 0
-        
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            
-            if currentX + size.width > maxWidth && currentX > 0 {
-                currentX = 0
-                currentY += lineHeight + spacing
-                lineHeight = 0
-            }
-            
-            positions.append(CGPoint(x: currentX, y: currentY))
-            
-            currentX += size.width + spacing
-            lineHeight = max(lineHeight, size.height)
-            maxX = max(maxX, currentX)
-        }
-        
-        return (CGSize(width: maxX, height: currentY + lineHeight), positions)
-    }
-}
-
 // MARK: - Preview
 
+/**
+ **Migration Note (2025-12-11):**
+ Updated preview to use Shared(value:) for the recording parameter.
+ This matches the new PlaybackFeature.State which uses @Shared var recording.
+ 
+ **Source:** Recipe 7 from swift-sharing-state-comprehensive-guide.md
+ **Motivation:** PlaybackFeature now receives derived shared state from parent.
+ */
 #Preview {
     let words: [TimestampedWord] = [
         .preview(text: "Hello", startTime: 0.0, endTime: 0.5),
@@ -366,18 +263,20 @@ struct FlowLayout: Layout {
         )
     ]
     
-    return NavigationStack {
+    let recording = Recording.preview(
+        transcription: .preview(
+            text: "Hello world, this is a test recording with multiple words to demonstrate the word highlighting feature.",
+            words: words,
+            segments: segments,
+            isFinal: true
+        )
+    )
+    
+    NavigationStack {
         PlaybackView(
             store: Store(
                 initialState: PlaybackFeature.State(
-                    recording: .preview(
-                        transcription: .preview(
-                            text: "Hello world, this is a test recording with multiple words to demonstrate the word highlighting feature.",
-                            words: words,
-                            segments: segments,
-                            isFinal: true
-                        )
-                    ),
+                    recording: Shared(value: recording),
                     currentWordIndex: 2
                 )
             ) {

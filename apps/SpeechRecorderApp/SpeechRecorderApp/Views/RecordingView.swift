@@ -41,14 +41,39 @@ import SwiftUI
 
 struct RecordingView: View {
     @Bindable var store: StoreOf<RecordingFeature>
+    @FocusState private var isTitleFocused: Bool
     
     var body: some View {
-        VStack(spacing: 24) {
-            /// Recording status
-            recordingStatus
+        VStack(spacing: 12) {
+            /// Header with editable title and date/time
+            recordingHeader
             
-            /// Duration display
-            durationDisplay
+            /// Live transcription with inline media (takes up most of the screen)
+            TranscriptionDisplayView(
+                segments: store.finalizedSegments,
+                words: store.transcription.words,
+                media: store.capturedMedia,
+                mediaThumbnails: store.mediaThumbnails,
+                currentTime: store.duration,
+                currentWordIndex: nil,
+                volatileText: store.volatileTranscription.isEmpty ? nil : store.volatileTranscription,
+                isAutoScrollEnabled: store.isAutoScrollEnabled,
+                onWordTapped: nil,
+                onMediaTapped: nil,
+                onUserDidScroll: {
+                    store.send(.userDidScroll)
+                },
+                onResumeAutoScrollTapped: {
+                    store.send(.resumeAutoScrollTapped)
+                },
+                showEmptyState: true,
+                emptyStateMessage: "Start speaking...",
+                emptyStateSubtitle: "Your words will appear here as you speak."
+            )
+            /// Two-finger double-tap to enter fullscreen
+            .onTwoFingerDoubleTap {
+                store.send(.twoFingerDoubleTapped)
+            }
             
             /// Asset download indicator
             if store.isDownloadingAssets {
@@ -60,56 +85,59 @@ struct RecordingView: View {
                 speechErrorView(error)
             }
             
-            /// Live transcription with inline media
-            if !store.fullTranscriptionText.isEmpty || !store.capturedMedia.isEmpty {
-                transcriptionWithMediaPreview
-            }
+            /// Time display and controls
+            recordingFooter
+        }
+        .padding(.horizontal, 8)
+        .padding(.top)
+        .padding(.bottom, 8)
+        .task { await store.send(.task).finish() }
+        .alert($store.scope(state: \.alert, action: \.alert))
+        .fullScreenCover(
+            item: $store.scope(state: \.fullscreenTranscript, action: \.fullscreenTranscript)
+        ) { fullscreenStore in
+            FullscreenTranscriptView(store: fullscreenStore)
+        }
+    }
+    
+    // MARK: - Header
+    
+    private var recordingHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            /// Editable title
+            TextField("Recording Title", text: $store.title.sending(\.titleChanged))
+                .font(.headline)
+                .focused($isTitleFocused)
+                .textFieldStyle(.plain)
+                .submitLabel(.done)
+                .onSubmit {
+                    isTitleFocused = false
+                }
             
-            Spacer()
-            
-            /// Record/Stop button
-            recordButton
-            
-            /// Cancel button (when recording)
-            if store.isRecording {
-                cancelButton
+            /// Date and duration info
+            if let startTime = store.recordingStartTime {
+                HStack(spacing: 8) {
+                    /// Start date/time
+                    Text(formatHumanReadableDateShort(startTime))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Text("·")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    /// Duration
+                    Text("Duration: \(formatDurationHMS(store.duration))")
+                        .font(.caption.monospacedDigit())
+                        .foregroundColor(.secondary)
+                }
             }
         }
-        .padding()
-        .alert($store.scope(state: \.alert, action: \.alert))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 8)
     }
     
     // MARK: - Subviews
-    
-    private var recordingStatus: some View {
-        HStack(spacing: 8) {
-            Circle()
-                .fill(store.isRecording ? Color.red : Color.gray)
-                .frame(width: 12, height: 12)
-                .opacity(store.isRecording ? (Int(store.duration).isMultiple(of: 2) ? 1 : 0.3) : 1)
-                .animation(.easeInOut(duration: 0.5), value: store.duration)
-            
-            Text(statusText)
-                .font(.headline)
-                .foregroundColor(store.isRecording ? .red : .secondary)
-        }
-    }
-    
-    private var statusText: String {
-        if store.mode == .encoding {
-            return "Processing..."
-        } else if store.isRecording {
-            return "Recording"
-        } else {
-            return "Ready"
-        }
-    }
-    
-    private var durationDisplay: some View {
-        Text(formattedDuration)
-            .font(.system(size: 48, weight: .light, design: .monospaced))
-            .foregroundColor(.primary)
-    }
     
     private var assetDownloadIndicator: some View {
         HStack(spacing: 8) {
@@ -139,186 +167,143 @@ struct RecordingView: View {
         .cornerRadius(8)
     }
     
-    private var transcriptionWithMediaPreview: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Live Transcription")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                /// Show word count and media count
-                HStack(spacing: 8) {
-                    if !store.capturedMedia.isEmpty {
-                        Label("\(store.capturedMedia.count)", systemImage: "photo")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    Text("\(store.transcription.words.count) words")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-            }
-            
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 12) {
-                        /// Show segments with timestamps and inline media
-                        ForEach(store.finalizedSegments) { segment in
-                            segmentView(segment)
-                        }
-                        
-                        /// Show volatile transcription (current in-progress segment)
-                        if !store.volatileTranscription.isEmpty {
-                            HStack(alignment: .top, spacing: 8) {
-                                /// Show the start time of the current segment (after last finalized segment)
-                                Text(formatTimestamp(store.finalizedSegments.last?.endTime ?? 0))
-                                    .font(.caption2.monospacedDigit())
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 40, alignment: .leading)
-                                
-                                Text(store.volatileTranscription.trimmingCharacters(in: .whitespaces))
-                                    .font(.body)
-                                    .foregroundColor(.purple.opacity(0.8))
-                            }
-                            .id("volatile")
-                        }
-                        
-                        /// Show any media captured after the last segment
-                        let lastSegmentEndTime = store.finalizedSegments.last?.endTime ?? 0
-                        let trailingMedia = store.capturedMedia.filter { $0.timestamp > lastSegmentEndTime }
-                        if !trailingMedia.isEmpty {
-                            mediaRow(trailingMedia)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .onChange(of: store.volatileTranscription) { _, _ in
-                    withAnimation {
-                        proxy.scrollTo("volatile", anchor: .bottom)
-                    }
-                }
-            }
-            .frame(maxHeight: 200)
-            .padding()
-            .background(Color.purple.opacity(0.1))
-            .cornerRadius(8)
-        }
-    }
+    // MARK: - Footer
     
-    private func segmentView(_ segment: TranscriptionSegment) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            /// Show any media captured during this segment
-            let segmentMedia = store.capturedMedia.filter { media in
-                media.timestamp >= segment.startTime && media.timestamp <= segment.endTime
-            }
-            if !segmentMedia.isEmpty {
-                mediaRow(segmentMedia)
-            }
-            
-            /// Segment with timestamp
-            HStack(alignment: .top, spacing: 8) {
-                Text(formatTimestamp(segment.startTime))
-                    .font(.caption2.monospacedDigit())
-                    .foregroundColor(.secondary)
-                    .frame(width: 40, alignment: .leading)
-                
-                Text(segment.text)
-                    .font(.body)
-                    .foregroundColor(.primary)
-            }
-        }
-    }
-    
-    private func mediaRow(_ media: [TimestampedMedia]) -> some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(media) { item in
-                    mediaThumbnail(item)
-                }
-            }
-        }
-        .padding(.leading, 48) /// Align with text after timestamp
-    }
-    
-    private func mediaThumbnail(_ media: TimestampedMedia) -> some View {
-        VStack(spacing: 2) {
-            if let thumbnail = store.mediaThumbnails[media.id] {
-                Image(uiImage: thumbnail)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(media.mediaType == .screenshot ? Color.blue : Color.green, lineWidth: 2)
-                    )
-            } else {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 60, height: 60)
-                    .overlay(
-                        Image(systemName: media.mediaType == .screenshot ? "camera.viewfinder" : "photo")
-                            .foregroundColor(.gray)
-                    )
-            }
-            
-            Text(formatTimestamp(media.timestamp))
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-    }
-    
-    private func formatTimestamp(_ time: TimeInterval) -> String {
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
-    
-    private var recordButton: some View {
-        Button {
+    private var recordingFooter: some View {
+        VStack(spacing: 12) {
+            /// Audio waveform visualization (only when recording)
             if store.isRecording {
-                store.send(.stopButtonTapped, animation: .default)
-            } else {
-                store.send(.recordButtonTapped, animation: .spring())
+                audioWaveform
             }
-        } label: {
-            ZStack {
+            
+            /// Time display with recording indicator
+            timeDisplay
+            
+            /// Recording controls
+            recordingControls
+        }
+    }
+    
+    private var audioWaveform: some View {
+        RollingWaveformView(
+            currentLevel: store.currentAudioLevel,
+            isRecording: store.isRecording,
+            isPaused: store.isPaused,
+            barColor: Color.red
+        )
+        .padding(EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
+    }
+    
+    private var timeDisplay: some View {
+        HStack {
+            /// Duration with milliseconds
+            Text(formatDurationHMSms(store.duration))
+                .font(.title2.monospacedDigit())
+                .fontWeight(.medium)
+            
+            Spacer()
+            
+            /// Recording status indicator
+            HStack(spacing: 8) {
                 Circle()
-                    .fill(Color(.label))
-                    .frame(width: 74, height: 74)
+                    .fill(statusColor)
+                    .frame(width: 10, height: 10)
+                    .opacity(store.isRecording && !store.isPaused ? (Int(store.duration).isMultiple(of: 2) ? 1 : 0.3) : 1)
+                    .animation(.easeInOut(duration: 0.5), value: store.duration)
                 
+                Text(statusText)
+                    .font(.subheadline)
+                    .foregroundColor(statusColor)
+            }
+        }
+        .padding(.horizontal, 8)
+    }
+    
+    private var statusText: String {
+        switch store.mode {
+        case .encoding:
+            return "Processing..."
+        case .paused:
+            return "Paused"
+        case .recording:
+            return "Recording"
+        case .idle:
+            return "Ready"
+        }
+    }
+    
+    private var statusColor: Color {
+        switch store.mode {
+        case .encoding:
+            return .secondary
+        case .paused:
+            return .orange
+        case .recording:
+            return .red
+        case .idle:
+            return .gray
+        }
+    }
+    
+    private var recordingControls: some View {
+        HStack(spacing: 40) {
+            /// Pause/Resume button (only visible when recording)
+            if store.isRecording {
+                Button {
+                    if store.isPaused {
+                        store.send(.resumeButtonTapped, animation: .default)
+                    } else {
+                        store.send(.pauseButtonTapped, animation: .default)
+                    }
+                } label: {
+                    /// Show microphone when paused (to indicate "tap to resume recording")
+                    /// Show pause when recording (to indicate "tap to pause")
+                    Image(systemName: store.isPaused ? "mic.fill" : "pause.fill")
+                        .font(.title2)
+                        .foregroundColor(store.isPaused ? .red : .primary)
+                        .frame(width: 44, height: 44)
+                        .background(Color(.systemGray5))
+                        .clipShape(Circle())
+                }
+                .disabled(store.mode == .encoding)
+            } else {
+                Color.clear
+                    .frame(width: 44, height: 44)
+            }
+            
+            /// Record/Stop button
+            Button {
                 if store.isRecording {
-                    /// Stop button (square)
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.red)
-                        .frame(width: 28, height: 28)
+                    store.send(.stopButtonTapped, animation: .default)
                 } else {
-                    /// Record button (circle)
+                    store.send(.recordButtonTapped, animation: .spring())
+                }
+            } label: {
+                ZStack {
                     Circle()
-                        .fill(Color.red)
-                        .frame(width: 66, height: 66)
+                        .fill(Color(.label))
+                        .frame(width: 64, height: 64)
+                    
+                    if store.isRecording {
+                        /// Stop button (square)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.red)
+                            .frame(width: 24, height: 24)
+                    } else {
+                        /// Record button (circle)
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 56, height: 56)
+                    }
                 }
             }
+            .disabled(store.mode == .encoding)
+            .opacity(store.mode == .encoding ? 0.5 : 1)
+            
+            /// Placeholder for symmetry
+            Color.clear
+                .frame(width: 44, height: 44)
         }
-        .disabled(store.mode == .encoding)
-        .opacity(store.mode == .encoding ? 0.5 : 1)
-    }
-    
-    private var cancelButton: some View {
-        Button("Cancel") {
-            store.send(.cancelButtonTapped)
-        }
-        .foregroundColor(.secondary)
-    }
-    
-    // MARK: - Helpers
-    
-    private var formattedDuration: String {
-        let minutes = Int(store.duration) / 60
-        let seconds = Int(store.duration) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
 
@@ -333,10 +318,15 @@ struct RecordingView: View {
 }
 
 #Preview("Recording") {
+    /// Set up shared state for preview
+    @Shared(.liveTranscription) var liveTranscription
+    $liveTranscription.withLock { transcription in
+        transcription.volatileText = "Hello, this is a test recording with live transcription. The words appear as you speak them."
+    }
+    
     var state = RecordingFeature.State()
     state.isRecording = true
     state.duration = 65
-    state.volatileTranscription = "Hello, this is a test recording with live transcription. The words appear as you speak them."
     
     return RecordingView(
         store: Store(initialState: state) {

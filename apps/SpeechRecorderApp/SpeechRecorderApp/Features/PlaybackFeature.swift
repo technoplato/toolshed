@@ -28,10 +28,23 @@
    and synchronized media display.
    Syncs current playback time with transcription words and shows
    photos/screenshots at their capture timestamps.
+   
+   **Migration Note (2025-12-11):**
+   Updated to use @Shared var recording for derived shared state.
+   This allows mutations to propagate back to the parent's recordings list.
+   
+   Reference: SyncUpDetail.swift:22
+   https://github.com/pointfreeco/swift-composable-architecture/blob/main/Examples/SyncUps/SyncUps/SyncUpDetail.swift
+   
+   See: docs/swift-sharing-state-comprehensive-guide.md#appendix-a-speechrecorderapp-migration-guide
 
  WHEN:
    Created: 2025-12-10
-   Last Modified: 2025-12-10
+   Last Modified: 2025-12-11
+   [Change Log:
+     - 2025-12-11: Migrated to @Shared var recording for derived shared state
+                   Enables mutations to propagate to parent's recordings list
+   ]
 
  WHERE:
    apps/SpeechRecorderApp/SpeechRecorderApp/Features/PlaybackFeature.swift
@@ -40,10 +53,16 @@
    To provide synchronized playback with word highlighting and media display.
    Uses the word timestamps to highlight the current word as audio plays,
    and shows photos/screenshots at the times they were captured.
+   
+   Using @Shared var recording:
+   1. Receives derived shared state from parent (RecordingsListFeature)
+   2. Any mutations propagate back to parent automatically
+   3. Matches the production SyncUps app pattern (SyncUpDetail)
  */
 
 import ComposableArchitecture
 import Foundation
+import Sharing
 import UIKit
 
 @Reducer
@@ -53,8 +72,15 @@ struct PlaybackFeature {
     
     @ObservableState
     struct State: Equatable, Sendable {
-        /// The recording being played
-        var recording: Recording
+        /**
+         The recording being played.
+         
+         **Pattern Source:** SyncUpDetail.swift:22
+         
+         Uses @Shared for derived shared state from parent.
+         Mutations propagate back to parent's recordings list automatically.
+         */
+        @Shared var recording: Recording
         
         /// Whether audio is currently playing
         var isPlaying = false
@@ -64,6 +90,12 @@ struct PlaybackFeature {
         
         /// Index of the currently highlighted word
         var currentWordIndex: Int?
+        
+        /// Fullscreen image presentation state
+        @Presents var fullscreenImage: FullscreenImageFeature.State?
+        
+        /// Fullscreen transcript presentation state
+        @Presents var fullscreenTranscript: FullscreenTranscriptFeature.State?
         
         /// The current word being spoken
         var currentWord: TimestampedWord? {
@@ -127,6 +159,18 @@ struct PlaybackFeature {
         
         /// Thumbnail loaded for a media item
         case thumbnailLoaded(UUID, UIImage)
+        
+        /// User double-tapped an image to view fullscreen
+        case imageDoubleTapped(UUID)
+        
+        /// User double-tapped with two fingers to enter fullscreen transcript
+        case twoFingerDoubleTapped
+        
+        /// Fullscreen image presentation actions
+        case fullscreenImage(PresentationAction<FullscreenImageFeature.Action>)
+        
+        /// Fullscreen transcript presentation actions
+        case fullscreenTranscript(PresentationAction<FullscreenTranscriptFeature.Action>)
         
         /// Delegate actions for parent feature
         case delegate(Delegate)
@@ -266,9 +310,53 @@ struct PlaybackFeature {
                     .send(.delegate(.didClose))
                 )
                 
+            case let .imageDoubleTapped(mediaId):
+                guard let media = state.recording.media.first(where: { $0.id == mediaId }) else {
+                    return .none
+                }
+                state.fullscreenImage = FullscreenImageFeature.State(
+                    assetIdentifier: media.assetIdentifier,
+                    mediaId: media.id
+                )
+                return .none
+                
+            case .twoFingerDoubleTapped:
+                /// Enter fullscreen transcript mode
+                /// Populate the shared state with recording data for playback viewing
+                @Shared(.liveTranscription) var liveTranscription
+                $liveTranscription.withLock { transcription in
+                    transcription.segments = state.recording.transcription.segments
+                    transcription.words = state.recording.transcription.words
+                    transcription.volatileText = nil
+                    transcription.currentTime = state.currentTime
+                    transcription.currentWordIndex = state.currentWordIndex
+                }
+                state.fullscreenTranscript = FullscreenTranscriptFeature.State()
+                return .none
+                
+            case .fullscreenImage(.presented(.delegate(.didClose))):
+                state.fullscreenImage = nil
+                return .none
+                
+            case .fullscreenImage:
+                return .none
+                
+            case .fullscreenTranscript(.presented(.delegate(.didClose))):
+                state.fullscreenTranscript = nil
+                return .none
+                
+            case .fullscreenTranscript:
+                return .none
+                
             case .delegate:
                 return .none
             }
+        }
+        .ifLet(\.$fullscreenImage, action: \.fullscreenImage) {
+            FullscreenImageFeature()
+        }
+        .ifLet(\.$fullscreenTranscript, action: \.fullscreenTranscript) {
+            FullscreenTranscriptFeature()
         }
     }
     

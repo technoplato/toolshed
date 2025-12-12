@@ -57,9 +57,17 @@ extension AudioRecorderClient: DependencyKey {
             startRecording: { url in
                 try recorder.start(url: url)
             },
+            pauseRecording: {
+                recorder.pause()
+            },
+            resumeRecording: {
+                try recorder.resume()
+            },
             stopRecording: {
                 recorder.stop()
-            }
+            },
+            isPaused: { recorder.isPaused },
+            audioLevelStream: { recorder.audioLevelStream }
         )
     }
 }
@@ -81,17 +89,77 @@ private final class Recorder: @unchecked Sendable {
     private var audioEngine: AVAudioEngine?
     private var audioFile: AVAudioFile?
     private var outputContinuation: AsyncStream<AVAudioPCMBuffer>.Continuation?
+    private var levelContinuation: AsyncStream<Float>.Continuation?
     private var recordingStartTime: Date?
+    private var pausedTime: Date?
+    private var totalPausedDuration: TimeInterval = 0
+    private(set) var isPaused: Bool = false
+    
+    /// Stream of audio levels for waveform visualization
+    var audioLevelStream: AsyncStream<Float> {
+        AsyncStream { [weak self] continuation in
+            self?.levelContinuation = continuation
+        }
+    }
     
     var currentTime: TimeInterval? {
-        guard let startTime = recordingStartTime, audioEngine?.isRunning == true else { 
-            return nil 
+        guard let startTime = recordingStartTime else {
+            return nil
         }
-        return Date().timeIntervalSince(startTime)
+        
+        if isPaused, let pauseStart = pausedTime {
+            /// When paused, return time up to when we paused
+            return pauseStart.timeIntervalSince(startTime) - totalPausedDuration
+        }
+        
+        guard audioEngine?.isRunning == true else {
+            return nil
+        }
+        
+        return Date().timeIntervalSince(startTime) - totalPausedDuration
     }
     
     static func requestPermission() async -> Bool {
         await AVAudioApplication.requestRecordPermission()
+    }
+    
+    func pause() {
+        guard let audioEngine, audioEngine.isRunning, !isPaused else {
+            logger.warning("⚠️ Cannot pause: engine not running or already paused")
+            return
+        }
+        
+        logger.info("⏸️ Pausing audio recording...")
+        
+        /// Record when we paused
+        pausedTime = Date()
+        isPaused = true
+        
+        /// Pause the audio engine (keeps the tap installed)
+        audioEngine.pause()
+        
+        logger.info("✅ Audio recording paused")
+    }
+    
+    func resume() throws {
+        guard let audioEngine, isPaused else {
+            logger.warning("⚠️ Cannot resume: not paused")
+            return
+        }
+        
+        logger.info("▶️ Resuming audio recording...")
+        
+        /// Calculate how long we were paused
+        if let pauseStart = pausedTime {
+            totalPausedDuration += Date().timeIntervalSince(pauseStart)
+        }
+        pausedTime = nil
+        isPaused = false
+        
+        /// Resume the audio engine
+        try audioEngine.start()
+        
+        logger.info("✅ Audio recording resumed")
     }
     
     func stop() {
@@ -103,14 +171,19 @@ private final class Recorder: @unchecked Sendable {
         /// Remove the tap
         audioEngine?.inputNode.removeTap(onBus: 0)
         
-        /// Finish the stream
+        /// Finish the streams
         outputContinuation?.finish()
         outputContinuation = nil
+        levelContinuation?.finish()
+        levelContinuation = nil
         
         /// Clean up
         audioFile = nil
         audioEngine = nil
         recordingStartTime = nil
+        pausedTime = nil
+        totalPausedDuration = 0
+        isPaused = false
         
         /// Deactivate audio session
         try? AVAudioSession.sharedInstance().setActive(false)
@@ -180,6 +253,20 @@ private final class Recorder: @unchecked Sendable {
             
             /// Yield buffer to stream for transcription
             self.outputContinuation?.yield(buffer)
+            
+            /// Calculate and yield audio level for waveform visualization
+            if let channelData = buffer.floatChannelData?[0] {
+                let frameLength = Int(buffer.frameLength)
+                var sum: Float = 0
+                for i in 0..<frameLength {
+                    let sample = channelData[i]
+                    sum += sample * sample
+                }
+                let rms = sqrt(sum / Float(frameLength))
+                /// Convert to 0-1 range with some scaling for better visualization
+                let level = min(1.0, rms * 5.0)
+                self.levelContinuation?.yield(level)
+            }
         }
         
         /// Prepare and start the engine

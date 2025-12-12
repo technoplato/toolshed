@@ -185,3 +185,132 @@ extension DependencyValues {
         set { self[PhotoLibraryClient.self] = newValue }
     }
 }
+
+// MARK: - Convenience Initializers
+
+extension PhotoLibraryClient {
+    /// A no-op implementation that does nothing - useful as a base for tests.
+    /// All methods return empty/default values immediately.
+    static let noop = Self(
+        requestAuthorization: { .notDetermined },
+        authorizationStatus: { .notDetermined },
+        observeNewPhotos: { AsyncStream { $0.finish() } },
+        stopObserving: {},
+        fetchThumbnail: { _, _ in nil },
+        fetchFullImage: { _ in nil }
+    )
+    
+    /// A preview implementation with simulated photo library behavior for SwiftUI previews.
+    /// - Parameters:
+    ///   - photos: Array of mock photos to return (default: generates sample photos)
+    ///   - photoInterval: Interval between simulated photo captures in seconds (default: 5)
+    /// - Returns: A configured PhotoLibraryClient for previews
+    static func preview(
+        photos: [PhotoAsset] = [],
+        photoInterval: TimeInterval = 5.0
+    ) -> Self {
+        let isObserving = LockIsolated(false)
+        let photoCount = LockIsolated(0)
+        
+        return Self(
+            requestAuthorization: { .authorized },
+            authorizationStatus: { .authorized },
+            observeNewPhotos: { [isObserving, photoCount] in
+                AsyncStream { continuation in
+                    Task {
+                        isObserving.setValue(true)
+                        
+                        /// If specific photos provided, yield them
+                        if !photos.isEmpty {
+                            for photo in photos {
+                                guard isObserving.value else { break }
+                                try? await Task.sleep(for: .seconds(photoInterval))
+                                continuation.yield(photo)
+                            }
+                        } else {
+                            /// Generate simulated photos
+                            while isObserving.value {
+                                try? await Task.sleep(for: .seconds(photoInterval))
+                                guard isObserving.value else { break }
+                                
+                                photoCount.withValue { $0 += 1 }
+                                let count = photoCount.value
+                                
+                                let asset = PhotoAsset(
+                                    id: "preview-\(count)",
+                                    creationDate: Date(),
+                                    mediaType: count % 3 == 0 ? .screenshot : .photo,
+                                    localIdentifier: "preview-\(count)"
+                                )
+                                continuation.yield(asset)
+                            }
+                        }
+                        
+                        continuation.finish()
+                    }
+                }
+            },
+            stopObserving: { [isObserving] in
+                isObserving.setValue(false)
+            },
+            fetchThumbnail: { _, _ in
+                /// Return a placeholder image for previews
+                UIImage(systemName: "photo")
+            },
+            fetchFullImage: { _ in
+                /// Return a placeholder image for previews
+                UIImage(systemName: "photo.fill")
+            }
+        )
+    }
+    
+    /// Convenience factory for testing authorization states.
+    /// - Parameter status: The authorization status to return
+    /// - Returns: A configured PhotoLibraryClient for testing authorization flows
+    static func withAuthorizationStatus(_ status: AuthorizationStatus) -> Self {
+        var client = noop
+        client.requestAuthorization = { status }
+        client.authorizationStatus = { status }
+        return client
+    }
+    
+    /// Convenience factory for testing with specific photos.
+    /// - Parameter photos: The photos to return from observeNewPhotos
+    /// - Returns: A configured PhotoLibraryClient for testing photo handling
+    static func withPhotos(_ photos: [PhotoAsset]) -> Self {
+        var client = noop
+        client.requestAuthorization = { .authorized }
+        client.authorizationStatus = { .authorized }
+        client.observeNewPhotos = {
+            AsyncStream { continuation in
+                for photo in photos {
+                    continuation.yield(photo)
+                }
+                continuation.finish()
+            }
+        }
+        return client
+    }
+    
+    /// Convenience factory for testing with a specific thumbnail image.
+    /// - Parameter image: The image to return for all thumbnail requests
+    /// - Returns: A configured PhotoLibraryClient for testing image display
+    static func withThumbnail(_ image: UIImage?) -> Self {
+        var client = noop
+        client.requestAuthorization = { .authorized }
+        client.authorizationStatus = { .authorized }
+        client.fetchThumbnail = { _, _ in image }
+        return client
+    }
+    
+    /// Convenience factory for testing with a specific full image.
+    /// - Parameter image: The image to return for all full image requests
+    /// - Returns: A configured PhotoLibraryClient for testing full image display
+    static func withFullImage(_ image: UIImage?) -> Self {
+        var client = noop
+        client.requestAuthorization = { .authorized }
+        client.authorizationStatus = { .authorized }
+        client.fetchFullImage = { _ in image }
+        return client
+    }
+}

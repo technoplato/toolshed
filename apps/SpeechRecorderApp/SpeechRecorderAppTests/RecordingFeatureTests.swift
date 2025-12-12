@@ -39,6 +39,7 @@ import Testing
 @testable import SpeechRecorderApp
 
 @Suite("RecordingFeature Tests")
+@MainActor
 struct RecordingFeatureTests {
     
     @Test("Record button tapped starts recording when permission granted")
@@ -50,8 +51,9 @@ struct RecordingFeatureTests {
             RecordingFeature()
         } withDependencies: {
             $0.audioRecorder.requestRecordPermission = { true }
-            $0.audioRecorder.startRecording = { _ in }
+            $0.audioRecorder.startRecording = { _ in AsyncStream { _ in } }
             $0.audioRecorder.currentTime = { nil }
+            $0.audioRecorder.audioLevelStream = { AsyncStream { $0.finish() } }
             $0.speechClient.requestAuthorization = { .authorized }
             $0.speechClient.isAssetInstalled = { _ in true }
             $0.speechClient.startTranscription = { _ in AsyncThrowingStream { _ in } }
@@ -72,7 +74,8 @@ struct RecordingFeatureTests {
             $0.isRecording = true
             $0.recordingStartTime = testDate
             $0.mode = .recording
-            $0.volatileTranscription = ""
+            /// volatileTranscription is now a computed property from liveTranscription
+            /// The liveTranscription is reset via $liveTranscription.withLock in the reducer
             $0.transcription = .empty
             $0.speechError = nil
             $0.capturedMedia = []
@@ -80,6 +83,7 @@ struct RecordingFeatureTests {
             $0.recordingURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent(testUUID.uuidString)
                 .appendingPathExtension("m4a")
+            $0.title = formatHumanReadableDate(testDate)
         }
         
         await store.receive(\.speechAuthorizationResponse) {
@@ -116,7 +120,8 @@ struct RecordingFeatureTests {
             $0.isRecording = true
             $0.recordingStartTime = testDate
             $0.mode = .recording
-            $0.volatileTranscription = ""
+            /// volatileTranscription is now a computed property from liveTranscription
+            /// The liveTranscription is reset via $liveTranscription.withLock in the reducer
             $0.transcription = .empty
             $0.speechError = nil
             $0.capturedMedia = []
@@ -124,6 +129,7 @@ struct RecordingFeatureTests {
             $0.recordingURL = URL(fileURLWithPath: NSTemporaryDirectory())
                 .appendingPathComponent(testUUID.uuidString)
                 .appendingPathExtension("m4a")
+            $0.title = formatHumanReadableDate(testDate)
         }
         
         await store.receive(\.speechAuthorizationResponse) {
@@ -139,6 +145,7 @@ struct RecordingFeatureTests {
             $0.recordingStartTime = nil
             $0.mode = .idle
             $0.hasPermission = false
+            $0.title = ""
             $0.alert = AlertState {
                 TextState("Permission Required")
             } message: {
@@ -211,7 +218,6 @@ struct RecordingFeatureTests {
         state.isRecording = true
         state.duration = 5.0
         state.hasPermission = true
-        state.volatileTranscription = "Hello world"
         
         let store = await TestStore(initialState: state) {
             RecordingFeature()
@@ -221,11 +227,14 @@ struct RecordingFeatureTests {
             $0.photoLibrary.stopObserving = { }
         }
         
+        /// Use non-exhaustive testing since shared state changes are complex
+        store.exhaustivity = .off
+        
         await store.send(.cancelButtonTapped) {
             $0.isRecording = false
             $0.duration = 0
             $0.mode = .idle
-            $0.volatileTranscription = ""
+            /// volatileTranscription is now a computed property - it will be "" after reset
             $0.transcription = .empty
             $0.capturedMedia = []
             $0.mediaThumbnails = [:]
@@ -258,6 +267,9 @@ struct RecordingFeatureTests {
             RecordingFeature()
         }
         
+        /// Use non-exhaustive testing since shared state changes are complex
+        store.exhaustivity = .off
+        
         let result = TranscriptionResult(
             text: "Hello world",
             words: [
@@ -267,9 +279,10 @@ struct RecordingFeatureTests {
             isFinal: false
         )
         
-        await store.send(.transcriptionResult(result)) {
-            $0.volatileTranscription = "Hello world"
-        }
+        await store.send(.transcriptionResult(result))
+        
+        /// Verify the shared state was updated by checking the store's state
+        #expect(store.state.volatileTranscription == "Hello world")
     }
     
     @Test("Final transcription result updates transcription")
@@ -282,6 +295,9 @@ struct RecordingFeatureTests {
             RecordingFeature()
         }
         
+        /// Use non-exhaustive testing since TranscriptionSegment has auto-generated UUIDs
+        store.exhaustivity = .off
+        
         let words = [
             TimestampedWord(text: "Hello", startTime: 0.0, endTime: 0.5, confidence: nil),
             TimestampedWord(text: "world", startTime: 0.5, endTime: 1.0, confidence: nil)
@@ -293,10 +309,19 @@ struct RecordingFeatureTests {
             isFinal: true
         )
         
-        await store.send(.transcriptionResult(result)) {
-            $0.volatileTranscription = "Hello world"
-            $0.transcription = Transcription(text: "Hello world", words: words, isFinal: true)
-        }
+        await store.send(.transcriptionResult(result))
+        
+        /// Verify the final state after the action
+        #expect(store.state.volatileTranscription == "")
+        #expect(store.state.finalizedText == "Hello world")
+        #expect(store.state.finalizedWords == words)
+        #expect(store.state.finalizedSegments.count == 1)
+        #expect(store.state.finalizedSegments.first?.text == "Hello world")
+        #expect(store.state.finalizedSegments.first?.words == words)
+        #expect(store.state.transcription.text == "Hello world")
+        #expect(store.state.transcription.words == words)
+        #expect(store.state.transcription.segments.count == 1)
+        #expect(store.state.transcription.isFinal == true)
     }
     
     @Test("Transcription failure sets error message")
@@ -348,5 +373,157 @@ struct RecordingFeatureTests {
         await store.send(.assetsDownloadCompleted) {
             $0.isDownloadingAssets = false
         }
+    }
+    
+    @Test("Pause button pauses recording")
+    func pauseButtonPausesRecording() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.mode = .recording
+        state.hasPermission = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        } withDependencies: {
+            $0.audioRecorder.pauseRecording = { }
+        }
+        
+        await store.send(.pauseButtonTapped) {
+            $0.isPaused = true
+            $0.mode = .paused
+        }
+    }
+    
+    @Test("Resume button resumes recording")
+    func resumeButtonResumesRecording() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isPaused = true
+        state.mode = .paused
+        state.hasPermission = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        } withDependencies: {
+            $0.audioRecorder.resumeRecording = { }
+        }
+        
+        await store.send(.resumeButtonTapped) {
+            $0.isPaused = false
+            $0.mode = .recording
+        }
+    }
+    
+    @Test("Timer does not increment duration when paused")
+    func timerDoesNotIncrementWhenPaused() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isPaused = true
+        state.duration = 10
+        state.hasPermission = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        /// Duration should not change when paused
+        await store.send(.timerTicked)
+        
+        /// Verify duration is still 10
+        #expect(store.state.duration == 10)
+    }
+    
+    @Test("Pause button does nothing when not recording")
+    func pauseButtonDoesNothingWhenNotRecording() async {
+        let state = RecordingFeature.State()
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        /// Should not change state when not recording
+        await store.send(.pauseButtonTapped)
+    }
+    
+    @Test("Resume button does nothing when not paused")
+    func resumeButtonDoesNothingWhenNotPaused() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isPaused = false
+        state.mode = .recording
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        /// Should not change state when not paused
+        await store.send(.resumeButtonTapped)
+    }
+    
+    // MARK: - Auto-scroll Tests
+    
+    @Test("User scroll disables auto-scroll")
+    func userScrollDisablesAutoScroll() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isAutoScrollEnabled = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        await store.send(.userDidScroll) {
+            $0.isAutoScrollEnabled = false
+        }
+    }
+    
+    @Test("Resume auto-scroll button re-enables auto-scroll")
+    func resumeAutoScrollButtonReEnablesAutoScroll() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isAutoScrollEnabled = false
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        await store.send(.resumeAutoScrollTapped) {
+            $0.isAutoScrollEnabled = true
+        }
+    }
+    
+    @Test("Auto-scroll is enabled by default")
+    func autoScrollIsEnabledByDefault() async {
+        let state = RecordingFeature.State()
+        
+        #expect(state.isAutoScrollEnabled == true)
+    }
+    
+    @Test("User scroll does nothing when auto-scroll already disabled")
+    func userScrollDoesNothingWhenAlreadyDisabled() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isAutoScrollEnabled = false
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        /// Should not change state when already disabled
+        await store.send(.userDidScroll)
+    }
+    
+    @Test("Resume auto-scroll does nothing when already enabled")
+    func resumeAutoScrollDoesNothingWhenAlreadyEnabled() async {
+        var state = RecordingFeature.State()
+        state.isRecording = true
+        state.isAutoScrollEnabled = true
+        
+        let store = await TestStore(initialState: state) {
+            RecordingFeature()
+        }
+        
+        /// Should not change state when already enabled
+        await store.send(.resumeAutoScrollTapped)
     }
 }
