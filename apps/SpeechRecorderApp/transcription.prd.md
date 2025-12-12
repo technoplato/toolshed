@@ -35,6 +35,13 @@ The application is built entirely with Point-Free's library ecosystem, leveragin
 | **Background Playback** | ⚪ Planned | Playback continues when app backgrounded |
 | **Sharing** | ⚪ Planned | Export/share recordings and transcripts |
 | **Organization** | ⚪ Planned | Folders, tags, search for recordings |
+| **Action Logging** | ⚪ Planned | Log clipboard, app context, URLs during recording |
+| **Interactive Playback** | ⚪ Planned | Play previous recordings while recording; auto-pause on speech |
+| **System Audio Recording** | ⚪ Planned | Capture system audio via `RPBroadcastSampleHandler` |
+| **Clipboard Integration** | ⚪ Planned | Auto-embed clipboard content on app activation |
+| **Drag-and-Drop Media** | ⚪ Planned | Drag photos/files into recording to embed |
+| **Pluggable Timeline Data** | ⚪ Planned | HealthKit, location, calendar, weather integration |
+| **Continuous Recording** | ⚪ Planned | Always-on recording with intelligent segmentation |
 
 ---
 
@@ -374,11 +381,11 @@ struct TimestampedMedia {
 
 ---
 
-## Strange Feature Ideas
+## Planned Feature Details
 
-Experimental concepts that push the boundaries of what a speech recording app can be. These are exploratory and may or may not be implemented.
+Detailed specifications for planned features in the feature matrix.
 
-### 1. Action Logging During Recording
+### Action Logging During Recording
 
 **Concept:** Log user actions and context during recording to create a richer timeline.
 
@@ -393,7 +400,7 @@ Experimental concepts that push the boundaries of what a speech recording app ca
 
 ---
 
-### 2. Interactive Playback During Recording
+### Interactive Playback During Recording
 
 **Concept:** Play back previous recordings while actively recording, with intelligent speech detection.
 
@@ -410,7 +417,7 @@ Experimental concepts that push the boundaries of what a speech recording app ca
 
 ---
 
-### 3. System Audio Recording
+### System Audio Recording
 
 **Concept:** Capture system audio alongside microphone input using `RPBroadcastSampleHandler`.
 
@@ -429,7 +436,7 @@ Experimental concepts that push the boundaries of what a speech recording app ca
 
 ---
 
-### 4. Clipboard Integration
+### Clipboard Integration
 
 **Concept:** Automatically embed clipboard content into the recording timeline.
 
@@ -446,7 +453,7 @@ Experimental concepts that push the boundaries of what a speech recording app ca
 
 ---
 
-### 5. Drag-and-Drop Media
+### Drag-and-Drop Media
 
 **Concept:** Drag photos or files into the recording view to embed them.
 
@@ -462,7 +469,7 @@ Experimental concepts that push the boundaries of what a speech recording app ca
 
 ---
 
-### 6. Pluggable Timeline Data
+### Pluggable Timeline Data
 
 **Concept:** Integrate external data sources into the recording timeline.
 
@@ -477,7 +484,7 @@ Experimental concepts that push the boundaries of what a speech recording app ca
 
 ---
 
-### 7. Continuous Recording Mode
+### Continuous Recording Mode
 
 **Concept:** Always-on recording that captures everything, with intelligent segmentation.
 
@@ -494,19 +501,34 @@ Experimental concepts that push the boundaries of what a speech recording app ca
 
 ---
 
-### 8. Ambient Audio Analysis (Maybe)
+## Experimental Ideas
+
+Exploratory concepts that may or may not be implemented. These require further research and validation.
+
+### Ambient Audio Analysis
 
 **Concept:** Analyze ambient audio for context without full transcription.
 
 **Potential Features:**
-- Detect environment type (office, outdoors, transit)
-- Identify significant sounds (doorbell, phone ring)
-- Measure noise levels over time
-- Tag recordings with acoustic environment
+- **Environment Detection:** Classify recording environment (office, outdoors, transit, home, café)
+- **Sound Event Recognition:** Identify significant sounds (doorbell, phone ring, alarm, applause)
+- **Noise Level Tracking:** Measure and graph ambient noise levels over time
+- **Acoustic Fingerprinting:** Tag recordings with acoustic environment signatures
+
+**Use Cases:**
+- Automatically tag recordings by location type
+- Surface recordings where specific events occurred
+- Provide context for why transcription quality varied
+- Enable search like "find recordings from coffee shops"
+
+**Technical Approach:**
+- Core ML models for audio classification
+- Apple's Sound Analysis framework
+- On-device processing for privacy
 
 ---
 
-### 9. Picture-in-Picture Playback (Maybe)
+### Picture-in-Picture Playback
 
 **Concept:** Continue playback in a floating window while using other apps.
 

@@ -26,6 +26,18 @@
 
 ---
 
+### December 12th, 2025 at 12:57:27 p.m.
+
+📝 Moved experimental features to Planned status in PRD
+
+[Commit](https://github.com/technoplato/toolshed/commit/bbb44a6)
+
+- Added 7 new planned features to feature matrix
+- Action Logging, Interactive Playback, System Audio Recording, Clipboard Integration, Drag-and-Drop Media, Pluggable Timeline Data, Continuous Recording
+- Kept Ambient Audio Analysis and PiP Playback as experimental ideas
+
+
+
 ### December 12th, 2025 at 12:51:51 p.m.
 
 📝 Enhanced SpeechRecorderApp PRD with status tracking and experimental features
